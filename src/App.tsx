@@ -1,5 +1,7 @@
 import { useState } from "react";
 import {
+  chatMessagesSeed,
+  chatSessionsSeed,
   entryPathSeed,
   insightsSeed,
   loopConnectionsSeed,
@@ -10,8 +12,17 @@ import {
 import type { BubbleSize, BubbleTone, OpenLoop, Thought } from "./domain/models";
 import { HomeScreen } from "./screens/Home";
 import { LoopsScreen, type NewLoopInput } from "./screens/Loops";
+import { MeScreen } from "./screens/Me";
+import { ThoughtCapture } from "./screens/ThoughtCapture";
+import {
+  clearPrototypeState,
+  loadPrototypeState,
+  savePrototypeState,
+  type PrototypeAppState,
+} from "./storage/prototypeStorage";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
+type ActiveSurface = Surface | "ThoughtCapture";
 
 const surfaces: Surface[] = ["Home", "Loops", "Lumi", "Universe", "Me"];
 
@@ -32,12 +43,30 @@ const bubblePositions = [
   { x: "74%", y: "74%" },
 ];
 
+const seedPrototypeState: PrototypeAppState = {
+  thoughts: thoughtsSeed,
+  openLoops: openLoopsSeed,
+  loopConnections: loopConnectionsSeed,
+  insights: insightsSeed,
+  chatSessions: chatSessionsSeed,
+  chatMessages: chatMessagesSeed,
+};
+
 function App() {
-  const [activeSurface, setActiveSurface] = useState<Surface>("Home");
-  const [loops, setLoops] = useState<OpenLoop[]>(() => openLoopsSeed);
-  const [thoughts, setThoughts] = useState<Thought[]>(() => thoughtsSeed);
+  const [activeSurface, setActiveSurface] = useState<ActiveSurface>("Home");
+  const [prototypeState, setPrototypeState] = useState<PrototypeAppState>(() =>
+    loadPrototypeState(seedPrototypeState),
+  );
   const [selectedLoopId, setSelectedLoopId] = useState(openLoopsSeed[0]?.id ?? "");
 
+  const {
+    chatMessages,
+    chatSessions,
+    insights,
+    loopConnections,
+    openLoops: loops,
+    thoughts,
+  } = prototypeState;
   const recentThought = thoughts[0] ?? thoughtsSeed[0];
   const spotlightLoop = loops.find((loop) => loop.status !== "archived") ?? loops[0];
 
@@ -72,14 +101,18 @@ function App() {
       },
     };
 
-    setLoops((currentLoops) => [newLoop, ...currentLoops]);
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      openLoops: [newLoop, ...currentState.openLoops],
+    }));
     setSelectedLoopId(newLoop.id);
     setActiveSurface("Loops");
   }
 
   function handleLinkThoughtToLoop(thoughtId: string, loopId: string) {
-    setThoughts((currentThoughts) =>
-      currentThoughts.map((thought) => {
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      thoughts: currentState.thoughts.map((thought) => {
         if (thought.id !== thoughtId || thought.relatedLoopIds.includes(loopId)) {
           return thought;
         }
@@ -90,10 +123,7 @@ function App() {
           relatedLoopIds: [...thought.relatedLoopIds, loopId],
         };
       }),
-    );
-
-    setLoops((currentLoops) =>
-      currentLoops.map((loop) => {
+      openLoops: currentState.openLoops.map((loop) => {
         if (loop.id !== loopId || loop.relatedThoughtIds.includes(thoughtId)) {
           return loop;
         }
@@ -105,8 +135,60 @@ function App() {
           relatedThoughtIds: [...loop.relatedThoughtIds, thoughtId],
         };
       }),
-    );
+    }));
     setSelectedLoopId(loopId);
+  }
+
+  function handleSaveThought(body: string) {
+    const now = new Date().toISOString();
+    const title = createThoughtTitle(body);
+    const newThought: Thought = {
+      id: `thought-${Date.now()}`,
+      title,
+      body,
+      createdAt: now,
+      updatedAt: now,
+      sourceType: "thought",
+      relatedThoughtIds: [],
+      relatedLoopIds: [],
+      relatedChatSessionIds: [],
+      tags: [],
+      themes: [],
+    };
+
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      thoughts: [newThought, ...currentState.thoughts],
+    }));
+
+    return newThought;
+  }
+
+  function handleEntryPathSelect(entryPathId: string) {
+    if (entryPathId === "enter-thought") {
+      setActiveSurface("ThoughtCapture");
+      return;
+    }
+
+    if (entryPathId === "chat-with-lumi") {
+      setActiveSurface("Lumi");
+    }
+  }
+
+  function handleResetPrototypeData() {
+    clearPrototypeState();
+    setPrototypeState(seedPrototypeState);
+    savePrototypeState(seedPrototypeState);
+    setSelectedLoopId(openLoopsSeed[0]?.id ?? "");
+    setActiveSurface("Home");
+  }
+
+  function updatePrototypeState(updater: (currentState: PrototypeAppState) => PrototypeAppState) {
+    setPrototypeState((currentState) => {
+      const nextState = updater(currentState);
+      savePrototypeState(nextState);
+      return nextState;
+    });
   }
 
   function showLoopsSurface(loopId?: string) {
@@ -121,16 +203,21 @@ function App() {
       <section className="phone-frame" aria-label="Open Loops app shell">
         {activeSurface === "Home" ? (
           <HomeScreen
-            connectionPreview={loopConnectionsSeed[0]}
+            connectionPreview={loopConnections[0] ?? loopConnectionsSeed[0]}
             entryPaths={entryPathSeed}
-            insight={insightsSeed[0]}
+            insight={insights[0] ?? insightsSeed[0]}
             loops={loops}
             onAddThoughtToLoop={() => showLoopsSurface(spotlightLoop?.id)}
+            onEntryPathSelect={handleEntryPathSelect}
             onNewLoop={() => showLoopsSurface()}
             recentThought={recentThought}
             spotlightLoop={spotlightLoop}
             user={userSeed}
           />
+        ) : null}
+
+        {activeSurface === "ThoughtCapture" ? (
+          <ThoughtCapture onCancel={() => setActiveSurface("Home")} onSaveThought={handleSaveThought} />
         ) : null}
 
         {activeSurface === "Loops" ? (
@@ -144,8 +231,14 @@ function App() {
           />
         ) : null}
 
-        {activeSurface !== "Home" && activeSurface !== "Loops" ? (
-          <SurfacePlaceholder surface={activeSurface} />
+        {activeSurface === "Me" ? <MeScreen onResetPrototypeData={handleResetPrototypeData} /> : null}
+
+        {activeSurface === "Lumi" || activeSurface === "Universe" ? (
+          <SurfacePlaceholder
+            chatMessageCount={chatMessages.length}
+            chatSessionCount={chatSessions.length}
+            surface={activeSurface}
+          />
         ) : null}
 
         <BottomNavigation activeSurface={activeSurface} setActiveSurface={setActiveSurface} />
@@ -155,21 +248,30 @@ function App() {
 }
 
 type SurfacePlaceholderProps = {
-  surface: Surface;
+  chatMessageCount: number;
+  chatSessionCount: number;
+  surface: "Lumi" | "Universe";
 };
 
-function SurfacePlaceholder({ surface }: SurfacePlaceholderProps) {
+function SurfacePlaceholder({ chatMessageCount, chatSessionCount, surface }: SurfacePlaceholderProps) {
   return (
     <section className="surface-placeholder" aria-live="polite">
       <p className="eyebrow">{surface}</p>
       <h1>{surface} Surface</h1>
       <p>{surfaceCopy[surface]}</p>
+      {surface === "Lumi" ? (
+        <p className="placeholder-note">
+          Chat with Lumi remains a separate future conversational mode. Prototype state currently
+          carries {chatSessionCount} chat sessions and {chatMessageCount} ordered messages, but this
+          milestone does not turn Lumi into thought capture.
+        </p>
+      ) : null}
     </section>
   );
 }
 
 type BottomNavigationProps = {
-  activeSurface: Surface;
+  activeSurface: ActiveSurface;
   setActiveSurface: (surface: Surface) => void;
 };
 
@@ -189,6 +291,16 @@ function BottomNavigation({ activeSurface, setActiveSurface }: BottomNavigationP
       ))}
     </nav>
   );
+}
+
+function createThoughtTitle(body: string) {
+  const words = body.split(/\s+/).slice(0, 6).join(" ");
+
+  if (words.length <= 44) {
+    return words;
+  }
+
+  return `${words.slice(0, 41)}...`;
 }
 
 export default App;

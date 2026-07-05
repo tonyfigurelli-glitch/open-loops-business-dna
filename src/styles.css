@@ -59,7 +59,9 @@ button {
 
 .home-screen,
 .loops-screen,
+.me-screen,
 .surface-placeholder,
+.thought-capture-screen,
 .bottom-nav {
   position: relative;
   z-index: 1;
@@ -493,7 +495,10 @@ h3 {
 
 .new-loop-form,
 .loops-view-card,
-.loop-detail {
+.loop-detail,
+.me-screen,
+.save-confirmation,
+.thought-capture-form {
   border: 1px solid rgba(255, 255, 255, 0.76);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.68);
@@ -501,13 +506,15 @@ h3 {
   backdrop-filter: blur(18px);
 }
 
-.new-loop-form {
+.new-loop-form,
+.thought-capture-form {
   display: grid;
   gap: 10px;
   padding: 14px;
 }
 
-.new-loop-form label {
+.new-loop-form label,
+.thought-capture-form label {
   display: grid;
   gap: 6px;
   color: #29305d;
@@ -516,7 +523,8 @@ h3 {
 }
 
 .new-loop-form input,
-.new-loop-form textarea {
+.new-loop-form textarea,
+.thought-capture-form textarea {
   width: 100%;
   border: 1px solid rgba(109, 57, 232, 0.18);
   border-radius: 8px;
@@ -531,7 +539,8 @@ h3 {
   padding: 0 12px;
 }
 
-.new-loop-form textarea {
+.new-loop-form textarea,
+.thought-capture-form textarea {
   padding: 10px 12px;
   resize: vertical;
 }
@@ -736,6 +745,57 @@ h3 {
   color: #6d39e8;
   font-size: 0.82rem;
   font-weight: 900;
+}
+
+.thought-capture-screen {
+  display: grid;
+  gap: 12px;
+}
+
+.form-actions {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: center;
+}
+
+.save-confirmation {
+  padding: 14px;
+}
+
+.save-confirmation p:last-child {
+  margin-bottom: 0;
+  color: #4d536f;
+  font-size: 0.9rem;
+}
+
+.me-screen {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  min-height: 520px;
+  padding: 28px;
+}
+
+.me-screen p {
+  color: #3a3f66;
+  line-height: 1.5;
+}
+
+.danger-button {
+  min-height: 44px;
+  border: 1px solid rgba(183, 48, 75, 0.26);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.68);
+  color: #b7304b;
+  font-weight: 950;
+}
+
+.placeholder-note {
+  padding: 12px;
+  border: 1px solid rgba(30, 156, 175, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
 }
 
 .surface-placeholder {

@@ -21,6 +21,7 @@ type HomeScreenProps = {
     lumiPrompt: string;
   };
   onAddThoughtToLoop: () => void;
+  onEntryPathSelect: (entryPathId: string) => void;
   onNewLoop: () => void;
 };
 
@@ -33,6 +34,7 @@ export function HomeScreen({
   spotlightLoop,
   user,
   onAddThoughtToLoop,
+  onEntryPathSelect,
   onNewLoop,
 }: HomeScreenProps) {
   return (
@@ -53,7 +55,12 @@ export function HomeScreen({
 
       <section className="entry-paths" aria-label="Primary entry paths">
         {entryPaths.map((path) => (
-          <button className={`entry-path ${path.tone}-path`} key={path.id} type="button">
+          <button
+            className={`entry-path ${path.tone}-path`}
+            key={path.id}
+            onClick={() => onEntryPathSelect(path.id)}
+            type="button"
+          >
             <span className="entry-path-icon" aria-hidden="true">
               {path.icon}
             </span>
