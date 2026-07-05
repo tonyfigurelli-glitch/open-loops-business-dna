@@ -16,6 +16,7 @@ import { LumiScreen } from "./screens/Lumi";
 import { LoopsScreen, type NewLoopInput } from "./screens/Loops";
 import { MeScreen } from "./screens/Me";
 import { ThoughtCapture } from "./screens/ThoughtCapture";
+import { ThoughtLibrary } from "./screens/ThoughtLibrary";
 import {
   clearPrototypeState,
   loadPrototypeState,
@@ -24,7 +25,7 @@ import {
 } from "./storage/prototypeStorage";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
-type ActiveSurface = Surface | "ThoughtCapture";
+type ActiveSurface = Surface | "ThoughtCapture" | "ThoughtLibrary";
 
 const surfaces: Surface[] = ["Home", "Loops", "Lumi", "Universe", "Me"];
 
@@ -142,6 +143,24 @@ function App() {
       }),
     }));
     setSelectedLoopId(loopId);
+  }
+
+  function handleUpdateThought(thoughtId: string, body: string) {
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      thoughts: currentState.thoughts.map((thought) => {
+        if (thought.id !== thoughtId) {
+          return thought;
+        }
+
+        return {
+          ...thought,
+          title: createThoughtTitle(body),
+          body,
+          updatedAt: new Date().toISOString(),
+        };
+      }),
+    }));
   }
 
   function handleSaveThought(body: string) {
@@ -306,6 +325,7 @@ function App() {
             onAddThoughtToLoop={() => showLoopsSurface(spotlightLoop?.id)}
             onEntryPathSelect={handleEntryPathSelect}
             onNewLoop={() => showLoopsSurface()}
+            onViewThoughtLibrary={() => setActiveSurface("ThoughtLibrary")}
             recentThought={recentThought}
             spotlightLoop={spotlightLoop}
             user={userSeed}
@@ -314,6 +334,16 @@ function App() {
 
         {activeSurface === "ThoughtCapture" ? (
           <ThoughtCapture onCancel={() => setActiveSurface("Home")} onSaveThought={handleSaveThought} />
+        ) : null}
+
+        {activeSurface === "ThoughtLibrary" ? (
+          <ThoughtLibrary
+            loops={loops}
+            onBackHome={() => setActiveSurface("Home")}
+            onConnectThoughtToLoop={handleLinkThoughtToLoop}
+            onUpdateThought={handleUpdateThought}
+            thoughts={thoughts}
+          />
         ) : null}
 
         {activeSurface === "Loops" ? (

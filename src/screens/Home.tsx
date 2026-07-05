@@ -23,6 +23,7 @@ type HomeScreenProps = {
   onAddThoughtToLoop: () => void;
   onEntryPathSelect: (entryPathId: string) => void;
   onNewLoop: () => void;
+  onViewThoughtLibrary: () => void;
 };
 
 export function HomeScreen({
@@ -36,6 +37,7 @@ export function HomeScreen({
   onAddThoughtToLoop,
   onEntryPathSelect,
   onNewLoop,
+  onViewThoughtLibrary,
 }: HomeScreenProps) {
   return (
     <div className="home-screen">
@@ -88,7 +90,11 @@ export function HomeScreen({
       <InsightCard connection={connectionPreview} insight={insight} loops={loops} />
 
       <section className="preview-grid" aria-label="Home previews">
-        <RecentThoughtCard onAddThoughtToLoop={onAddThoughtToLoop} thought={recentThought} />
+        <RecentThoughtCard
+          onAddThoughtToLoop={onAddThoughtToLoop}
+          onViewThoughtLibrary={onViewThoughtLibrary}
+          thought={recentThought}
+        />
         <SpotlightLoopCard loop={spotlightLoop} />
       </section>
     </div>
@@ -124,9 +130,14 @@ function InsightCard({ connection, insight, loops }: InsightCardProps) {
 type RecentThoughtCardProps = {
   thought: Thought;
   onAddThoughtToLoop: () => void;
+  onViewThoughtLibrary: () => void;
 };
 
-function RecentThoughtCard({ thought, onAddThoughtToLoop }: RecentThoughtCardProps) {
+function RecentThoughtCard({
+  thought,
+  onAddThoughtToLoop,
+  onViewThoughtLibrary,
+}: RecentThoughtCardProps) {
   return (
     <article className="small-card">
       <div className="card-meta">
@@ -134,9 +145,14 @@ function RecentThoughtCard({ thought, onAddThoughtToLoop }: RecentThoughtCardPro
         <span>{formatPreviewDate(thought.createdAt)}</span>
       </div>
       <p className="quote">{formatRecentThoughtPreview(thought)}</p>
-      <button className="text-action" onClick={onAddThoughtToLoop} type="button">
-        Add to Loop
-      </button>
+      <div className="card-actions">
+        <button className="text-action" onClick={onAddThoughtToLoop} type="button">
+          Add to Loop
+        </button>
+        <button className="text-action" onClick={onViewThoughtLibrary} type="button">
+          View all thoughts
+        </button>
+      </div>
     </article>
   );
 }
