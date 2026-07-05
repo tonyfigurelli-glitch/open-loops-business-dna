@@ -1,5 +1,14 @@
 import type { OpenLoop } from "../domain/models";
 
+const homeBubblePositions: Record<string, { x: string; y: string }> = {
+  "loop-financial-freedom": { x: "45%", y: "36%" },
+  "loop-family": { x: "23%", y: "22%" },
+  "loop-health": { x: "24%", y: "72%" },
+  "loop-lumi-podcast": { x: "75%", y: "24%" },
+  "loop-book-idea": { x: "72%", y: "58%" },
+  "loop-past-reflections": { x: "77%", y: "83%" },
+};
+
 type BubbleWorkspaceProps = {
   loops: OpenLoop[];
   selectedLoopId?: string;
@@ -16,6 +25,7 @@ export function BubbleWorkspace({ loops, selectedLoopId, onSelectLoop }: BubbleW
         <path d="M231 166 C267 187, 287 205, 320 224" />
       </svg>
       {loops.map((loop) => {
+        const bubblePosition = homeBubblePositions[loop.id] ?? loop.bubble;
         const bubbleClassName = [
           "loop-bubble",
           loop.bubble.tone,
@@ -31,10 +41,10 @@ export function BubbleWorkspace({ loops, selectedLoopId, onSelectLoop }: BubbleW
             <div
               className={bubbleClassName}
               key={loop.id}
-              style={{ left: loop.bubble.x, top: loop.bubble.y }}
+              style={{ left: bubblePosition.x, top: bubblePosition.y }}
             >
               <strong>{loop.title}</strong>
-              <span>{loop.status === "archived" ? "Archived" : `${loop.thoughtCount} thoughts`}</span>
+              <span>{loop.thoughtCount}</span>
             </div>
           );
         }
@@ -44,11 +54,11 @@ export function BubbleWorkspace({ loops, selectedLoopId, onSelectLoop }: BubbleW
             className={bubbleClassName}
             key={loop.id}
             onClick={() => onSelectLoop(loop.id)}
-            style={{ left: loop.bubble.x, top: loop.bubble.y }}
+            style={{ left: bubblePosition.x, top: bubblePosition.y }}
             type="button"
           >
             <strong>{loop.title}</strong>
-            <span>{loop.status === "archived" ? "Archived" : `${loop.thoughtCount} thoughts`}</span>
+            <span>{loop.thoughtCount}</span>
           </button>
         );
       })}

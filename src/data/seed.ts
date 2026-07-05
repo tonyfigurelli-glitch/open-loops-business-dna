@@ -74,7 +74,7 @@ export const openLoopsSeed: OpenLoop[] = [
     relatedChatSessionIds: ["chat-freedom-and-health"],
     tags: ["money", "simplicity", "autonomy"],
     themes: ["freedom", "identity"],
-    bubble: { tone: "violet", size: "large", x: "38%", y: "34%" },
+    bubble: { tone: "violet", size: "large", x: "45%", y: "36%" },
   },
   {
     id: "loop-family",
@@ -89,7 +89,7 @@ export const openLoopsSeed: OpenLoop[] = [
     relatedChatSessionIds: [],
     tags: ["relationships"],
     themes: ["belonging"],
-    bubble: { tone: "blue", size: "medium", x: "10%", y: "15%" },
+    bubble: { tone: "blue", size: "medium", x: "19%", y: "20%" },
   },
   {
     id: "loop-health",
@@ -104,7 +104,7 @@ export const openLoopsSeed: OpenLoop[] = [
     relatedChatSessionIds: ["chat-freedom-and-health"],
     tags: ["health", "energy"],
     themes: ["wellbeing", "freedom"],
-    bubble: { tone: "green", size: "small", x: "8%", y: "62%" },
+    bubble: { tone: "green", size: "small", x: "22%", y: "72%" },
   },
   {
     id: "loop-lumi-podcast",
@@ -119,7 +119,7 @@ export const openLoopsSeed: OpenLoop[] = [
     relatedChatSessionIds: ["chat-lumi-voice"],
     tags: ["podcast", "storytelling"],
     themes: ["communication"],
-    bubble: { tone: "green", size: "medium", x: "61%", y: "11%" },
+    bubble: { tone: "green", size: "medium", x: "75%", y: "21%" },
   },
   {
     id: "loop-book-idea",
@@ -134,7 +134,7 @@ export const openLoopsSeed: OpenLoop[] = [
     relatedChatSessionIds: [],
     tags: ["writing", "creative"],
     themes: ["imagination"],
-    bubble: { tone: "orange", size: "medium", x: "66%", y: "58%" },
+    bubble: { tone: "orange", size: "medium", x: "72%", y: "58%" },
   },
   {
     id: "loop-past-reflections",
@@ -149,7 +149,7 @@ export const openLoopsSeed: OpenLoop[] = [
     relatedChatSessionIds: [],
     tags: ["archive"],
     themes: ["memory"],
-    bubble: { tone: "silver", size: "small", x: "70%", y: "79%" },
+    bubble: { tone: "silver", size: "small", x: "77%", y: "83%" },
   },
 ];
 

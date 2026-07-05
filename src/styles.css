@@ -296,7 +296,7 @@ h3 {
 
 .bubble-workspace {
   position: relative;
-  height: 336px;
+  height: 360px;
   border: 1px solid rgba(255, 255, 255, 0.54);
   border-radius: 8px;
   background:
@@ -322,7 +322,7 @@ h3 {
   position: absolute;
   display: grid;
   place-items: center;
-  padding: 12px;
+  padding: 11px;
   translate: -50% -50%;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 999px;
@@ -344,30 +344,37 @@ h3 {
 
 .loop-bubble strong {
   display: block;
-  max-width: 104px;
+  max-width: 112px;
   font-size: 0.86rem;
   line-height: 1.12;
+  overflow-wrap: anywhere;
 }
 
 .loop-bubble span {
-  font-size: 0.7rem;
+  display: grid;
+  min-width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.72rem;
   font-weight: 800;
   opacity: 0.92;
 }
 
 .loop-bubble.large {
-  width: 126px;
-  height: 126px;
+  width: 134px;
+  height: 134px;
 }
 
 .loop-bubble.medium {
-  width: 102px;
-  height: 102px;
+  width: 108px;
+  height: 108px;
 }
 
 .loop-bubble.small {
-  width: 82px;
-  height: 82px;
+  width: 88px;
+  height: 88px;
 }
 
 .loop-bubble.violet {
