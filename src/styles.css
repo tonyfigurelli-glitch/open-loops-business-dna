@@ -451,6 +451,27 @@ h3 {
   background: rgba(255, 255, 255, 0.62);
 }
 
+.text-action.green {
+  border-color: rgba(62, 157, 100, 0.26);
+  color: #17824a;
+}
+
+.status-pill {
+  padding: 6px 10px;
+  border: 1px solid rgba(62, 157, 100, 0.16);
+  border-radius: 999px;
+  background: rgba(106, 222, 151, 0.16);
+  color: #17824a !important;
+  font-weight: 900;
+}
+
+.spotlight-description {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .surface-placeholder {
   display: grid;
   min-height: 520px;
@@ -521,5 +542,9 @@ h3 {
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.22);
     box-shadow: 0 28px 80px rgba(58, 39, 100, 0.16);
+  }
+
+  .preview-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }

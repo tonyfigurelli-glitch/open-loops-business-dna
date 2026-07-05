@@ -1,33 +1,10 @@
 import { useState } from "react";
+import { homeSeed } from "./data/seed";
+import type { Insight, LoopConnection, OpenLoop, Thought } from "./domain/models";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
 
-type LoopPreview = {
-  title: string;
-  count: string;
-  tone: "violet" | "blue" | "green" | "orange" | "silver";
-  size: "large" | "medium" | "small";
-  x: string;
-  y: string;
-};
-
 const surfaces: Surface[] = ["Home", "Loops", "Lumi", "Universe", "Me"];
-
-const loops: LoopPreview[] = [
-  {
-    title: "Financial Freedom",
-    count: "31 thoughts",
-    tone: "violet",
-    size: "large",
-    x: "38%",
-    y: "34%",
-  },
-  { title: "Family", count: "24 thoughts", tone: "blue", size: "medium", x: "10%", y: "15%" },
-  { title: "Health", count: "16 thoughts", tone: "green", size: "small", x: "8%", y: "62%" },
-  { title: "Lumi Podcast", count: "22 thoughts", tone: "green", size: "medium", x: "61%", y: "11%" },
-  { title: "Book Idea", count: "18 thoughts", tone: "orange", size: "medium", x: "66%", y: "58%" },
-  { title: "Past Reflections", count: "Archived", tone: "silver", size: "small", x: "70%", y: "79%" },
-];
 
 const surfaceCopy: Record<Surface, string> = {
   Home: "Your calm starting point for capturing and connecting thoughts.",
@@ -52,13 +29,16 @@ function App() {
 }
 
 function HomeScreen() {
+  const { connectionPreview, entryPaths, insight, loops, recentThought, spotlightLoop, user } =
+    homeSeed;
+
   return (
     <div className="home-screen">
       <header className="hero">
         <div>
           <p className="eyebrow">Open Loops</p>
-          <h1>Good morning, Tony</h1>
-          <p className="hero-copy">I&apos;m Lumi. What shall we explore today?</p>
+          <h1>{user.greeting}</h1>
+          <p className="hero-copy">{user.lumiPrompt}</p>
         </div>
         <div className="lumi-orb" aria-label="Lumi presence">
           <span className="lumi-face">
@@ -69,25 +49,17 @@ function HomeScreen() {
       </header>
 
       <section className="entry-paths" aria-label="Primary entry paths">
-        <button className="entry-path thought-path" type="button">
-          <span className="entry-path-icon" aria-hidden="true">
-            +
-          </span>
-          <span className="entry-path-copy">
-            <strong>Enter a Thought</strong>
-            <span>Quickly capture an open loop, memory, question, or idea.</span>
-          </span>
-        </button>
-
-        <button className="entry-path lumi-path" type="button">
-          <span className="entry-path-icon" aria-hidden="true">
-            ..
-          </span>
-          <span className="entry-path-copy">
-            <strong>Chat with Lumi</strong>
-            <span>Start a deeper conversation and let Lumi respond.</span>
-          </span>
-        </button>
+        {entryPaths.map((path) => (
+          <button className={`entry-path ${path.tone}-path`} key={path.id} type="button">
+            <span className="entry-path-icon" aria-hidden="true">
+              {path.icon}
+            </span>
+            <span className="entry-path-copy">
+              <strong>{path.title}</strong>
+              <span>{path.subtitle}</span>
+            </span>
+          </button>
+        ))}
       </section>
 
       <section className="loop-section" aria-labelledby="loops-title">
@@ -100,28 +72,24 @@ function HomeScreen() {
             New Loop
           </button>
         </div>
-        <BubbleWorkspace />
+        <BubbleWorkspace loops={loops} />
       </section>
 
-      <InsightCard />
+      <InsightCard connection={connectionPreview} insight={insight} loops={loops} />
 
       <section className="preview-grid" aria-label="Home previews">
-        <article className="small-card">
-          <div className="card-meta">
-            <p>Recent Thought</p>
-            <span>2 hours ago</span>
-          </div>
-          <p className="quote">I had another idea about simplifying my life even more...</p>
-          <button className="text-action" type="button">
-            Add to an Open Loop
-          </button>
-        </article>
+        <RecentThoughtCard thought={recentThought} />
+        <SpotlightLoopCard loop={spotlightLoop} />
       </section>
     </div>
   );
 }
 
-function BubbleWorkspace() {
+type BubbleWorkspaceProps = {
+  loops: OpenLoop[];
+};
+
+function BubbleWorkspace({ loops }: BubbleWorkspaceProps) {
   return (
     <div className="bubble-workspace" aria-label="Open Loops bubble workspace preview">
       <svg className="connection-lines" aria-hidden="true" viewBox="0 0 360 270">
@@ -132,31 +100,92 @@ function BubbleWorkspace() {
       </svg>
       {loops.map((loop) => (
         <div
-          className={`loop-bubble ${loop.tone} ${loop.size}`}
-          key={loop.title}
-          style={{ left: loop.x, top: loop.y }}
+          className={`loop-bubble ${loop.bubble.tone} ${loop.bubble.size}`}
+          key={loop.id}
+          style={{ left: loop.bubble.x, top: loop.bubble.y }}
         >
           <strong>{loop.title}</strong>
-          <span>{loop.count}</span>
+          <span>{loop.status === "archived" ? "Archived" : `${loop.thoughtCount} thoughts`}</span>
         </div>
       ))}
     </div>
   );
 }
 
-function InsightCard() {
+type InsightCardProps = {
+  connection: LoopConnection;
+  insight: Insight;
+  loops: OpenLoop[];
+};
+
+function InsightCard({ connection, insight, loops }: InsightCardProps) {
+  const connectedLoopTitles = connection.loopIds
+    .map((loopId) => loops.find((loop) => loop.id === loopId)?.title)
+    .filter(Boolean)
+    .join(" and ");
+
   return (
     <article className="insight-card">
       <div className="spark" aria-hidden="true" />
       <div>
-        <p>These two loops have been getting closer.</p>
-        <h3>Financial Freedom and Health</h3>
+        <p>{insight.body}</p>
+        <h3>{connectedLoopTitles || insight.title}</h3>
         <button className="text-action" type="button">
           View connection
         </button>
       </div>
     </article>
   );
+}
+
+type RecentThoughtCardProps = {
+  thought: Thought;
+};
+
+function RecentThoughtCard({ thought }: RecentThoughtCardProps) {
+  return (
+    <article className="small-card">
+      <div className="card-meta">
+        <p>Recent Thought</p>
+        <span>{formatPreviewDate(thought.createdAt)}</span>
+      </div>
+      <p className="quote">{thought.body}</p>
+      <button className="text-action" type="button">
+        Add to an Open Loop
+      </button>
+    </article>
+  );
+}
+
+type SpotlightLoopCardProps = {
+  loop: OpenLoop;
+};
+
+function SpotlightLoopCard({ loop }: SpotlightLoopCardProps) {
+  return (
+    <article className="small-card spotlight-card">
+      <div className="card-meta">
+        <p>Open Loop</p>
+        <span className="status-pill">{formatStatus(loop.status)}</span>
+      </div>
+      <h3>{loop.title}</h3>
+      <p className="spotlight-description">{loop.description}</p>
+      <button className="text-action green" type="button">
+        Continue exploring
+      </button>
+    </article>
+  );
+}
+
+function formatPreviewDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
+function formatStatus(status: OpenLoop["status"]) {
+  return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
 type SurfacePlaceholderProps = {
