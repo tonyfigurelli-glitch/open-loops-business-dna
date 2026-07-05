@@ -37,7 +37,7 @@ button {
   width: min(100%, 430px);
   min-height: calc(100vh - 20px);
   margin: 0 auto;
-  padding: 24px 16px 104px;
+  padding: 20px 16px 96px;
   overflow: hidden;
 }
 
@@ -69,7 +69,7 @@ button {
   grid-template-columns: 1fr auto;
   gap: 14px;
   align-items: start;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .eyebrow,
@@ -121,8 +121,8 @@ h3 {
 .lumi-orb {
   position: relative;
   display: grid;
-  width: 82px;
-  height: 82px;
+  width: 76px;
+  height: 76px;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 999px;
@@ -192,41 +192,42 @@ h3 {
 .entry-paths {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 18px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .entry-path {
   display: grid;
-  min-height: 164px;
+  min-height: 142px;
   grid-template-rows: auto 1fr;
-  gap: 14px;
+  gap: 12px;
   align-content: start;
   padding: 16px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.46);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.64);
-  box-shadow: 0 18px 50px rgba(82, 49, 128, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.38),
+    0 18px 50px rgba(55, 43, 110, 0.18);
   text-align: left;
   backdrop-filter: blur(18px);
 }
 
 .entry-path.thought-path {
   background:
-    radial-gradient(circle at 18% 14%, rgba(255, 255, 255, 0.94), transparent 28%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.75), rgba(245, 238, 255, 0.7));
+    radial-gradient(circle at 18% 12%, rgba(255, 255, 255, 0.72), transparent 30%),
+    linear-gradient(145deg, rgba(115, 82, 255, 0.92), rgba(76, 45, 205, 0.9));
 }
 
 .entry-path.lumi-path {
   background:
-    radial-gradient(circle at 82% 12%, rgba(211, 186, 255, 0.58), transparent 33%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.72), rgba(238, 246, 255, 0.7));
+    radial-gradient(circle at 82% 12%, rgba(255, 255, 255, 0.7), transparent 32%),
+    linear-gradient(145deg, rgba(30, 169, 182, 0.9), rgba(21, 105, 178, 0.9));
 }
 
 .entry-path-icon {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border-radius: 999px;
   font-size: 1.2rem;
@@ -234,35 +235,35 @@ h3 {
 }
 
 .thought-path .entry-path-icon {
-  background: rgba(109, 57, 232, 0.12);
-  color: #6d39e8;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .lumi-path .entry-path-icon {
-  background: rgba(65, 139, 216, 0.13);
-  color: #2b77c7;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
 }
 
 .entry-path-copy {
   display: grid;
-  gap: 7px;
+  gap: 6px;
 }
 
 .entry-path-copy strong {
-  color: #11195d;
+  color: #ffffff;
   font-size: 1rem;
   line-height: 1.15;
 }
 
 .entry-path-copy span {
-  color: #505978;
-  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.8rem;
   font-weight: 650;
   line-height: 1.36;
 }
 
 .loop-section {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .section-heading {
@@ -270,7 +271,7 @@ h3 {
   grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: end;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .ghost-button,
@@ -291,7 +292,7 @@ h3 {
 
 .bubble-workspace {
   position: relative;
-  height: 310px;
+  height: 258px;
   border: 1px solid rgba(255, 255, 255, 0.54);
   border-radius: 8px;
   background:
@@ -331,29 +332,29 @@ h3 {
 .loop-bubble strong {
   display: block;
   max-width: 90px;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   line-height: 1.12;
 }
 
 .loop-bubble span {
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   opacity: 0.92;
 }
 
 .loop-bubble.large {
-  width: 132px;
-  height: 132px;
+  width: 116px;
+  height: 116px;
 }
 
 .loop-bubble.medium {
-  width: 108px;
-  height: 108px;
+  width: 96px;
+  height: 96px;
 }
 
 .loop-bubble.small {
-  width: 84px;
-  height: 84px;
+  width: 76px;
+  height: 76px;
 }
 
 .loop-bubble.violet {
@@ -390,8 +391,8 @@ h3 {
   grid-template-columns: auto 1fr;
   gap: 14px;
   align-items: start;
-  padding: 16px;
-  margin-bottom: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
 }
 
 .spark {
@@ -416,8 +417,8 @@ h3 {
 }
 
 .small-card {
-  min-height: 138px;
-  padding: 16px;
+  min-height: 116px;
+  padding: 14px;
 }
 
 .card-meta {
@@ -448,20 +449,6 @@ h3 {
   min-height: 34px;
   padding: 0 14px;
   background: rgba(255, 255, 255, 0.62);
-}
-
-.text-action.green {
-  border-color: rgba(62, 157, 100, 0.26);
-  color: #17824a;
-}
-
-.status-pill {
-  padding: 6px 10px;
-  border: 1px solid rgba(62, 157, 100, 0.16);
-  border-radius: 999px;
-  background: rgba(106, 222, 151, 0.16);
-  color: #17824a !important;
-  font-weight: 900;
 }
 
 .surface-placeholder {
@@ -529,14 +516,10 @@ h3 {
   }
 
   .phone-frame {
-    min-height: 850px;
+    min-height: 780px;
     border: 1px solid rgba(255, 255, 255, 0.72);
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.22);
     box-shadow: 0 28px 80px rgba(58, 39, 100, 0.16);
-  }
-
-  .preview-grid {
-    grid-template-columns: 1fr 1fr;
   }
 }

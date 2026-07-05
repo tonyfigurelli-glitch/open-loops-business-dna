@@ -75,7 +75,7 @@ function HomeScreen() {
           </span>
           <span className="entry-path-copy">
             <strong>Enter a Thought</strong>
-            <span>Capture an open loop, memory, question, feeling, or idea.</span>
+            <span>Quickly capture an open loop, memory, question, or idea.</span>
           </span>
         </button>
 
@@ -114,18 +114,6 @@ function HomeScreen() {
           <p className="quote">I had another idea about simplifying my life even more...</p>
           <button className="text-action" type="button">
             Add to an Open Loop
-          </button>
-        </article>
-
-        <article className="small-card spotlight-card">
-          <div className="card-meta">
-            <p>Open Loop Spotlight</p>
-            <span className="status-pill">Growing</span>
-          </div>
-          <h3>Financial Freedom</h3>
-          <p>5 new thoughts this week</p>
-          <button className="text-action green" type="button">
-            Continue exploring
           </button>
         </article>
       </section>
