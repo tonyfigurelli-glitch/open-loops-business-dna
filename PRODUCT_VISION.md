@@ -1,7 +1,7 @@
 # Product Vision
 
 Status: Draft v1.0
-Last Updated: 2026-07-02
+Last Updated: 2026-07-05
 Owner: Founder / Product
 
 ## Purpose
@@ -26,6 +26,7 @@ The long-term vision is a Universal Emotional Translator. The Version 1 entry po
 - Capture thoughts
 - Create Open Loops
 - Talk to Lumi
+- Keep Enter a Thought and Chat with Lumi as separate entry modes: quick dated capture versus contextual conversation
 - Organize thinking through bubbles
 - Preserve continuity through persistent storage
 - Avoid exposing deeper long-term capabilities too early

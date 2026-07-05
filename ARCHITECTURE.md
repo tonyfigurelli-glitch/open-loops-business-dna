@@ -1,7 +1,7 @@
 # Architecture
 
 Status: Draft
-Last Updated: 2026-07-02
+Last Updated: 2026-07-05
 Owner: TBD
 
 ## Purpose
@@ -30,10 +30,19 @@ Detailed technical architecture lives in [TECHNICAL_ARCHITECTURE.md](TECHNICAL_A
 - Thought capture
 - Open Loop creation and management
 - Lumi conversation
+- Ordered Chat Sessions and Chat Messages
 - Bubble visualization
 - List view
 - Basic categorization
 - Persistent storage
+
+## Entry Mode Boundary
+
+Enter a Thought is quick capture for dated thoughts, memories, questions, feelings, ideas, or reflections.
+
+Chat with Lumi is true conversational mode. It should open or continue a Chat Session, store ordered Chat Messages, preserve context within the active session, and eventually let Lumi respond to follow-up questions without treating every message as a disconnected new thought.
+
+Do not implement Lumi intelligence until explicitly scoped, but preserve this boundary in implementation plans and data structures.
 
 ## UX Reference
 

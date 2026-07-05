@@ -1,7 +1,7 @@
 # MVP Tasks
 
 Status: Draft
-Last Updated: 2026-07-02
+Last Updated: 2026-07-05
 Owner: TBD
 
 ## Purpose
@@ -33,7 +33,13 @@ Track the Version 1 MVP task structure for Open Loops.
 
 ### Lumi
 
-- TBD
+- Build Chat with Lumi as a true conversational mode, not as thought capture.
+- Support starting or continuing a Chat Session.
+- Store ordered Chat Messages.
+- Preserve session context for future follow-up questions.
+- Future Lumi responses should use prior chat context and avoid simply repeating the previous answer.
+- Allow Chat Sessions to later connect to Open Loops.
+- Do not implement real Lumi intelligence unless explicitly scoped by a milestone.
 
 ### Open Loops
 

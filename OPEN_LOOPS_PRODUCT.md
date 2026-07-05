@@ -1,7 +1,7 @@
 # Open Loops Product
 
 Status: Draft v1.0
-Last Updated: 2026-07-02
+Last Updated: 2026-07-05
 Owner: Founder / Product
 
 ## Purpose
@@ -184,6 +184,34 @@ The Home screen should remain intentionally simple:
 The goal is to enter relationship first and discover functionality later.
 
 The current canonical Home Screen UX reference is [HomeScreen_v1.png](UI_REFERENCE/HomeScreen_v1.png). Implementations should preserve the interaction model, visual hierarchy, and philosophy shown there unless intentionally revised.
+
+## Primary Entry Modes
+
+Open Loops has two primary entry modes. They should remain conceptually separate.
+
+### Enter a Thought
+
+Enter a Thought is quick capture.
+
+It captures and stores a dated thought, memory, question, feeling, idea, reflection, or possible Open Loop.
+
+It does not require Lumi to respond conversationally.
+
+It behaves more like journaling or lightweight capture. These thoughts should eventually be reviewable by date, and a thought can eventually become or connect to an Open Loop.
+
+### Chat with Lumi
+
+Chat with Lumi is true conversational mode.
+
+It opens or continues a Chat Session, stores ordered Chat Messages, and must eventually allow Lumi to respond to normal conversational input.
+
+Chat with Lumi must preserve context within the active chat session. Follow-up questions should be interpreted through prior messages in that same session.
+
+Chat with Lumi must not treat every user message as a disconnected new thought, and Lumi must not simply repeat or rehash the previous response.
+
+Chat Sessions can later connect to Open Loops, recurring themes, prior thoughts, or prior chats.
+
+Do not fully implement Lumi intelligence until a milestone explicitly asks for it, but preserve the product architecture so this conversational behavior can be implemented cleanly later.
 
 ## Navigation
 

@@ -1,7 +1,7 @@
 # Decisions
 
 Status: Approved
-Last Updated: 2026-07-03
+Last Updated: 2026-07-05
 Owner: TBD
 
 ## Purpose
@@ -35,6 +35,23 @@ Every entry should include:
 **Follow-Up:** TBD
 
 ## Log
+
+### 2026-07-05: Treat Chat with Lumi as True Conversational Mode
+
+**Decision:** Chat with Lumi must be treated as a true conversational mode, distinct from Enter a Thought. Enter a Thought is quick dated capture for thoughts, memories, questions, feelings, ideas, reflections, or possible Open Loops. Chat with Lumi opens or continues a Chat Session, stores ordered Chat Messages, preserves active-session context, and must eventually support contextual follow-up questions and non-repetitive Lumi responses.
+
+**Rationale:** Open Loops needs both lightweight journaling-style capture and deeper conversational reflection. If Chat with Lumi is implemented as disconnected thought capture, the product cannot earn conversational continuity, interpret follow-ups, or later connect chat sessions cleanly to Open Loops, recurring themes, prior thoughts, and prior chats.
+
+**Affected Files:**
+
+- [OPEN_LOOPS_PRODUCT.md](OPEN_LOOPS_PRODUCT.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [ARCHITECTURE.md](ARCHITECTURE.md)
+- [MVP_TASKS.md](MVP_TASKS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Future Lumi milestones should keep this distinction visible in their implementation plans. Do not implement full Lumi intelligence until explicitly scoped, but preserve data and component boundaries for Chat Sessions, ordered Chat Messages, session context, follow-up interpretation, and later Open Loop connections.
 
 ### 2026-07-03: Version UX Vision Artifacts
 
