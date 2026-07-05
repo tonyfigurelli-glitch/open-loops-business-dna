@@ -1,7 +1,6 @@
 import { useState } from "react";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
-type Mode = "Enter Thought" | "Chat with Lumi";
 
 type LoopPreview = {
   title: string;
@@ -13,7 +12,6 @@ type LoopPreview = {
 };
 
 const surfaces: Surface[] = ["Home", "Loops", "Lumi", "Universe", "Me"];
-const modes: Mode[] = ["Enter Thought", "Chat with Lumi"];
 
 const loops: LoopPreview[] = [
   {
@@ -41,16 +39,11 @@ const surfaceCopy: Record<Surface, string> = {
 
 function App() {
   const [activeSurface, setActiveSurface] = useState<Surface>("Home");
-  const [activeMode, setActiveMode] = useState<Mode>("Enter Thought");
 
   return (
     <main className="app-shell">
       <section className="phone-frame" aria-label="Open Loops app shell">
-        {activeSurface === "Home" ? (
-          <HomeScreen activeMode={activeMode} setActiveMode={setActiveMode} />
-        ) : (
-          <SurfacePlaceholder surface={activeSurface} />
-        )}
+        {activeSurface === "Home" ? <HomeScreen /> : <SurfacePlaceholder surface={activeSurface} />}
 
         <BottomNavigation activeSurface={activeSurface} setActiveSurface={setActiveSurface} />
       </section>
@@ -58,12 +51,7 @@ function App() {
   );
 }
 
-type HomeScreenProps = {
-  activeMode: Mode;
-  setActiveMode: (mode: Mode) => void;
-};
-
-function HomeScreen({ activeMode, setActiveMode }: HomeScreenProps) {
+function HomeScreen() {
   return (
     <div className="home-screen">
       <header className="hero">
@@ -80,31 +68,26 @@ function HomeScreen({ activeMode, setActiveMode }: HomeScreenProps) {
         </div>
       </header>
 
-      <section className="entry-card" aria-label="Talk to Lumi entry">
-        <div className="entry-icon" aria-hidden="true">
-          <span />
-        </div>
-        <div>
-          <p>Talk to Lumi...</p>
-          <span>{activeMode === "Enter Thought" ? "Capture a thought" : "Start a quiet chat"}</span>
-        </div>
-      </section>
+      <section className="entry-paths" aria-label="Primary entry paths">
+        <button className="entry-path thought-path" type="button">
+          <span className="entry-path-icon" aria-hidden="true">
+            +
+          </span>
+          <span className="entry-path-copy">
+            <strong>Enter a Thought</strong>
+            <span>Capture an open loop, memory, question, feeling, or idea.</span>
+          </span>
+        </button>
 
-      <section className="mode-card" aria-label="Primary modes">
-        <div className="mode-switch" role="tablist" aria-label="Choose mode">
-          {modes.map((mode) => (
-            <button
-              aria-selected={activeMode === mode}
-              className={activeMode === mode ? "mode-button active" : "mode-button"}
-              key={mode}
-              onClick={() => setActiveMode(mode)}
-              role="tab"
-              type="button"
-            >
-              {mode}
-            </button>
-          ))}
-        </div>
+        <button className="entry-path lumi-path" type="button">
+          <span className="entry-path-icon" aria-hidden="true">
+            ..
+          </span>
+          <span className="entry-path-copy">
+            <strong>Chat with Lumi</strong>
+            <span>Start a deeper conversation and let Lumi respond.</span>
+          </span>
+        </button>
       </section>
 
       <section className="loop-section" aria-labelledby="loops-title">
