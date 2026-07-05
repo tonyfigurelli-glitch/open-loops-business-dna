@@ -11,21 +11,21 @@ import type {
 export const userSeed = {
   firstName: "Tony",
   greeting: "Good morning, Tony",
-  lumiPrompt: "I'm Lumi. What shall we explore today?",
+  lumiPrompt: "What shall we explore?",
 };
 
 export const entryPathSeed = [
   {
     id: "enter-thought",
-    title: "Enter a Thought",
-    subtitle: "Quickly capture an open loop, memory, question, or idea.",
+    title: "Enter Thought",
+    subtitle: "Capture something.",
     icon: "+",
     tone: "thought",
   },
   {
     id: "chat-with-lumi",
     title: "Chat with Lumi",
-    subtitle: "Start a deeper conversation and let Lumi respond.",
+    subtitle: "Talk it through.",
     icon: "..",
     tone: "lumi",
   },

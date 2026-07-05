@@ -73,7 +73,7 @@ button {
   grid-template-columns: 1fr auto;
   gap: 14px;
   align-items: start;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
 .eyebrow,
@@ -197,16 +197,16 @@ h3 {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .entry-path {
   display: grid;
-  min-height: 142px;
+  min-height: 118px;
   grid-template-rows: auto 1fr;
   gap: 12px;
   align-content: start;
-  padding: 16px 14px;
+  padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.46);
   border-radius: 8px;
   box-shadow:
@@ -267,7 +267,7 @@ h3 {
 }
 
 .loop-section {
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .section-heading {
@@ -296,7 +296,7 @@ h3 {
 
 .bubble-workspace {
   position: relative;
-  height: 258px;
+  height: 336px;
   border: 1px solid rgba(255, 255, 255, 0.54);
   border-radius: 8px;
   background:
@@ -322,7 +322,7 @@ h3 {
   position: absolute;
   display: grid;
   place-items: center;
-  padding: 10px;
+  padding: 12px;
   translate: -50% -50%;
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 999px;
@@ -344,30 +344,30 @@ h3 {
 
 .loop-bubble strong {
   display: block;
-  max-width: 90px;
-  font-size: 0.82rem;
+  max-width: 104px;
+  font-size: 0.86rem;
   line-height: 1.12;
 }
 
 .loop-bubble span {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   font-weight: 800;
   opacity: 0.92;
 }
 
 .loop-bubble.large {
-  width: 116px;
-  height: 116px;
+  width: 126px;
+  height: 126px;
 }
 
 .loop-bubble.medium {
-  width: 96px;
-  height: 96px;
+  width: 102px;
+  height: 102px;
 }
 
 .loop-bubble.small {
-  width: 76px;
-  height: 76px;
+  width: 82px;
+  height: 82px;
 }
 
 .loop-bubble.violet {
@@ -402,10 +402,10 @@ h3 {
 .insight-card {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 14px;
+  gap: 12px;
   align-items: start;
-  padding: 14px;
-  margin-bottom: 12px;
+  padding: 12px;
+  margin-bottom: 14px;
 }
 
 .spark {
@@ -419,19 +419,19 @@ h3 {
 
 .insight-card p,
 .small-card p {
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   color: #373d66;
-  line-height: 1.45;
+  line-height: 1.35;
 }
 
 .preview-grid {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .small-card {
-  min-height: 116px;
-  padding: 14px;
+  min-height: 104px;
+  padding: 12px;
 }
 
 .card-meta {
@@ -456,6 +456,7 @@ h3 {
 .quote {
   color: #11195d;
   font-weight: 750;
+  font-size: 0.96rem;
 }
 
 .text-action {

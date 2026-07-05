@@ -75,8 +75,8 @@ export function HomeScreen({
       <section className="loop-section" aria-labelledby="loops-title">
         <div className="section-heading">
           <div>
-            <p className="section-label">Your Open Loops</p>
-            <h2 id="loops-title">A living map of what you keep returning to.</h2>
+            <p className="section-label">Open Loops</p>
+            <h2 id="loops-title">What keeps returning.</h2>
           </div>
           <button className="ghost-button" onClick={onNewLoop} type="button">
             New Loop
@@ -105,16 +105,16 @@ function InsightCard({ connection, insight, loops }: InsightCardProps) {
   const connectedLoopTitles = connection.loopIds
     .map((loopId) => loops.find((loop) => loop.id === loopId)?.title)
     .filter(Boolean)
-    .join(" and ");
+    .join(" + ");
 
   return (
     <article className="insight-card">
       <div className="spark" aria-hidden="true" />
       <div>
-        <p>{insight.body}</p>
+        <p>Connection forming</p>
         <h3>{connectedLoopTitles || insight.title}</h3>
         <button className="text-action" type="button">
-          View connection
+          View
         </button>
       </div>
     </article>
@@ -133,9 +133,9 @@ function RecentThoughtCard({ thought, onAddThoughtToLoop }: RecentThoughtCardPro
         <p>Recent Thought</p>
         <span>{formatPreviewDate(thought.createdAt)}</span>
       </div>
-      <p className="quote">{thought.body}</p>
+      <p className="quote">{formatRecentThoughtPreview(thought)}</p>
       <button className="text-action" onClick={onAddThoughtToLoop} type="button">
-        Add to an Open Loop
+        Add to Loop
       </button>
     </article>
   );
@@ -149,13 +149,12 @@ function SpotlightLoopCard({ loop }: SpotlightLoopCardProps) {
   return (
     <article className="small-card spotlight-card">
       <div className="card-meta">
-        <p>Open Loop</p>
+        <p>Spotlight</p>
         <span className="status-pill">{formatStatus(loop.status)}</span>
       </div>
       <h3>{loop.title}</h3>
-      <p className="spotlight-description">{loop.description}</p>
       <button className="text-action green" type="button">
-        Continue exploring
+        Continue
       </button>
     </article>
   );
@@ -170,4 +169,16 @@ function formatPreviewDate(value: string) {
 
 function formatStatus(status: OpenLoop["status"]) {
   return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
+function formatRecentThoughtPreview(thought: Thought) {
+  if (thought.id === "thought-simplifying-life") {
+    return "Simplifying life even more...";
+  }
+
+  if (thought.body.length <= 72) {
+    return thought.body;
+  }
+
+  return `${thought.body.slice(0, 69)}...`;
 }
