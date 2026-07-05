@@ -9,8 +9,10 @@ import {
   thoughtsSeed,
   userSeed,
 } from "./data/seed";
-import type { BubbleSize, BubbleTone, OpenLoop, Thought } from "./domain/models";
+import { createLumiMockResponse } from "./domain/lumiMockResponse";
+import type { BubbleSize, BubbleTone, ChatMessage, ChatSession, OpenLoop, Thought } from "./domain/models";
 import { HomeScreen } from "./screens/Home";
+import { LumiScreen } from "./screens/Lumi";
 import { LoopsScreen, type NewLoopInput } from "./screens/Loops";
 import { MeScreen } from "./screens/Me";
 import { ThoughtCapture } from "./screens/ThoughtCapture";
@@ -58,6 +60,9 @@ function App() {
     loadPrototypeState(seedPrototypeState),
   );
   const [selectedLoopId, setSelectedLoopId] = useState(openLoopsSeed[0]?.id ?? "");
+  const [activeChatSessionId, setActiveChatSessionId] = useState(() =>
+    getNewestChatSessionId(loadPrototypeState(seedPrototypeState).chatSessions),
+  );
 
   const {
     chatMessages,
@@ -171,8 +176,98 @@ function App() {
     }
 
     if (entryPathId === "chat-with-lumi") {
+      setActiveChatSessionId(getNewestChatSessionId(chatSessions));
       setActiveSurface("Lumi");
     }
+  }
+
+  function handleCreateChatSession() {
+    const now = new Date().toISOString();
+    const newSession: ChatSession = {
+      id: `chat-${Date.now()}`,
+      title: `Lumi chat ${formatSessionTitleDate(now)}`,
+      createdAt: now,
+      updatedAt: now,
+      relatedThoughtIds: [],
+      relatedLoopIds: [],
+      relatedChatSessionIds: [],
+      tags: [],
+      themes: [],
+    };
+
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      chatSessions: [newSession, ...currentState.chatSessions],
+    }));
+    setActiveChatSessionId(newSession.id);
+  }
+
+  function handleSendChatMessage(content: string) {
+    const chatSessionId = activeChatSessionId || getNewestChatSessionId(chatSessions);
+    const now = new Date().toISOString();
+
+    updatePrototypeState((currentState) => {
+      const activeSession =
+        currentState.chatSessions.find((session) => session.id === chatSessionId) ??
+        createFallbackChatSession(now);
+      const priorMessages = currentState.chatMessages
+        .filter((message) => message.chatSessionId === activeSession.id)
+        .sort((first, second) => first.createdAt.localeCompare(second.createdAt));
+      const userMessage: ChatMessage = {
+        id: `message-user-${Date.now()}`,
+        chatSessionId: activeSession.id,
+        role: "user",
+        content,
+        createdAt: now,
+        sourceType: "chat",
+        relatedThoughtIds: [],
+        relatedLoopIds: [],
+        tags: [],
+        themes: [],
+      };
+      const lumiMessage: ChatMessage = {
+        id: `message-lumi-${Date.now()}`,
+        chatSessionId: activeSession.id,
+        role: "lumi",
+        content: createLumiMockResponse({
+          currentUserMessage: content,
+          priorMessages,
+        }),
+        createdAt: new Date(Date.now() + 1).toISOString(),
+        sourceType: "chat",
+        relatedThoughtIds: [],
+        relatedLoopIds: [],
+        tags: [],
+        themes: [],
+      };
+      const sessionExists = currentState.chatSessions.some((session) => session.id === activeSession.id);
+      const nextSessions = sessionExists
+        ? currentState.chatSessions.map((session) =>
+            session.id === activeSession.id
+              ? {
+                  ...session,
+                  title: priorMessages.length ? session.title : createChatTitle(content),
+                  updatedAt: lumiMessage.createdAt,
+                }
+              : session,
+          )
+        : [
+            {
+              ...activeSession,
+              title: createChatTitle(content),
+              updatedAt: lumiMessage.createdAt,
+            },
+            ...currentState.chatSessions,
+          ];
+
+      return {
+        ...currentState,
+        chatSessions: nextSessions,
+        chatMessages: [...currentState.chatMessages, userMessage, lumiMessage],
+      };
+    });
+
+    setActiveChatSessionId(chatSessionId);
   }
 
   function handleResetPrototypeData() {
@@ -180,6 +275,7 @@ function App() {
     setPrototypeState(seedPrototypeState);
     savePrototypeState(seedPrototypeState);
     setSelectedLoopId(openLoopsSeed[0]?.id ?? "");
+    setActiveChatSessionId(getNewestChatSessionId(chatSessionsSeed));
     setActiveSurface("Home");
   }
 
@@ -231,14 +327,21 @@ function App() {
           />
         ) : null}
 
+        {activeSurface === "Lumi" ? (
+          <LumiScreen
+            activeChatSessionId={activeChatSessionId}
+            chatMessages={chatMessages}
+            chatSessions={chatSessions}
+            onNewChatSession={handleCreateChatSession}
+            onSelectChatSession={setActiveChatSessionId}
+            onSendChatMessage={handleSendChatMessage}
+          />
+        ) : null}
+
         {activeSurface === "Me" ? <MeScreen onResetPrototypeData={handleResetPrototypeData} /> : null}
 
-        {activeSurface === "Lumi" || activeSurface === "Universe" ? (
-          <SurfacePlaceholder
-            chatMessageCount={chatMessages.length}
-            chatSessionCount={chatSessions.length}
-            surface={activeSurface}
-          />
+        {activeSurface === "Universe" ? (
+          <SurfacePlaceholder surface={activeSurface} />
         ) : null}
 
         <BottomNavigation activeSurface={activeSurface} setActiveSurface={setActiveSurface} />
@@ -248,24 +351,15 @@ function App() {
 }
 
 type SurfacePlaceholderProps = {
-  chatMessageCount: number;
-  chatSessionCount: number;
-  surface: "Lumi" | "Universe";
+  surface: "Universe";
 };
 
-function SurfacePlaceholder({ chatMessageCount, chatSessionCount, surface }: SurfacePlaceholderProps) {
+function SurfacePlaceholder({ surface }: SurfacePlaceholderProps) {
   return (
     <section className="surface-placeholder" aria-live="polite">
       <p className="eyebrow">{surface}</p>
       <h1>{surface} Surface</h1>
       <p>{surfaceCopy[surface]}</p>
-      {surface === "Lumi" ? (
-        <p className="placeholder-note">
-          Chat with Lumi remains a separate future conversational mode. Prototype state currently
-          carries {chatSessionCount} chat sessions and {chatMessageCount} ordered messages, but this
-          milestone does not turn Lumi into thought capture.
-        </p>
-      ) : null}
     </section>
   );
 }
@@ -301,6 +395,45 @@ function createThoughtTitle(body: string) {
   }
 
   return `${words.slice(0, 41)}...`;
+}
+
+function getNewestChatSessionId(chatSessions: ChatSession[]) {
+  return [...chatSessions].sort((first, second) => second.updatedAt.localeCompare(first.updatedAt))[0]?.id ?? "";
+}
+
+function createFallbackChatSession(createdAt: string): ChatSession {
+  return {
+    id: `chat-${Date.now()}`,
+    title: `Lumi chat ${formatSessionTitleDate(createdAt)}`,
+    createdAt,
+    updatedAt: createdAt,
+    relatedThoughtIds: [],
+    relatedLoopIds: [],
+    relatedChatSessionIds: [],
+    tags: [],
+    themes: [],
+  };
+}
+
+function createChatTitle(content: string) {
+  const words = content.split(/\s+/).slice(0, 5).join(" ");
+
+  if (!words) {
+    return "Lumi chat";
+  }
+
+  if (words.length <= 36) {
+    return words;
+  }
+
+  return `${words.slice(0, 33)}...`;
+}
+
+function formatSessionTitleDate(value: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
 }
 
 export default App;
