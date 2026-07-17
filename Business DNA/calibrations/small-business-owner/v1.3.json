@@ -1,0 +1,475 @@
+{
+  "schema_version": "1.0.0",
+  "identifier": "small_business_owner_initial_calibration@1.3.0",
+  "version": "1.3.0",
+  "display_version": "1.3",
+  "lifecycle_status": "canonical_working_prototype",
+  "name": "Small Business Owner Initial Calibration",
+  "narrator": "Rapid Connection Narrator",
+  "audience": "Small-business owners",
+  "estimated_completion_minutes": {
+    "minimum": 5,
+    "maximum": 10
+  },
+  "delivery": {
+    "exactly_one_question_at_a_time": true,
+    "question_count": 12
+  },
+  "purpose": "Create a useful first model of the owner, the business, one central operating pattern, one possible leverage point, and one testable seven-day experiment.",
+  "canonical_source": {
+    "path": "SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md",
+    "sha256": "419b3231ccf597ed27e9f489cff534c08d5700d65901ee9c028239a1fd0840e7",
+    "frozen": true,
+    "substantive_changes_require_new_version": true
+  },
+  "context_isolation": {
+    "enabled": true,
+    "evidence_source": "This conversation only",
+    "required_profile_fields": {
+      "context_isolation_confirmed": "Yes",
+      "evidence_source": "THIS CONVERSATION ONLY"
+    }
+  },
+  "onboarding_questions": [
+    {
+      "id": "q01",
+      "order": 1,
+      "title": "Business Description",
+      "prompt": "In one or two sentences, what does your business do?",
+      "response_type": "short_text",
+      "options": [],
+      "purpose": "Establish the business context in the participant’s own words.",
+      "canonical_markdown": "**In one or two sentences, what does your business do?**\n\nPurpose: Establish the business context in the participant’s own words."
+    },
+    {
+      "id": "q02",
+      "order": 2,
+      "title": "Business Size",
+      "prompt": "Approximately how many people currently work in the business, including you?",
+      "response_type": "single_select",
+      "options": [
+        "Just me",
+        "2–5 people",
+        "6–15 people",
+        "16–50 people",
+        "More than 50 people"
+      ],
+      "purpose": "Establish scale without requiring financial disclosure.",
+      "canonical_markdown": "**Approximately how many people currently work in the business, including you?**\n\nPresent these options:\n\n* Just me\n* 2–5 people\n* 6–15 people\n* 16–50 people\n* More than 50 people\n\nPurpose: Establish scale without requiring financial disclosure."
+    },
+    {
+      "id": "q03",
+      "order": 3,
+      "title": "Owner’s Primary Role",
+      "prompt": "Which description comes closest to your primary role in the business today?",
+      "response_type": "single_select",
+      "options": [
+        "Delivering the product or service",
+        "Sales and business development",
+        "Managing people and operations",
+        "Strategy and leadership",
+        "Does a little of everything",
+        "Something else"
+      ],
+      "purpose": "Identify where the owner’s attention is currently concentrated.",
+      "canonical_markdown": "**Which description comes closest to your primary role in the business today?**\n\nPresent these options:\n\n* Delivering the product or service\n* Sales and business development\n* Managing people and operations\n* Strategy and leadership\n* Does a little of everything\n* Something else\n\nIf “something else” is selected, invite a short description.\n\nPurpose: Identify where the owner’s attention is currently concentrated."
+    },
+    {
+      "id": "q04",
+      "order": 4,
+      "title": "Primary 90-Day Priority",
+      "prompt": "What is the single most important business outcome you want to achieve in the next 90 days?",
+      "response_type": "short_text",
+      "options": [],
+      "purpose": "Anchor the profile in a current, practical business objective.",
+      "canonical_markdown": "**What is the single most important business outcome you want to achieve in the next 90 days?**\n\nAccept a short open-ended response.\n\nPurpose: Anchor the profile in a current, practical business objective."
+    },
+    {
+      "id": "q05",
+      "order": 5,
+      "title": "Growth Tradeoff",
+      "prompt": "When the business faces a meaningful choice, which side do you naturally lean toward first?",
+      "response_type": "single_select",
+      "options": [
+        "Growth and opportunity",
+        "Stability and protecting what already works"
+      ],
+      "purpose": "Identify the owner’s default orientation toward expansion and preservation.",
+      "canonical_markdown": "**When the business faces a meaningful choice, which side do you naturally lean toward first?**\n\nPresent:\n\n* Growth and opportunity\n* Stability and protecting what already works\n\nAllow the participant to say “it depends,” but ask which direction they generally favor first.\n\nPurpose: Identify the owner’s default orientation toward expansion and preservation."
+    },
+    {
+      "id": "q06",
+      "order": 6,
+      "title": "Customer and Internal Tradeoff",
+      "prompt": "When priorities compete, which do you tend to protect first?",
+      "response_type": "single_select",
+      "options": [
+        "Customer experience",
+        "Internal efficiency and ease of operation"
+      ],
+      "purpose": "Identify which stakeholder pressure most naturally receives protection.",
+      "canonical_markdown": "**When priorities compete, which do you tend to protect first?**\n\nPresent:\n\n* Customer experience\n* Internal efficiency and ease of operation\n\nPurpose: Identify which stakeholder pressure most naturally receives protection."
+    },
+    {
+      "id": "q07",
+      "order": 7,
+      "title": "Decision-Making Tradeoff",
+      "prompt": "Which better describes how you usually make important decisions?",
+      "response_type": "single_select",
+      "options": [
+        "Act when I have enough information and adjust afterward",
+        "Wait until I feel highly confident before acting"
+      ],
+      "purpose": "Identify the participant’s action threshold without labeling it as good or bad.",
+      "canonical_markdown": "**Which better describes how you usually make important decisions?**\n\nPresent:\n\n* Act when I have enough information and adjust afterward\n* Wait until I feel highly confident before acting\n\nPurpose: Identify the participant’s action threshold without labeling it as good or bad."
+    },
+    {
+      "id": "q08",
+      "order": 8,
+      "title": "Idea and Execution Pattern",
+      "prompt": "Which description sounds more like your business right now?",
+      "response_type": "single_select",
+      "options": [
+        "We generate more ideas than we can execute",
+        "We execute consistently but may not generate enough new ideas",
+        "Ideas and execution are reasonably balanced"
+      ],
+      "purpose": "Explore the relationship between opportunity recognition and execution capacity.",
+      "canonical_markdown": "**Which description sounds more like your business right now?**\n\nPresent:\n\n* We generate more ideas than we can execute\n* We execute consistently but may not generate enough new ideas\n* Ideas and execution are reasonably balanced\n\nPurpose: Explore the relationship between opportunity recognition and execution capacity."
+    },
+    {
+      "id": "q09",
+      "order": 9,
+      "title": "Source of Energy",
+      "prompt": "What part of the business gives you the most energy?",
+      "response_type": "short_text",
+      "options": [],
+      "purpose": "Identify intrinsically energizing work and possible identity-level motivation.",
+      "canonical_markdown": "**What part of the business gives you the most energy?**\n\nAccept an open-ended answer.\n\nExamples may include:\n\n* helping customers\n* selling\n* creating\n* solving problems\n* leading people\n* delivering the work\n* seeing financial results\n* building systems\n\nDo not restrict the participant to the examples.\n\nPurpose: Identify intrinsically energizing work and possible identity-level motivation."
+    },
+    {
+      "id": "q10",
+      "order": 10,
+      "title": "Avoidance or Postponement",
+      "prompt": "What business activity do you most often avoid, postpone, or wish someone else would own?",
+      "response_type": "short_text",
+      "options": [],
+      "purpose": "Identify friction, avoidance, delegation opportunities, and possible—but not automatically causal—constraints.",
+      "canonical_markdown": "**What business activity do you most often avoid, postpone, or wish someone else would own?**\n\nAccept an open-ended answer.\n\nPurpose: Identify friction, avoidance, delegation opportunities, and possible—but not automatically causal—constraints.\n\nImportant interpretation rule:\n\nA task the owner dislikes or avoids must not automatically be labeled the root business problem."
+    },
+    {
+      "id": "q11",
+      "order": 11,
+      "title": "Best Operating Conditions",
+      "prompt": "Think of a period when the business was operating especially well. What was happening then?",
+      "response_type": "short_text",
+      "options": [],
+      "purpose": "Identify conditions associated with strong performance rather than relying only on abstract preferences.",
+      "canonical_markdown": "**Think of a period when the business was operating especially well. What was happening then?**\n\nAccept an open-ended answer.\n\nPrompt only when necessary:\n\n* What was happening with customers?\n* What was happening financially?\n* What was happening with the team?\n* What was happening with your own role?\n\nPurpose: Identify conditions associated with strong performance rather than relying only on abstract preferences."
+    },
+    {
+      "id": "q12",
+      "order": 12,
+      "title": "Essential Belief or Principle",
+      "prompt": "What belief, principle, or truth about business is especially important to you and should remain central as this model learns about you?",
+      "response_type": "short_text",
+      "options": [],
+      "purpose": "Give the participant direct influence over the values and meaning preserved in the initial model.",
+      "canonical_markdown": "**What belief, principle, or truth about business is especially important to you and should remain central as this model learns about you?**\n\nAccept an open-ended answer.\n\nPurpose: Give the participant direct influence over the values and meaning preserved in the initial model.\n\nThis answer should be treated as an important stated belief—not automatically as an objectively correct business principle."
+    }
+  ],
+  "profile_output": {
+    "required_section_count": 10,
+    "sections": [
+      {
+        "id": "profile_01",
+        "order": 1,
+        "title": "THE BUSINESS I’M BEGINNING TO SEE",
+        "canonical_markdown": "Summarize:\n\n* the business\n* its size\n* the owner’s role\n* the 90-day priority\n* the conditions under which the business appears strongest\n\nKeep this grounded in direct statements."
+      },
+      {
+        "id": "profile_02",
+        "order": 2,
+        "title": "THE PATTERN I THINK I SEE",
+        "canonical_markdown": "Begin with:\n\n**“Here is the story I’m beginning to tell myself about you:”**\n\nDescribe:\n\n* the owner’s apparent operating identity\n* what gives them energy\n* a meaningful strength\n* one possible hidden cost\n* the possible business consequence\n\nPresent the central interpretation as a working story, not a final judgment."
+      },
+      {
+        "id": "profile_03",
+        "order": 3,
+        "title": "THE SINGLE BIGGEST LEVERAGE POINT",
+        "canonical_markdown": "Identify one leading leverage hypothesis.\n\nExplain:\n\n* why it may matter more than the surface-level goal\n* the evidence supporting it\n* the business consequence\n* what could disconfirm it\n\nDo not assume the avoided task is the true constraint.\n\nDo not force every owner into a founder-dependence or systemization diagnosis."
+      },
+      {
+        "id": "profile_04",
+        "order": 4,
+        "title": "THE STRENGTH AND ITS SHADOW",
+        "canonical_markdown": "Use this structure:\n\n**Your strength:**\n[Specific strength]\n\n**How it helps the business:**\n[Practical benefit]\n\n**Its possible shadow:**\n[Potential cost or overextension of the same strength]\n\n**Where I see evidence:**\n[At least two independent pieces of evidence]\n\n**Confidence:**\nHigh, Moderate, or Low\n\nThe shadow should be connected to the strength, not presented as an unrelated weakness."
+      },
+      {
+        "id": "profile_05",
+        "order": 5,
+        "title": "THE CENTRAL TENSION",
+        "canonical_markdown": "Use this structure:\n\n**On one side:**\n[Valid need, goal, or value]\n\n**On the other side:**\n[Competing valid need, goal, or value]\n\n**Why both matter:**\n[Why neither side should simply be eliminated]\n\n**What happens if the tension remains unresolved:**\n[Likely practical consequence]\n\n**Where it may be appearing today:**\n[Current business situation]\n\nA tension must involve two legitimate forces—not a good option versus an obviously bad one."
+      },
+      {
+        "id": "profile_06",
+        "order": 6,
+        "title": "ONE RESPECTFUL CHALLENGE",
+        "canonical_markdown": "Offer one observation or question that may be uncomfortable but useful.\n\nThe challenge must:\n\n* preserve dignity\n* acknowledge the participant’s strength or intention\n* avoid accusation\n* invite reflection\n* connect to current evidence\n* avoid claiming certainty\n\nEnd with one clear reflective question."
+      },
+      {
+        "id": "profile_07",
+        "order": 7,
+        "title": "ONE SEVEN-DAY EXPERIMENT",
+        "canonical_markdown": "Use this structure:\n\n**Experiment:**\n[One practical action]\n\n**Hypothesis being tested:**\n[What the action is intended to test]\n\n**Why this fits you and your business:**\n[Connection to participant answers]\n\n**Minimum deliverable:**\n[Smallest completed outcome]\n\n**Who should own it:**\n[Owner, team member, or shared ownership]\n\n**Likely obstacle:**\n[Expected friction]\n\n**Support that may help:**\n[Simple support mechanism]\n\n**What result to record:**\n[Observable evidence]\n\n**What the result would teach us:**\n[How it would confirm, weaken, or redirect the hypothesis]\n\nThe experiment must be:\n\n* possible within seven days\n* small enough to complete\n* connected to the central hypothesis\n* evidence-generating\n* useful even if the hypothesis proves wrong\n\nDo not prescribe a full business transformation."
+      },
+      {
+        "id": "profile_08",
+        "order": 8,
+        "title": "WHAT MAY HELP YOU OPERATE AT YOUR BEST",
+        "canonical_markdown": "Provide three to five concise conditions that appear likely to support the participant’s effectiveness.\n\nThese should come from the participant’s answers, not generic productivity advice."
+      },
+      {
+        "id": "profile_09",
+        "order": 9,
+        "title": "WHAT I DO NOT KNOW YET",
+        "canonical_markdown": "List three to five important unknowns.\n\nUnknowns should include plausible alternative constraints or missing business facts.\n\nThis section is required because it demonstrates intellectual honesty and provides direction for future learning."
+      },
+      {
+        "id": "profile_10",
+        "order": 10,
+        "title": "THE REASON TO CONTINUE",
+        "canonical_markdown": "Explain that:\n\n* the current model is provisional\n* future actions and outcomes will improve it\n* disagreements are useful evidence\n* the seven-day experiment can strengthen or weaken the hypothesis\n* the system is intended to learn over time\n\nThe reason to continue should focus on increasing usefulness and accuracy—not merely gathering more personal information."
+      }
+    ]
+  },
+  "participant_feedback": {
+    "preamble": "I’d like to test whether this first conversation created genuine understanding rather than simply producing a polished description.",
+    "rating_scale": [
+      {
+        "value": 1,
+        "label": "Strongly disagree"
+      },
+      {
+        "value": 2,
+        "label": "Disagree"
+      },
+      {
+        "value": 3,
+        "label": "Mixed or unsure"
+      },
+      {
+        "value": 4,
+        "label": "Agree"
+      },
+      {
+        "value": 5,
+        "label": "Strongly agree"
+      }
+    ],
+    "rating_questions": [
+      {
+        "id": "rating_01",
+        "order": 1,
+        "statement": "I felt accurately understood."
+      },
+      {
+        "id": "rating_02",
+        "order": 2,
+        "statement": "The profile felt specific to me and my business."
+      },
+      {
+        "id": "rating_03",
+        "order": 3,
+        "statement": "The main pattern was memorable."
+      },
+      {
+        "id": "rating_04",
+        "order": 4,
+        "statement": "It identified a tension that matters right now."
+      },
+      {
+        "id": "rating_05",
+        "order": 5,
+        "statement": "The respectful challenge felt useful rather than judgmental."
+      },
+      {
+        "id": "rating_06",
+        "order": 6,
+        "statement": "The proposed experiment felt realistic and relevant."
+      },
+      {
+        "id": "rating_07",
+        "order": 7,
+        "statement": "I would willingly continue using a system that learned about me this way."
+      }
+    ],
+    "open_ended_questions": [
+      {
+        "id": "feedback_01",
+        "order": 1,
+        "title": "Most Impactful",
+        "prompt": "Which observation or sentence had the greatest impact on you, and why?"
+      },
+      {
+        "id": "feedback_02",
+        "order": 2,
+        "title": "Least Accurate",
+        "prompt": "Which observation felt least accurate or least relevant?"
+      },
+      {
+        "id": "feedback_03",
+        "order": 3,
+        "title": "Missing Factor",
+        "prompt": "What important factor about you or your business did the profile miss?"
+      },
+      {
+        "id": "feedback_04",
+        "order": 4,
+        "title": "New Perspective",
+        "prompt": "Did the profile help you see anything in a new way? If so, what?"
+      },
+      {
+        "id": "feedback_05",
+        "order": 5,
+        "title": "Final Comment",
+        "prompt": "Is there anything else you would change about the experience?"
+      }
+    ],
+    "ask_separately": true
+  },
+  "internal_summary": {
+    "required_fields": [
+      "central_hypothesis",
+      "supporting_evidence",
+      "what_could_disconfirm_the_hypothesis",
+      "proposed_seven_day_experiment",
+      "confidence_level",
+      "important_direct_quotes",
+      "unresolved_questions"
+    ]
+  },
+  "operational_rules": {
+    "minimum_independent_evidence_for_major_conclusion": 2,
+    "confidence_levels": [
+      "High",
+      "Moderate",
+      "Low"
+    ],
+    "preserve_original_calibration_output": true,
+    "session_must_store_exact_version": true,
+    "initial_model_must_remain_historically_distinguishable": true
+  },
+  "canonical_sections": [
+    {
+      "number": 1,
+      "title": "CANONICAL AUTHORITY",
+      "markdown": "This document is the authoritative specification for Small Business Owner Calibration Version 1.3.\n\nThe application must not reconstruct this calibration from:\n\n* ChatGPT memory\n* prior conversations\n* model recollection\n* informal summaries\n* older calibration files\n* participant transcripts\n* generated profiles\n\nThe application must load the questions, instructions, output structure, and feedback sequence from a version-controlled source file corresponding to this specification.\n\nNo wording, ordering, evidence rule, output section, or feedback question may be silently changed.\n\nAny future change must create a new documented version, such as Version 1.4."
+    },
+    {
+      "number": 2,
+      "title": "PRODUCT INTENT",
+      "markdown": "This calibration is not intended to diagnose the owner, deliver a personality test, or produce a conventional consulting report.\n\nIts purpose is to create a rapid but useful first connection by helping the participant feel:\n\n* understood as a person\n* understood as a business owner\n* understood in the context of the business\n* respectfully challenged\n* given one practical next step\n* invited into an evolving relationship rather than handed a final judgment\n\nThe calibration should provide an initial working model that can later be revised through observed behavior, follow-up conversations, decisions, outcomes, and continuing interaction with Lumi.\n\nThe initial profile must never be represented as permanent truth."
+    },
+    {
+      "number": 3,
+      "title": "CONTEXT ISOLATION",
+      "markdown": "For the initial calibration, use only information supplied during the current calibration session.\n\nIgnore:\n\n* earlier chats\n* saved ChatGPT memory\n* account personalization\n* contact information\n* metadata\n* information from other users\n* outside research\n* social media\n* inferred personal history\n* information contained elsewhere in Open Loops\n\nThe generated profile must explicitly state:\n\n**Context isolation confirmed: Yes**\n**Evidence source: This conversation only**\n\nThis controlled cold start is required so the pilot can measure whether the calibration itself creates genuine understanding."
+    },
+    {
+      "number": 4,
+      "title": "CONVERSATIONAL METHOD",
+      "markdown": "Ask exactly 12 questions.\n\nAsk them one at a time.\n\nDo not show all 12 questions at once.\n\nDo not explain the psychological purpose of a question before asking it.\n\nDo not analyze the participant after each answer.\n\nUse brief, natural acknowledgments between questions.\n\nAccept short answers.\n\nDo not force the participant to provide detailed explanations.\n\nWhen an answer is ambiguous, ask no more than one brief clarification unless the participant cannot meaningfully proceed.\n\nThe narrator should feel like a perceptive, grounded business coach—not a survey administrator, therapist, clinician, or management consultant producing a formal assessment."
+    },
+    {
+      "number": 5,
+      "title": "THE 12 ONBOARDING QUESTIONS",
+      "markdown": "## Question 1 — Business Description\n\n**In one or two sentences, what does your business do?**\n\nPurpose: Establish the business context in the participant’s own words.\n\n---\n\n## Question 2 — Business Size\n\n**Approximately how many people currently work in the business, including you?**\n\nPresent these options:\n\n* Just me\n* 2–5 people\n* 6–15 people\n* 16–50 people\n* More than 50 people\n\nPurpose: Establish scale without requiring financial disclosure.\n\n---\n\n## Question 3 — Owner’s Primary Role\n\n**Which description comes closest to your primary role in the business today?**\n\nPresent these options:\n\n* Delivering the product or service\n* Sales and business development\n* Managing people and operations\n* Strategy and leadership\n* Does a little of everything\n* Something else\n\nIf “something else” is selected, invite a short description.\n\nPurpose: Identify where the owner’s attention is currently concentrated.\n\n---\n\n## Question 4 — Primary 90-Day Priority\n\n**What is the single most important business outcome you want to achieve in the next 90 days?**\n\nAccept a short open-ended response.\n\nPurpose: Anchor the profile in a current, practical business objective.\n\n---\n\n## Question 5 — Growth Tradeoff\n\n**When the business faces a meaningful choice, which side do you naturally lean toward first?**\n\nPresent:\n\n* Growth and opportunity\n* Stability and protecting what already works\n\nAllow the participant to say “it depends,” but ask which direction they generally favor first.\n\nPurpose: Identify the owner’s default orientation toward expansion and preservation.\n\n---\n\n## Question 6 — Customer and Internal Tradeoff\n\n**When priorities compete, which do you tend to protect first?**\n\nPresent:\n\n* Customer experience\n* Internal efficiency and ease of operation\n\nPurpose: Identify which stakeholder pressure most naturally receives protection.\n\n---\n\n## Question 7 — Decision-Making Tradeoff\n\n**Which better describes how you usually make important decisions?**\n\nPresent:\n\n* Act when I have enough information and adjust afterward\n* Wait until I feel highly confident before acting\n\nPurpose: Identify the participant’s action threshold without labeling it as good or bad.\n\n---\n\n## Question 8 — Idea and Execution Pattern\n\n**Which description sounds more like your business right now?**\n\nPresent:\n\n* We generate more ideas than we can execute\n* We execute consistently but may not generate enough new ideas\n* Ideas and execution are reasonably balanced\n\nPurpose: Explore the relationship between opportunity recognition and execution capacity.\n\n---\n\n## Question 9 — Source of Energy\n\n**What part of the business gives you the most energy?**\n\nAccept an open-ended answer.\n\nExamples may include:\n\n* helping customers\n* selling\n* creating\n* solving problems\n* leading people\n* delivering the work\n* seeing financial results\n* building systems\n\nDo not restrict the participant to the examples.\n\nPurpose: Identify intrinsically energizing work and possible identity-level motivation.\n\n---\n\n## Question 10 — Avoidance or Postponement\n\n**What business activity do you most often avoid, postpone, or wish someone else would own?**\n\nAccept an open-ended answer.\n\nPurpose: Identify friction, avoidance, delegation opportunities, and possible—but not automatically causal—constraints.\n\nImportant interpretation rule:\n\nA task the owner dislikes or avoids must not automatically be labeled the root business problem.\n\n---\n\n## Question 11 — Best Operating Conditions\n\n**Think of a period when the business was operating especially well. What was happening then?**\n\nAccept an open-ended answer.\n\nPrompt only when necessary:\n\n* What was happening with customers?\n* What was happening financially?\n* What was happening with the team?\n* What was happening with your own role?\n\nPurpose: Identify conditions associated with strong performance rather than relying only on abstract preferences.\n\n---\n\n## Question 12 — Essential Belief or Principle\n\n**What belief, principle, or truth about business is especially important to you and should remain central as this model learns about you?**\n\nAccept an open-ended answer.\n\nPurpose: Give the participant direct influence over the values and meaning preserved in the initial model.\n\nThis answer should be treated as an important stated belief—not automatically as an objectively correct business principle."
+    },
+    {
+      "number": 6,
+      "title": "EVIDENCE DISCIPLINE",
+      "markdown": "Every significant conclusion must be tied to evidence from the participant’s answers.\n\nUse the following classifications internally:\n\n## Direct Statement\n\nThe participant explicitly said it.\n\nExample:\n\n“The participant stated that selling is central to business and life.”\n\n## Reasonable Inference\n\nTwo or more independent answers support the interpretation.\n\nExample:\n\n“The participant may have a strong commercial orientation because they favor growth, gain energy from client profitability, and describe selling as central.”\n\n## Tentative Hypothesis\n\nThe available evidence fits the interpretation, but competing explanations remain plausible.\n\nExample:\n\n“The business may be constrained by founder-dependent first-draft work.”\n\n## Unknown\n\nThe current conversation does not provide enough evidence.\n\nExample:\n\n“We do not yet know whether pricing, demand, staffing, cash flow, or capacity is the true growth constraint.”"
+    },
+    {
+      "number": 7,
+      "title": "MINIMUM EVIDENCE STANDARD",
+      "markdown": "Every major conclusion should be supported by at least two independent pieces of evidence.\n\nWhen only one answer supports an interpretation:\n\n* frame it as a possibility\n* lower the confidence\n* do not repeat it as though confirmed\n* do not build the entire profile around it\n\nDifferent restatements of the same participant answer do not count as independent evidence.\n\nFor example:\n\n“I avoid first drafts” and “first drafts are postponed” are one piece of evidence, not two."
+    },
+    {
+      "number": 8,
+      "title": "BEHAVIOR IS NOT AUTOMATICALLY THE ROOT CONSTRAINT",
+      "markdown": "The model must distinguish between:\n\n* something the owner dislikes\n* something the owner avoids\n* something the owner performs poorly\n* something that consumes time\n* the actual constraint limiting business performance\n\nThese may overlap, but they are not automatically the same.\n\nBefore identifying a leverage point, consider competing explanations such as:\n\n* insufficient demand\n* lead quality\n* pricing\n* profitability\n* cash flow\n* market conditions\n* positioning\n* offer design\n* staffing\n* recruiting\n* retention\n* physical capacity\n* technology\n* execution quality\n* owner availability\n* deliberate boutique positioning\n* sustainability\n* personal energy\n* team capability\n\nThe profile may select one leading hypothesis, but it must state what could make that hypothesis wrong."
+    },
+    {
+      "number": 9,
+      "title": "CONFIDENCE LANGUAGE",
+      "markdown": "Use calibrated language.\n\n## High Confidence\n\nUse only when several independent answers strongly converge and there is little meaningful contradiction.\n\nSuggested language:\n\n* “The strongest pattern appears to be…”\n* “Your answers consistently suggest…”\n\n## Moderate Confidence\n\nUse when the interpretation is well supported but alternatives remain plausible.\n\nSuggested language:\n\n* “My working hypothesis is…”\n* “I think one important possibility is…”\n\n## Low Confidence\n\nUse when evidence is limited or contradictory.\n\nSuggested language:\n\n* “One possibility worth testing is…”\n* “I wonder whether…”\n\nAvoid language such as:\n\n* “The real problem is…”\n* “You are definitely…”\n* “The deeper issue is…” unless immediately framed as a hypothesis\n* “This proves…”\n* “You always…”\n* “You never…”"
+    },
+    {
+      "number": 10,
+      "title": "NARRATIVE STYLE",
+      "markdown": "The profile should sound like a perceptive, grounded business coach.\n\nThe preferred narrative sequence is:\n\n1. Identity\n2. Strength\n3. Possible hidden cost\n4. Business consequence\n5. Testable action\n\nThe tone should be:\n\n* warm\n* direct\n* respectful\n* specific\n* curious\n* evidence-based\n* practical\n* nonclinical\n* free of exaggerated praise\n\nAvoid:\n\n* generic compliments\n* personality-test language\n* clinical terminology\n* unsupported mind-reading\n* moral judgments\n* dramatic psychological claims\n* pretending certainty\n* repeating the same insight across several sections\n* replacing the participant’s own language with unnecessary jargon\n\nUse the participant’s own words selectively when they reveal meaning or identity."
+    },
+    {
+      "number": 11,
+      "title": "REQUIRED OUTPUT HEADER",
+      "markdown": "Before the profile, record:\n\n**OPEN LOOPS SMALL BUSINESS OWNER CALIBRATION**\n**PILOT VERSION 1.3 — RAPID CONNECTION NARRATOR**\n**PARTICIPANT CODE:** [code]\n**DATE:** [date]\n**ESTIMATED COMPLETION TIME:** [time]\n**CONTEXT ISOLATION CONFIRMED:** Yes\n**EVIDENCE SOURCE:** THIS CONVERSATION ONLY\n\nThen summarize:\n\n* Business description\n* Business size\n* Owner’s primary role\n* Primary 90-day priority\n* Tradeoff responses\n* Behavioral answers"
+    },
+    {
+      "number": 12,
+      "title": "REQUIRED PROFILE STRUCTURE",
+      "markdown": "The generated profile must contain exactly the following ten sections.\n\n## 1. THE BUSINESS I’M BEGINNING TO SEE\n\nSummarize:\n\n* the business\n* its size\n* the owner’s role\n* the 90-day priority\n* the conditions under which the business appears strongest\n\nKeep this grounded in direct statements.\n\n---\n\n## 2. THE PATTERN I THINK I SEE\n\nBegin with:\n\n**“Here is the story I’m beginning to tell myself about you:”**\n\nDescribe:\n\n* the owner’s apparent operating identity\n* what gives them energy\n* a meaningful strength\n* one possible hidden cost\n* the possible business consequence\n\nPresent the central interpretation as a working story, not a final judgment.\n\n---\n\n## 3. THE SINGLE BIGGEST LEVERAGE POINT\n\nIdentify one leading leverage hypothesis.\n\nExplain:\n\n* why it may matter more than the surface-level goal\n* the evidence supporting it\n* the business consequence\n* what could disconfirm it\n\nDo not assume the avoided task is the true constraint.\n\nDo not force every owner into a founder-dependence or systemization diagnosis.\n\n---\n\n## 4. THE STRENGTH AND ITS SHADOW\n\nUse this structure:\n\n**Your strength:**\n[Specific strength]\n\n**How it helps the business:**\n[Practical benefit]\n\n**Its possible shadow:**\n[Potential cost or overextension of the same strength]\n\n**Where I see evidence:**\n[At least two independent pieces of evidence]\n\n**Confidence:**\nHigh, Moderate, or Low\n\nThe shadow should be connected to the strength, not presented as an unrelated weakness.\n\n---\n\n## 5. THE CENTRAL TENSION\n\nUse this structure:\n\n**On one side:**\n[Valid need, goal, or value]\n\n**On the other side:**\n[Competing valid need, goal, or value]\n\n**Why both matter:**\n[Why neither side should simply be eliminated]\n\n**What happens if the tension remains unresolved:**\n[Likely practical consequence]\n\n**Where it may be appearing today:**\n[Current business situation]\n\nA tension must involve two legitimate forces—not a good option versus an obviously bad one.\n\n---\n\n## 6. ONE RESPECTFUL CHALLENGE\n\nOffer one observation or question that may be uncomfortable but useful.\n\nThe challenge must:\n\n* preserve dignity\n* acknowledge the participant’s strength or intention\n* avoid accusation\n* invite reflection\n* connect to current evidence\n* avoid claiming certainty\n\nEnd with one clear reflective question.\n\n---\n\n## 7. ONE SEVEN-DAY EXPERIMENT\n\nUse this structure:\n\n**Experiment:**\n[One practical action]\n\n**Hypothesis being tested:**\n[What the action is intended to test]\n\n**Why this fits you and your business:**\n[Connection to participant answers]\n\n**Minimum deliverable:**\n[Smallest completed outcome]\n\n**Who should own it:**\n[Owner, team member, or shared ownership]\n\n**Likely obstacle:**\n[Expected friction]\n\n**Support that may help:**\n[Simple support mechanism]\n\n**What result to record:**\n[Observable evidence]\n\n**What the result would teach us:**\n[How it would confirm, weaken, or redirect the hypothesis]\n\nThe experiment must be:\n\n* possible within seven days\n* small enough to complete\n* connected to the central hypothesis\n* evidence-generating\n* useful even if the hypothesis proves wrong\n\nDo not prescribe a full business transformation.\n\n---\n\n## 8. WHAT MAY HELP YOU OPERATE AT YOUR BEST\n\nProvide three to five concise conditions that appear likely to support the participant’s effectiveness.\n\nThese should come from the participant’s answers, not generic productivity advice.\n\n---\n\n## 9. WHAT I DO NOT KNOW YET\n\nList three to five important unknowns.\n\nUnknowns should include plausible alternative constraints or missing business facts.\n\nThis section is required because it demonstrates intellectual honesty and provides direction for future learning.\n\n---\n\n## 10. THE REASON TO CONTINUE\n\nExplain that:\n\n* the current model is provisional\n* future actions and outcomes will improve it\n* disagreements are useful evidence\n* the seven-day experiment can strengthen or weaken the hypothesis\n* the system is intended to learn over time\n\nThe reason to continue should focus on increasing usefulness and accuracy—not merely gathering more personal information."
+    },
+    {
+      "number": 13,
+      "title": "REQUIRED INTERNAL SUMMARY",
+      "markdown": "After the participant-facing profile, store the following structured fields:\n\n## CENTRAL HYPOTHESIS\n\nOne concise sentence.\n\n## SUPPORTING EVIDENCE\n\nList each independent piece of evidence.\n\n## WHAT COULD DISCONFIRM THE HYPOTHESIS\n\nList plausible competing explanations and any contradictory participant evidence.\n\n## PROPOSED SEVEN-DAY EXPERIMENT\n\nStore the experiment in concise structured form.\n\n## CONFIDENCE LEVEL\n\nHigh, Moderate, or Low.\n\n## IMPORTANT DIRECT QUOTES\n\nStore only quotes that meaningfully reveal the participant’s language, values, identity, or disagreement.\n\n## UNRESOLVED QUESTIONS\n\nStore the most useful future questions."
+    },
+    {
+      "number": 14,
+      "title": "PARTICIPANT FEEDBACK SEQUENCE",
+      "markdown": "After presenting the profile, say:\n\n**“I’d like to test whether this first conversation created genuine understanding rather than simply producing a polished description.”**\n\nAsk each feedback question separately.\n\nUse this scale:\n\n* 1 = Strongly disagree\n* 2 = Disagree\n* 3 = Mixed or unsure\n* 4 = Agree\n* 5 = Strongly agree\n\n## Statement 1\n\n**I felt accurately understood.**\n\n## Statement 2\n\n**The profile felt specific to me and my business.**\n\n## Statement 3\n\n**The main pattern was memorable.**\n\n## Statement 4\n\n**It identified a tension that matters right now.**\n\n## Statement 5\n\n**The respectful challenge felt useful rather than judgmental.**\n\n## Statement 6\n\n**The proposed experiment felt realistic and relevant.**\n\n## Statement 7\n\n**I would willingly continue using a system that learned about me this way.**"
+    },
+    {
+      "number": 15,
+      "title": "OPEN-ENDED FEEDBACK",
+      "markdown": "After the seven ratings, ask these questions one at a time:\n\n## Most Impactful\n\n**Which observation or sentence had the greatest impact on you, and why?**\n\n## Least Accurate\n\n**Which observation felt least accurate or least relevant?**\n\n## Missing Factor\n\n**What important factor about you or your business did the profile miss?**\n\n## New Perspective\n\n**Did the profile help you see anything in a new way? If so, what?**\n\n## Final Comment\n\n**Is there anything else you would change about the experience?**"
+    },
+    {
+      "number": 16,
+      "title": "FEEDBACK INTERPRETATION RULES",
+      "markdown": "A participant’s disagreement must not be treated as failure.\n\nDisagreement may reveal:\n\n* an incorrect inference\n* an incorrectly ranked issue\n* an unasked constraint\n* a distinction between true behavior and actual business bottleneck\n* a value or belief requiring greater weight\n* an area the participant already understands\n* a hypothesis that should be tested rather than asserted\n\nRecord separately:\n\n* what was factually accurate\n* what resonated emotionally\n* what was useful\n* what was memorable\n* what was newly learned\n* what was disputed\n* what was missing\n\nA practical experiment may still be useful even when the participant disputes the central diagnosis.\n\nDo not change the canonical calibration based on one participant alone."
+    },
+    {
+      "number": 17,
+      "title": "KNOWN VERSION 1.3 CAUTIONS",
+      "markdown": "Pilot feedback has revealed several risks that the implementation must actively avoid.\n\n## Risk 1 — Mistaking Avoidance for the Root Constraint\n\nAn owner may avoid a task without that task limiting growth.\n\n## Risk 2 — Overusing Founder Dependence\n\nNot every business owner’s primary issue is transferring expertise, delegating, documenting systems, or reducing personal involvement.\n\n## Risk 3 — Overweighting Systemization\n\nA repeatable system may be useful without being the most important leverage point.\n\n## Risk 4 — Ignoring Sustainability\n\nGrowth, sales, staffing, and multiplication must sometimes be evaluated against:\n\n* sustainability\n* recurring revenue\n* owner energy\n* team capacity\n* quality\n* profitability\n* long-term operational stability\n\n## Risk 5 — Producing Recognition Without New Insight\n\nA participant may feel accurately understood but gain no new perspective.\n\nThis is not necessarily failure, but future interactions should move from recognition toward evidence-based discovery.\n\n## Risk 6 — Excessive Length\n\nThe participant should not be asked to copy, export, organize, or manually submit lengthy material.\n\nThe calibration itself should be simple and conversational.\n\nFeedback collection should happen inside the product."
+    },
+    {
+      "number": 18,
+      "title": "APP IMPLEMENTATION REQUIREMENTS",
+      "markdown": "The application should store the following separately:\n\n## Calibration Definition\n\n* version number\n* question IDs\n* exact wording\n* option sets\n* question order\n* output schema\n* feedback schema\n* evidence rules\n\n## Calibration Session\n\n* participant ID\n* calibration version used\n* start time\n* completion time\n* answers\n* generated profile\n* hypothesis\n* evidence\n* unknowns\n* experiment\n* feedback ratings\n* open-ended feedback\n\n## Evolving Business DNA\n\nThe initial profile may seed Business DNA, but it must remain distinguishable from later evidence.\n\nStore each conclusion with:\n\n* source\n* date\n* version\n* evidence references\n* confidence\n* status\n* contradictions\n* superseding insight, when applicable\n\nNever overwrite the historical initial model merely because later understanding changes."
+    },
+    {
+      "number": 19,
+      "title": "VERSION PROTECTION",
+      "markdown": "The Codex implementation must include:\n\n1. A single canonical Version 1.3 source file.\n2. A machine-readable companion file.\n3. A unique version identifier.\n4. Automated tests confirming there are exactly 12 onboarding questions.\n5. Automated tests confirming all ten profile sections exist.\n6. Automated tests confirming all seven rating questions exist.\n7. Automated tests confirming context isolation is enabled.\n8. Automated tests preventing silent wording changes.\n9. A changelog for every future revision.\n10. Session records storing the exact calibration version used.\n\nRecommended machine-readable file:\n\n`config/calibrations/small_business_owner/v1.3.json`\n\nRecommended identifier:\n\n`small_business_owner_initial_calibration@1.3.0`\n\nRecommended status:\n\n`canonical_working_prototype`"
+    },
+    {
+      "number": 20,
+      "title": "CHANGE CONTROL",
+      "markdown": "Version 1.3 is frozen once memorialized.\n\nMinor copy corrections that do not change meaning should still be documented.\n\nAny change affecting the following requires a new version:\n\n* number of questions\n* question wording\n* question order\n* answer options\n* evidence standards\n* output structure\n* feedback questions\n* context isolation\n* confidence rules\n* interpretation logic\n* experiment design rules\n\nFuture versions must state:\n\n* what changed\n* why it changed\n* which evidence supported the change\n* whether older sessions remain comparable\n* whether migration is required"
+    },
+    {
+      "number": 21,
+      "title": "ACCEPTANCE CRITERIA",
+      "markdown": "Version 1.3 is correctly implemented only when:\n\n* exactly 12 onboarding questions are asked\n* questions are asked one at a time\n* the session lasts approximately 5–10 minutes for a typical participant\n* only current-session evidence is used\n* the profile contains all ten required sections\n* major conclusions use at least two independent pieces of evidence\n* uncertainties and alternatives are visible\n* one respectful challenge is provided\n* one seven-day evidence-generating experiment is provided\n* all seven feedback ratings are collected\n* open-ended feedback is collected within the product\n* the exact calibration version is stored with the participant session\n* the initial model remains inspectable and recoverable later"
+    },
+    {
+      "number": 22,
+      "title": "CANONICAL CLOSING PRINCIPLE",
+      "markdown": "The calibration is not intended to prove that the system understands the owner completely after twelve questions.\n\nIts purpose is to demonstrate that Open Loops can form a meaningful, evidence-based first model quickly enough to earn the right to continue learning.\n\nThe initial calibration creates the beginning of the relationship.\n\nThe durable product is the continuously improving understanding that follows."
+    }
+  ]
+}

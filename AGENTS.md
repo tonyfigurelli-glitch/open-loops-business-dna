@@ -1,7 +1,7 @@
 # Open Loops Constitution
 
 Status: Draft
-Last Updated: 2026-07-03
+Last Updated: 2026-07-17
 Owner: TBD
 
 ## Purpose
@@ -57,6 +57,9 @@ ChatGPT is used for:
 - Business model
 - Founder discussions
 - Architecture decisions
+- Codex-ready decision handoffs
+
+Use [OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md](OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md) as the operating guide for ChatGPT/founder/Codex coordination. It defines how to separate exploration, proposed direction, approved decisions, and Codex-ready implementation instructions.
 
 Codex is used for:
 
@@ -96,7 +99,15 @@ Use each document for its intended purpose:
 - [DATA_MODEL.md](DATA_MODEL.md): conceptual data model
 - [MVP_TASKS.md](MVP_TASKS.md): Version 1 MVP task structure
 - [INVESTOR_PITCH.md](INVESTOR_PITCH.md): business narrative, market framing, traction, and fundraising story
+- [OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md](OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md): ChatGPT/founder/Codex coordination guide
+- [Business DNA/README.md](Business%20DNA/README.md): canonical entry point for the Business DNA sub-project
 - [DECISIONS.md](DECISIONS.md): permanent chronological history of approved decisions
+
+## Sub-Projects
+
+- [Business DNA](Business%20DNA/README.md) is the approved business-oriented application of Open Loops. It remains subordinate to the parent system and follows the local [Business DNA Instructions](Business%20DNA/AGENTS.md).
+- Work inside a sub-project follows this constitution and any more specific local `AGENTS.md` instructions.
+- Creating a sub-project does not change the approved Open Loops Version 1 scope unless that change is explicitly approved and recorded.
 
 ## Decision Logging Workflow
 
@@ -152,6 +163,8 @@ When working on Open Loops, Codex should:
 - [Data Model](DATA_MODEL.md)
 - [MVP Tasks](MVP_TASKS.md)
 - [Technical Architecture](TECHNICAL_ARCHITECTURE.md)
+- [ChatGPT Coordination Brief](OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md)
+- [Business DNA](Business%20DNA/README.md)
 - [Decisions Log](DECISIONS.md)
 
 ## Open Questions

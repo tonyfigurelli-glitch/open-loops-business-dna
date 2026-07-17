@@ -108,3 +108,120 @@ export type TimelineEvent = {
   tags: string[];
   themes: string[];
 };
+
+export type CalibrationResponse = {
+  questionId: string;
+  response: string | string[];
+  answeredAt: string;
+};
+
+export type CalibrationEvidenceReference = {
+  questionId: string;
+  classification: "direct_statement" | "reasonable_inference" | "tentative_hypothesis";
+  summary: string;
+};
+
+export type CalibrationExperiment = {
+  action: string;
+  hypothesis: string;
+  minimumDeliverable: string;
+  owner: string;
+  likelyObstacle: string;
+  supportThatMayHelp: string;
+  resultToRecord: string;
+  whatResultWouldTeach: string;
+};
+
+export type CalibrationGeneratedProfile = {
+  generatedAt: string;
+  participantFacingProfile: string;
+  sections: Array<{
+    id: string;
+    title: string;
+    body: string;
+  }>;
+};
+
+export type CalibrationGenerationResult = {
+  generatedProfile: CalibrationGeneratedProfile;
+  centralHypothesis: string;
+  evidenceReferences: CalibrationEvidenceReference[];
+  supportingEvidence: CalibrationEvidenceReference[];
+  possibleDisconfirmingEvidence: string[];
+  confidenceLevel: ConfidenceLevel;
+  unknowns: string[];
+  importantDirectQuotes: string[];
+  proposedExperiment: CalibrationExperiment;
+  competingHypotheses?: Array<{
+    hypothesis: string;
+    evidenceReferences: string[];
+    rank: number;
+  }>;
+  confidenceRationale?: string;
+  directStatements?: Array<{ questionId: string; statement: string }>;
+  reasonableInferences?: Array<{ statement: string; evidenceReferences: string[] }>;
+  tentativeHypotheses?: Array<{ statement: string; evidenceReferences: string[] }>;
+};
+
+export type CalibrationGenerationProvenance = {
+  generatorType: "ai_assisted" | "deterministic_fallback";
+  provider: string;
+  modelIdentifier: string;
+  promptInstructionVersion: string;
+  calibrationVersion: string;
+  frozenCalibrationHash: string;
+  generationTimestamp: string;
+  validationResult: {
+    valid: boolean;
+    errors: string[];
+  };
+  retryCount: number;
+  evidencePackageHash: string;
+  usage?: Record<string, number>;
+};
+
+export type CalibrationSessionStatus =
+  | "collecting_answers"
+  | "model_ready"
+  | "collecting_feedback"
+  | "completed";
+
+export type CalibrationSession = {
+  id: string;
+  participantId: string;
+  calibrationId: string;
+  semanticVersion: string;
+  frozenSourceHash: string;
+  status: CalibrationSessionStatus;
+  startedAt: string;
+  lastUpdatedAt?: string;
+  completedAt?: string;
+  participantCode?: string;
+  currentQuestionIndex: number;
+  participantResponses: CalibrationResponse[];
+  generatedProfile?: CalibrationGeneratedProfile;
+  centralHypothesis?: string;
+  supportingEvidence: CalibrationEvidenceReference[];
+  possibleDisconfirmingEvidence: string[];
+  evidenceReferences: CalibrationEvidenceReference[];
+  confidenceLevel?: ConfidenceLevel;
+  unknowns: string[];
+  importantDirectQuotes: string[];
+  proposedExperiment?: CalibrationExperiment;
+  competingHypotheses?: CalibrationGenerationResult["competingHypotheses"];
+  confidenceRationale?: string;
+  directStatements?: CalibrationGenerationResult["directStatements"];
+  reasonableInferences?: CalibrationGenerationResult["reasonableInferences"];
+  tentativeHypotheses?: CalibrationGenerationResult["tentativeHypotheses"];
+  generationProvenance?: CalibrationGenerationProvenance;
+  originalStructuredGenerationOutput?: Record<string, unknown>;
+  deterministicFallbackOutput?: CalibrationGenerationResult;
+  migrationProvenance?: {
+    source: "localStorage";
+    importedAt: string;
+    originalSessionId: string;
+    fingerprint: string;
+  };
+  numericalFeedback: Record<string, 1 | 2 | 3 | 4 | 5>;
+  openEndedFeedback: Record<string, string>;
+};

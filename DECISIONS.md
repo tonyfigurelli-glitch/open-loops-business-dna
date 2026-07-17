@@ -1,7 +1,7 @@
 # Decisions
 
 Status: Approved
-Last Updated: 2026-07-05
+Last Updated: 2026-07-17
 Owner: TBD
 
 ## Purpose
@@ -35,6 +35,189 @@ Every entry should include:
 **Follow-Up:** TBD
 
 ## Log
+
+### 2026-07-17: Establish Controlled Version 1.3 Pilot Readiness Controls
+
+**Decision:** Prepare—but do not publicly deploy—the Small Business Owner Initial Calibration Version 1.3 for a controlled pilot. Preserve the vendor-neutral authentication and model boundaries; fail production startup until an approved external identity adapter is installed; retain deterministic fallback; add backup, restore verification, participant export, confirmed deletion, redacted operational logging, health checks, and separate reviewer evaluations; and use manual tester, technical, and pilot-operation checklists. No identity vendor, deployment platform, commercial model, retention period, or paid usage is approved by this decision.
+
+**Rationale:** A small real-user pilot needs recoverability, participant data rights, operational discipline, explicit provenance, and repeatable acceptance evidence before enrollment. Keeping vendor decisions open prevents readiness work from silently committing the product to unapproved infrastructure or data-processing terms.
+
+**Affected Files:**
+
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_ACCEPTANCE_TEST.md](Business%20DNA/calibrations/small-business-owner/PILOT_ACCEPTANCE_TEST.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_OPERATIONS.md](Business%20DNA/calibrations/small-business-owner/PILOT_OPERATIONS.md)
+- [server/auth.mjs](server/auth.mjs)
+- [server/config.mjs](server/config.mjs)
+- [server/database.mjs](server/database.mjs)
+- [server/evaluationHarness.mjs](server/evaluationHarness.mjs)
+- [server/pilotOperations.mjs](server/pilotOperations.mjs)
+- [server/productionReadiness.test.mjs](server/productionReadiness.test.mjs)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Tony must approve the identity provider/sign-in method, deployment platform/domain, live provider/model and data terms, retention/deletion policy, pilot size, incident owner, and backup destination before enrollment. Recommended defaults are documented as recommendations, not approvals.
+
+### 2026-07-17: Add Secure Calibration Generation And Durable Owner-Scoped Storage
+
+**Decision:** Implement the Small Business Owner Initial Calibration backend as a co-located Node HTTP API within Open Loops. Use SQLite as the minimum durable single-instance Version 1 store, an injectable authentication boundary with encrypted authenticated HttpOnly development sessions, and a vendor-neutral configured HTTP model-provider adapter. The generation endpoint accepts only an exact canonical current-session evidence package, uses the existing validation-and-retry pipeline, and preserves deterministic fallback. Completed sessions and their initial provisional Business DNA records are immutable. Canonical local sessions migrate only after authentication, are deduplicated, retain migration provenance, and remain recoverable in local storage.
+
+**Rationale:** The vertical slice needs durable ownership, secure server-only credentials, context isolation, recoverability, and a permanent historical starting model without creating a parallel Business DNA application or adding enterprise infrastructure before the deployment platform and production identity provider are approved.
+
+**Affected Files:**
+
+- [server/README.md](server/README.md)
+- [server/api.mjs](server/api.mjs)
+- [server/auth.mjs](server/auth.mjs)
+- [server/database.mjs](server/database.mjs)
+- [server/generationService.mjs](server/generationService.mjs)
+- [server/modelProvider.mjs](server/modelProvider.mjs)
+- [server/backend.test.mjs](server/backend.test.mjs)
+- [src/storage/calibrationApi.ts](src/storage/calibrationApi.ts)
+- [src/App.tsx](src/App.tsx)
+- [src/domain/models.ts](src/domain/models.ts)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Approve a production deployment platform and identity provider before production release. Keep SQLite for a persistent single instance; use hosted PostgreSQL behind the same adapter if deployment becomes multi-instance or serverless. Configure only an approved server-side structured-output provider.
+
+### 2026-07-17: Add The Evidence-Constrained AI Generation Boundary
+
+**Decision:** Add a provider-neutral, AI-assisted generation pipeline for the Small Business Owner Initial Calibration while preserving the deterministic generator as the tested fallback. The pipeline builds a current-session-only evidence package, supplies canonical Version 1.3 generation instructions and a structured schema, validates evidence IDs, quotes, classifications, section identity, confidence, safety, and experiment completeness, retries once with correction errors, and falls back after a second failure. Generation provenance and any validated original structured output are stored with the calibration session.
+
+**Rationale:** Participant-specific model generation requires more reasoning flexibility than fixed templates, but it must not weaken context isolation, evidence discipline, safety, version protection, or recoverability. A provider boundary allows a future secure server implementation without coupling the calibration domain to a vendor or exposing credentials in the React client.
+
+**Affected Files:**
+
+- [src/domain/calibrations/aiModelGenerationPipeline.ts](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [src/domain/calibrations/aiModelGenerationPipeline.test.mjs](src/domain/calibrations/aiModelGenerationPipeline.test.mjs)
+- [src/domain/calibrations/generateInitialBusinessModel.ts](src/domain/calibrations/generateInitialBusinessModel.ts)
+- [src/domain/models.ts](src/domain/models.ts)
+- [src/storage/prototypeStorage.ts](src/storage/prototypeStorage.ts)
+- [src/App.tsx](src/App.tsx)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [MVP_TASKS.md](MVP_TASKS.md)
+- [package.json](package.json)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Implement a secure server-side provider adapter before enabling live AI-assisted generation. Semantic entailment of arbitrary business claims remains a prototype limitation even though every major conclusion must carry valid current-session evidence references.
+
+### 2026-07-17: Audit And Harden The Version 1.3 Prototype Model Generator
+
+**Decision:** Keep the Initial Business Owner Model generator deterministic and current-session-only for the prototype, while tightening its evidence and safety discipline. Empty answers no longer count as evidence, fewer than two meaningful supporting answers produces low confidence, sustainability and owner energy remain visible alternative constraints, avoided work is not selected as the root constraint, and healthcare-related answers cannot become clinical or medical action recommendations. The canonical Version 1.3 specification and JSON remain unchanged.
+
+**Rationale:** The vertical slice needs reproducible prototype behavior without pretending that templates perform semantic business diagnosis. Narrow safeguards make limitations explicit, preserve evidence, and prevent sparse or healthcare-related inputs from producing misleading confidence or consequential advice.
+
+**Affected Files:**
+
+- [src/domain/calibrations/generateInitialBusinessModel.ts](src/domain/calibrations/generateInitialBusinessModel.ts)
+- [src/domain/calibrations/generateInitialBusinessModel.test.mjs](src/domain/calibrations/generateInitialBusinessModel.test.mjs)
+- [package.json](package.json)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Treat semantic contradiction detection, inference classification, evidence independence beyond distinct question IDs, participant-specific alternative ranking, and any AI-assisted generation as prototype limitations requiring separate review before production use.
+
+### 2026-07-17: Implement The Complete Local Version 1.3 Calibration Loop
+
+**Decision:** Implement the approved Small Business Owner Initial Calibration Version 1.3 inside the existing Open Loops prototype. The Home screen can start or resume a calibration; the application asks the 12 canonical JSON-backed questions one at a time, saves each answer, generates and preserves a conservative ten-section initial model, stores evidence references, confidence, unknowns, and a seven-day experiment, collects all canonical participant feedback one item at a time, and preserves the completed session with its exact calibration identity and frozen source hash.
+
+**Rationale:** The approved calibration needs a complete, testable product loop without creating a separate Business DNA application or silently introducing a new model dependency. Incremental persistence protects continuity, while JSON-driven content and validation prevent Version 1.3 wording drift.
+
+**Affected Files:**
+
+- [src/App.tsx](src/App.tsx)
+- [src/data/seed.ts](src/data/seed.ts)
+- [src/domain/models.ts](src/domain/models.ts)
+- [src/domain/calibrations/smallBusinessOwnerCalibration.ts](src/domain/calibrations/smallBusinessOwnerCalibration.ts)
+- [src/domain/calibrations/generateInitialBusinessModel.ts](src/domain/calibrations/generateInitialBusinessModel.ts)
+- [src/domain/calibrations/calibrationSession.ts](src/domain/calibrations/calibrationSession.ts)
+- [src/domain/calibrations/calibrationSession.test.mjs](src/domain/calibrations/calibrationSession.test.mjs)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [src/storage/prototypeStorage.ts](src/storage/prototypeStorage.ts)
+- [src/styles.css](src/styles.css)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [MVP_TASKS.md](MVP_TASKS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Exercise the flow with pilot participants. Record any proposed calibration changes in the Version 1.4 proposals document. Replace the conservative local model generator only through a separately approved model-integration decision.
+
+### 2026-07-17: Freeze Version 1.3 Authority And Define Its Application Contract
+
+**Decision:** Treat `small_business_owner_initial_calibration@1.3.0` as the sole authoritative Small Business Owner Initial Calibration. Application code must load its onboarding questions and output definition from the canonical `v1.3.json` through a shared Open Loops domain adapter rather than duplicating wording in UI components or prompts. Every calibration session must preserve the calibration ID, semantic version, frozen source hash, participant responses, generated initial model, evidence references, confidence level, unknowns, proposed experiment, and participant feedback. Earlier or later-discovered drafts are historical only unless Tony explicitly approves a new version.
+
+**Rationale:** A single immutable source prevents wording drift and competing prompts. A durable shared session contract keeps Business DNA inside the existing Open Loops memory and storage architecture while preserving evidence, uncertainty, participant feedback, historical outputs, and exact version attribution.
+
+**Affected Files:**
+
+- [Business DNA/AGENTS.md](Business%20DNA/AGENTS.md)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/calibrations/small-business-owner/README.md](Business%20DNA/calibrations/small-business-owner/README.md)
+- [Business DNA/calibrations/small-business-owner/CALIBRATION_V1_4_PROPOSALS.md](Business%20DNA/calibrations/small-business-owner/CALIBRATION_V1_4_PROPOSALS.md)
+- [Business DNA/calibrations/small-business-owner/v1.3.test.mjs](Business%20DNA/calibrations/small-business-owner/v1.3.test.mjs)
+- [src/domain/calibrations/smallBusinessOwnerCalibration.ts](src/domain/calibrations/smallBusinessOwnerCalibration.ts)
+- [src/domain/models.ts](src/domain/models.ts)
+- [src/storage/prototypeStorage.ts](src/storage/prototypeStorage.ts)
+- [src/App.tsx](src/App.tsx)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Build the calibration UI from the shared JSON-backed adapter. Record proposed wording, ordering, schema, evidence, interpretation, feedback, or experiment changes in the Version 1.4 proposals document for separate founder review; do not alter Version 1.3 during implementation.
+
+### 2026-07-17: Approve Business DNA Working Direction And Initial Calibration
+
+**Decision:** Approve Business DNA as the business-oriented application of Open Loops, subordinate to the parent system and governed by [Business DNA/AGENTS.md](Business%20DNA/AGENTS.md). Approve the Small Business Owner Initial Calibration as its first capability and authorize the minimum Version 1 infrastructure needed to run the 12-question flow, preserve answers and the original evidence-based model, record confidence and competing explanations, create one seven-day experiment, collect participant feedback, and evolve Business DNA through continuing interaction. The canonical calibration identifier is `small_business_owner_initial_calibration@1.3.0`.
+
+**Rationale:** Business understanding should accumulate durably and inspectably rather than depend on model memory or one-time diagnosis. Business DNA extends the Open Loops approach to recurring business patterns, unresolved decisions, opportunities, constraints, owner behavior, and sustainable growth while preserving evidence, uncertainty, historical versions, and alignment with the business's longer-term true north.
+
+**Affected Files:**
+
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/AGENTS.md](Business%20DNA/AGENTS.md)
+- [Business DNA/calibrations/small-business-owner/README.md](Business%20DNA/calibrations/small-business-owner/README.md)
+- [Business DNA/calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md](Business%20DNA/calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md)
+- [Business DNA/calibrations/small-business-owner/v1.3.json](Business%20DNA/calibrations/small-business-owner/v1.3.json)
+- [Business DNA/calibrations/small-business-owner/v1.3.test.mjs](Business%20DNA/calibrations/small-business-owner/v1.3.test.mjs)
+- [package.json](package.json)
+- [AGENTS.md](AGENTS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Supersedes:** The undefined-placeholder scope recorded when the Business DNA sub-project was established earlier on 2026-07-17. The original creation decision remains part of the historical record.
+
+**Follow-Up:** The founder-approved Version 1.3 specification, derived JSON definition, and automated validation tests were memorialized on 2026-07-17. Application implementation should consume these canonical artifacts through the existing Open Loops architecture and preserve exact session-version attribution, context isolation, original outputs, later evidence, and historical revisions.
+
+### 2026-07-17: Establish Business DNA As An Open Loops Sub-Project
+
+**Decision:** Create `Business DNA` as a named sub-project within the Open Loops repository, with a canonical overview and local working instructions. The name and placement are established; its product definition, audience, scope, architecture, and implementation remain unresolved.
+
+**Rationale:** A dedicated workspace gives Business DNA a durable home for exploration and future decisions while protecting the approved Open Loops product and Version 1 scope from accidental expansion.
+
+**Affected Files:**
+
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/AGENTS.md](Business%20DNA/AGENTS.md)
+- [AGENTS.md](AGENTS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Define the problem, primary user, relationship to Open Loops, project type, and smallest testable first version before adding product or implementation structure.
+
+### 2026-07-09: Approve ChatGPT Coordination Brief
+
+**Decision:** Approved [OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md](OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md) as the operating guide for ChatGPT/founder/Codex coordination. The brief defines the separation between exploration, proposed direction, approved decisions, and Codex-ready handoffs. It also preserves the role split between ChatGPT as a product reasoning and handoff partner and Codex as the repo, documentation, and implementation agent.
+
+**Rationale:** Open Loops has accumulated significant product, UX, and implementation context. The coordination brief protects continuity by preventing exploratory ideas from becoming accidental product commitments, reinforcing the product principle that Open Loops organizes thinking rather than information, and giving future conversations a clear handoff protocol.
+
+**Affected Files:**
+
+- [OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md](OPEN_LOOPS_CHATGPT_COORDINATION_BRIEF.md)
+- [AGENTS.md](AGENTS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Decide whether future ChatGPT conversations should use the brief as a standing system prompt. Decide whether to create a shorter one-page founder handoff version.
 
 ### 2026-07-05: Treat Chat with Lumi as True Conversational Mode
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   chatMessagesSeed,
   chatSessionsSeed,
@@ -10,8 +10,31 @@ import {
   userSeed,
 } from "./data/seed";
 import { createLumiMockResponse } from "./domain/lumiMockResponse";
-import type { BubbleSize, BubbleTone, ChatMessage, ChatSession, OpenLoop, Thought } from "./domain/models";
+import { generateInitialBusinessModel } from "./domain/calibrations/generateInitialBusinessModel";
+import { smallBusinessOwnerCalibrationIdentity } from "./domain/calibrations/smallBusinessOwnerCalibration";
+import { smallBusinessOwnerCalibration } from "./domain/calibrations/smallBusinessOwnerCalibration";
+import {
+  createCalibrationSession,
+  saveCalibrationAnswer,
+  saveNumericalFeedback,
+  saveOpenEndedFeedback,
+  selectCalibrationToOpen,
+} from "./domain/calibrations/calibrationSession";
+import {
+  buildCalibrationEvidencePackage,
+  hashCalibrationEvidencePackage,
+} from "./domain/calibrations/calibrationEvidencePackage";
+import type {
+  BubbleSize,
+  BubbleTone,
+  CalibrationResponse,
+  ChatMessage,
+  ChatSession,
+  OpenLoop,
+  Thought,
+} from "./domain/models";
 import { HomeScreen } from "./screens/Home";
+import { BusinessCalibration } from "./screens/BusinessCalibration";
 import { LumiScreen } from "./screens/Lumi";
 import { LoopsScreen, type NewLoopInput } from "./screens/Loops";
 import { MeScreen } from "./screens/Me";
@@ -23,9 +46,15 @@ import {
   savePrototypeState,
   type PrototypeAppState,
 } from "./storage/prototypeStorage";
+import {
+  establishCalibrationSession,
+  migrateAndLoadCalibrationSessions,
+  requestGenerationWithNetworkFallback,
+  syncCalibrationSession,
+} from "./storage/calibrationApi";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
-type ActiveSurface = Surface | "ThoughtCapture" | "ThoughtLibrary";
+type ActiveSurface = Surface | "ThoughtCapture" | "ThoughtLibrary" | "Calibration";
 
 const surfaces: Surface[] = ["Home", "Loops", "Lumi", "Universe", "Me"];
 
@@ -45,8 +74,8 @@ const bubblePositions = [
   { x: "22%", y: "40%" },
   { x: "74%", y: "74%" },
 ];
-
 const seedPrototypeState: PrototypeAppState = {
+  calibrationSessions: [],
   thoughts: thoughtsSeed,
   openLoops: openLoopsSeed,
   loopConnections: loopConnectionsSeed,
@@ -64,8 +93,14 @@ function App() {
   const [activeChatSessionId, setActiveChatSessionId] = useState(() =>
     getNewestChatSessionId(loadPrototypeState(seedPrototypeState).chatSessions),
   );
+  const [activeCalibrationSessionId, setActiveCalibrationSessionId] = useState(() =>
+    selectCalibrationToOpen(loadPrototypeState(seedPrototypeState).calibrationSessions)?.id ?? "",
+  );
+  const durableStorageReady = useRef(false);
+  const previousCalibrationSnapshot = useRef("");
 
   const {
+    calibrationSessions,
     chatMessages,
     chatSessions,
     insights,
@@ -75,6 +110,35 @@ function App() {
   } = prototypeState;
   const recentThought = thoughts[0] ?? thoughtsSeed[0];
   const spotlightLoop = loops.find((loop) => loop.status !== "archived") ?? loops[0];
+
+  useEffect(() => {
+    let active = true;
+    void (async () => {
+      try {
+        if (!await establishCalibrationSession("local-prototype-user")) return;
+        const sessions = await migrateAndLoadCalibrationSessions(calibrationSessions);
+        if (!active || !sessions) return;
+        durableStorageReady.current = true;
+        previousCalibrationSnapshot.current = JSON.stringify(sessions);
+        updatePrototypeState((current) => ({ ...current, calibrationSessions: sessions }));
+      } catch {
+        // localStorage remains a recoverable cache while the API is unavailable.
+      }
+    })();
+    return () => { active = false; };
+    // This migration runs once for the local prototype identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!durableStorageReady.current) return;
+    const snapshot = JSON.stringify(calibrationSessions);
+    if (snapshot === previousCalibrationSnapshot.current) return;
+    previousCalibrationSnapshot.current = snapshot;
+    void Promise.all(calibrationSessions.map((session) => syncCalibrationSession(session))).catch(() => {
+      // The local cache already contains the update and will be retried after reconnect/reload.
+    });
+  }, [calibrationSessions]);
 
   function handleCreateLoop(input: NewLoopInput) {
     const now = new Date().toISOString();
@@ -197,7 +261,140 @@ function App() {
     if (entryPathId === "chat-with-lumi") {
       setActiveChatSessionId(getNewestChatSessionId(chatSessions));
       setActiveSurface("Lumi");
+      return;
     }
+
+    if (entryPathId === "business-dna-calibration") {
+      const existingSession = selectCalibrationToOpen(calibrationSessions);
+
+      if (existingSession) {
+        setActiveCalibrationSessionId(existingSession.id);
+      } else {
+        const now = new Date().toISOString();
+        const session = createCalibrationSession({
+          id: `calibration-${Date.now()}`,
+          participantId: `participant-${Date.now()}`,
+          startedAt: now,
+          ...smallBusinessOwnerCalibrationIdentity,
+        });
+        updatePrototypeState((currentState) => ({
+          ...currentState,
+          calibrationSessions: [session, ...currentState.calibrationSessions],
+        }));
+        setActiveCalibrationSessionId(session.id);
+      }
+
+      setActiveSurface("Calibration");
+    }
+  }
+
+  async function handleCalibrationAnswer(response: CalibrationResponse) {
+    const orderedQuestionIds = smallBusinessOwnerCalibration.onboarding_questions.map(
+      (question) => question.id,
+    );
+    const activeSession = calibrationSessions.find(
+      (session) => session.id === activeCalibrationSessionId,
+    );
+    const isFinalAnswer =
+      activeSession?.currentQuestionIndex === orderedQuestionIds.length - 1;
+
+    if (activeSession && isFinalAnswer) {
+      const responses = [...activeSession.participantResponses, response];
+      const evidencePackage = buildCalibrationEvidencePackage(smallBusinessOwnerCalibration, responses);
+      const generation = await requestGenerationWithNetworkFallback(evidencePackage, async () => ({
+        generation: generateInitialBusinessModel(responses),
+        provenance: {
+          generatorType: "deterministic_fallback",
+          provider: "network_unavailable",
+          modelIdentifier: "unavailable",
+          promptInstructionVersion: "small_business_owner_v1.3_ai_generation@1.0.0",
+          calibrationVersion: smallBusinessOwnerCalibration.version,
+          frozenCalibrationHash: smallBusinessOwnerCalibration.canonical_source.sha256,
+          generationTimestamp: new Date().toISOString(),
+          validationResult: { valid: false, errors: ["Secure generation endpoint unavailable."] },
+          retryCount: 0,
+          evidencePackageHash: await hashCalibrationEvidencePackage(evidencePackage),
+        },
+      }));
+
+      updatePrototypeState((currentState) => ({
+        ...currentState,
+        calibrationSessions: currentState.calibrationSessions.map((session) => {
+          if (session.id !== activeCalibrationSessionId) return session;
+          const completed = saveCalibrationAnswer(
+            session,
+            response,
+            orderedQuestionIds,
+            () => generation.generation,
+          );
+          return {
+            ...completed,
+            generationProvenance: generation.provenance,
+            originalStructuredGenerationOutput: generation.originalStructuredOutput,
+            deterministicFallbackOutput:
+              generation.provenance.generatorType === "deterministic_fallback"
+                ? generation.generation
+                : undefined,
+          };
+        }),
+      }));
+      return;
+    }
+
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      calibrationSessions: currentState.calibrationSessions.map((session) => {
+        if (session.id !== activeCalibrationSessionId) return session;
+
+        return saveCalibrationAnswer(
+          session,
+          response,
+          orderedQuestionIds,
+          generateInitialBusinessModel,
+        );
+      }),
+    }));
+  }
+
+  function handleNumericalCalibrationFeedback(
+    feedbackId: string,
+    value: 1 | 2 | 3 | 4 | 5,
+  ) {
+    const orderedFeedbackIds =
+      smallBusinessOwnerCalibration.participant_feedback.rating_questions.map(
+        (question) => question.id,
+      );
+
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      calibrationSessions: currentState.calibrationSessions.map((session) =>
+        session.id === activeCalibrationSessionId
+          ? saveNumericalFeedback(session, feedbackId, value, orderedFeedbackIds)
+          : session,
+      ),
+    }));
+  }
+
+  function handleOpenEndedCalibrationFeedback(feedbackId: string, value: string) {
+    const orderedFeedbackIds =
+      smallBusinessOwnerCalibration.participant_feedback.open_ended_questions.map(
+        (question) => question.id,
+      );
+
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      calibrationSessions: currentState.calibrationSessions.map((session) =>
+        session.id === activeCalibrationSessionId
+          ? saveOpenEndedFeedback(
+              session,
+              feedbackId,
+              value,
+              orderedFeedbackIds,
+              new Date().toISOString(),
+            )
+          : session,
+      ),
+    }));
   }
 
   function handleCreateChatSession() {
@@ -343,6 +540,19 @@ function App() {
             onConnectThoughtToLoop={handleLinkThoughtToLoop}
             onUpdateThought={handleUpdateThought}
             thoughts={thoughts}
+          />
+        ) : null}
+
+        {activeSurface === "Calibration" ? (
+          <BusinessCalibration
+            onAnswer={handleCalibrationAnswer}
+            onBackHome={() => setActiveSurface("Home")}
+            onNumericalFeedback={handleNumericalCalibrationFeedback}
+            onOpenEndedFeedback={handleOpenEndedCalibrationFeedback}
+            session={
+              calibrationSessions.find((session) => session.id === activeCalibrationSessionId) ??
+              calibrationSessions[0]
+            }
           />
         ) : null}
 

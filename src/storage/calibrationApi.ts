@@ -1,0 +1,100 @@
+import type { CalibrationSession } from "../domain/models";
+import type { CalibrationEvidencePackage, ModelGenerationPipelineResult } from "../domain/calibrations/aiModelGenerationPipeline";
+import { smallBusinessOwnerCalibrationIdentity } from "../domain/calibrations/smallBusinessOwnerCalibration";
+
+export async function establishCalibrationSession(userId: string) {
+  const current = await fetch("/api/auth/session", { credentials: "include" });
+  if (current.ok) return true;
+  if (!isDevelopmentBuild()) return false;
+  const development = await fetch("/api/auth/development", {
+    method: "POST",
+    credentials: "include",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ userId }),
+  });
+  return development.ok;
+}
+
+export async function signOutCalibrationSession() {
+  const response = await fetch("/api/auth/sign-out", { method: "POST", credentials: "include" });
+  return response.ok;
+}
+
+export async function migrateAndLoadCalibrationSessions(localSessions: CalibrationSession[]) {
+  const canonicalSessions = localSessions.filter((session) =>
+    session.calibrationId === smallBusinessOwnerCalibrationIdentity.calibrationId &&
+    session.semanticVersion === smallBusinessOwnerCalibrationIdentity.semanticVersion &&
+    session.frozenSourceHash === smallBusinessOwnerCalibrationIdentity.frozenSourceHash,
+  );
+  if (canonicalSessions.length) {
+    const migration = await request("/api/calibration-sessions/import", {
+      method: "POST",
+      body: JSON.stringify({ sessions: canonicalSessions }),
+    });
+    if (!migration.ok) return null;
+  }
+  const response = await request("/api/calibration-sessions");
+  if (!response.ok) return null;
+  const body = await response.json() as { sessions: CalibrationSession[] };
+  return mergeSessions(localSessions, body.sessions);
+}
+
+export async function syncCalibrationSession(session: CalibrationSession) {
+  const update = await request(`/api/calibration-sessions/${encodeURIComponent(session.id)}`, {
+    method: "PUT",
+    body: JSON.stringify(session),
+  });
+  if (update.ok) return (await update.json() as { session: CalibrationSession }).session;
+  return null;
+}
+
+export async function requestServerGeneration(evidencePackage: CalibrationEvidencePackage) {
+  const response = await request("/api/calibrations/generate", {
+    method: "POST",
+    body: JSON.stringify({ evidencePackage }),
+  });
+  if (!response.ok) throw new Error("Secure generation is temporarily unavailable.");
+  return response.json() as Promise<ModelGenerationPipelineResult>;
+}
+
+export async function requestGenerationWithNetworkFallback(
+  evidencePackage: CalibrationEvidencePackage,
+  fallback: () => Promise<ModelGenerationPipelineResult>,
+) {
+  try {
+    return await requestServerGeneration(evidencePackage);
+  } catch {
+    return fallback();
+  }
+}
+
+export function mergeSessions(local: CalibrationSession[], remote: CalibrationSession[]) {
+  const merged = new Map(remote.map((session) => [session.id, session]));
+  for (const session of local) {
+    const existing = merged.get(session.id);
+    if (!existing || completionScore(session) > completionScore(existing) ||
+        Date.parse(session.lastUpdatedAt ?? session.startedAt) > Date.parse(existing.lastUpdatedAt ?? existing.startedAt)) {
+      merged.set(session.id, session);
+    }
+  }
+  return [...merged.values()].sort((a, b) =>
+    Date.parse(b.lastUpdatedAt ?? b.startedAt) - Date.parse(a.lastUpdatedAt ?? a.startedAt));
+}
+
+async function request(path: string, init: RequestInit = {}) {
+  return fetch(path, {
+    ...init,
+    credentials: "include",
+    headers: { "content-type": "application/json", ...init.headers },
+  });
+}
+
+function completionScore(session: CalibrationSession) {
+  const status = { collecting_answers: 0, model_ready: 100, collecting_feedback: 200, completed: 300 }[session.status];
+  return status + session.participantResponses.length +
+    Object.keys(session.numericalFeedback).length + Object.keys(session.openEndedFeedback).length;
+}
+
+function isDevelopmentBuild() {
+  return Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+}

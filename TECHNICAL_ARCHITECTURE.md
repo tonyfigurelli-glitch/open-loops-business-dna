@@ -1,7 +1,7 @@
 # Technical Architecture
 
 Status: Draft
-Last Updated: 2026-07-05
+Last Updated: 2026-07-17
 Owner: TBD
 
 ## Purpose
@@ -17,6 +17,8 @@ Use this file for technical decisions and architecture placeholders. Do not choo
 The MVP architecture should support thought capture, Open Loop creation, a Lumi conversation surface, a bubble-based loop workspace, basic AI categorization, and persistent storage.
 
 The Home Screen implementation should align with [HomeScreen_v1.png](UI_REFERENCE/HomeScreen_v1.png) as the canonical Version 1 UX reference.
+
+Business DNA remains an organizational sub-project, not a parallel technical system. Its approved Small Business Owner Initial Calibration uses the existing Open Loops React application, domain model, authenticated API, durable storage adapter, and Lumi-facing interaction patterns.
 
 ## Foundational Technical Concepts
 
@@ -39,6 +41,7 @@ TBD
 - Lumi
 - Universe
 - Me
+- Business DNA Calibration
 
 ## Core Components
 
@@ -50,6 +53,7 @@ TBD
 - List view
 - Basic AI categorization
 - Persistent storage
+- JSON-backed calibration flow and durable calibration sessions
 
 ## Data Model
 
@@ -69,7 +73,31 @@ Chat Sessions should later be able to connect to one or more Open Loops without 
 
 ## Storage
 
-TBD
+The calibration vertical slice uses a co-located Node HTTP API and SQLite through the built-in `node:sqlite` driver. Every query is scoped by authenticated user ID. SQLite is the minimum durable single-instance Version 1 store; a multi-instance or serverless deployment requires hosted PostgreSQL behind the same storage contract.
+
+`localStorage` remains a recoverable client cache. After authentication, canonical local Version 1.3 sessions are validated, uploaded transactionally, deduplicated by a stable import fingerprint, marked with migration provenance, and retained locally. Backend state becomes authoritative after confirmed persistence.
+
+Calibration Sessions live in that same state and are saved after every answer, generated model, feedback response, and completion event. Each session records the exact calibration identifier, semantic version, and frozen source hash used.
+
+Pure domain lifecycle functions enforce ordered answers, explicit status transitions, ordered feedback, completion, and deterministic selection of an incomplete or completed session when the user returns. Storage normalization keeps earlier prototype records readable without changing canonical calibration content.
+
+### Calibration Source Of Truth
+
+The application imports `Business DNA/calibrations/small-business-owner/v1.3.json` through `src/domain/calibrations/smallBusinessOwnerCalibration.ts`.
+
+UI components and generation code must read canonical questions and output-section titles from that adapter. They must not duplicate Version 1.3 wording. Automated tests compare the JSON to the frozen Markdown source and reject duplicated UI wording or unlabelled competing prompts.
+
+### AI-Assisted Calibration Generation Boundary
+
+The calibration domain constructs a current-session-only evidence package, combines it with canonical Version 1.3 generation instructions, requests provider-neutral structured output, validates that output, retries once with validation errors, and falls back deterministically after a second failure.
+
+The React client contains no provider secret and makes no direct vendor call. `CalibrationModelProvider` is the vendor-neutral boundary. The server provides a configurable HTTP adapter for an approved structured-output model endpoint. When it is unavailable or unconfigured, the deterministic generator remains the functioning runtime path.
+
+The `/api/calibrations/generate` route accepts only the canonical evidence package, rebuilds it from its twelve answers, rejects any mismatch or added context, loads canonical instructions server-side, invokes the configured provider, runs the existing validator, retries once, and returns validated output or deterministic fallback with provenance. It does not add prior chats, account memory, other Business DNA records, outside research, or unrelated metadata.
+
+## Authentication
+
+The Version 1 API uses an injectable authentication boundary. Its local adapter issues encrypted, authenticated, opaque, HttpOnly, SameSite cookies that survive browser refresh and server restart. Development identity issuance is explicitly gated and cannot run in production. A production identity provider remains an approval and deployment decision; production must fail closed until that adapter or a trusted gateway identity is configured.
 
 ## Information Access
 
@@ -91,15 +119,22 @@ Future Lumi conversation work must treat Lumi as a contextual conversational age
 
 ## Security And Privacy
 
-TBD
+- All calibration and Business DNA reads and writes enforce ownership server-side.
+- Request bodies are limited to 256 KiB and validated against the canonical identity and ordered response contract.
+- Model credentials, instructions, and configuration remain server-side.
+- Model output is schema- and evidence-validated; unsafe clinical advice is rejected.
+- Completed sessions, original validated output, and initial Business DNA records are immutable.
+- Error responses do not expose participant content, prompts, credentials, or provider responses.
 
 ## Observability
 
-TBD
+The API exposes a content-free health endpoint and structured operational events. Logging uses an explicit redaction boundary and records route templates, status, duration, startup, backup, and operational outcomes rather than participant answers, prompts, model output, cookies, authorization headers, or secrets. Pilot monitoring must cover health, restarts, 5xx responses, disk capacity, backup success, provider latency, validation retries, fallback rate, and authentication failures.
 
 ## Deployment
 
-TBD
+Required server configuration is documented in [server/README.md](server/README.md). Production requires persistent storage, TLS, a high-entropy session secret, an approved identity provider or gateway, and optional server-only model-provider credentials. The current server process is suitable for a single persistent instance, not ephemeral multi-instance hosting without a PostgreSQL adapter.
+
+Production configuration validation requires an absolute database path, HTTPS public origin, external authentication mode, a 32-character-or-longer session secret, and complete model-provider configuration when enabled. The executable still fails closed until Tony approves and the project installs a production identity adapter.
 
 ## Engineering Constraints
 
@@ -108,7 +143,10 @@ TBD
 
 ## Technical Risks
 
-- TBD
+- The production deployment platform and identity provider remain unapproved.
+- SQLite assumes one persistent service instance; horizontal or serverless deployment needs hosted PostgreSQL.
+- The configured provider must support the documented structured-output request contract.
+- Evidence-reference validation is strong, but semantic entailment of arbitrary business claims remains a bounded model-quality risk.
 
 ## Decision References
 
@@ -121,11 +159,14 @@ TBD
 - [Emotional DNA](EMOTIONAL_DNA.md)
 - [Version 1 Roadmap](VERSION1_ROADMAP.md)
 - [Open Loops Constitution](AGENTS.md)
+- [Business DNA](Business%20DNA/README.md)
 
 ## Open Questions
 
-- TBD
+- Which production deployment platform, identity provider, and structured-output model endpoint should be approved?
+- When should the SQLite adapter be replaced by hosted PostgreSQL?
 
 ## Version 1 Boundaries
 
-- TBD
+- The approved calibration flow may use the configured secure provider, but must always retain validated deterministic fallback.
+- Business DNA must inherit Open Loops architecture rather than introduce a parallel application or memory store.

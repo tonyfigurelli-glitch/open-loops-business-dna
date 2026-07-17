@@ -29,6 +29,13 @@ export const entryPathSeed = [
     icon: "..",
     tone: "lumi",
   },
+  {
+    id: "business-dna-calibration",
+    title: "Start Business DNA",
+    subtitle: "Build a first model of you and your business.",
+    icon: "12",
+    tone: "business",
+  },
 ] as const;
 
 export const thoughtsSeed: Thought[] = [
