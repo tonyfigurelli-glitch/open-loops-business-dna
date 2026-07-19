@@ -101,6 +101,24 @@ test("completed results expose history, new-session, retry, and safe generation 
   assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
 });
 
+test("completed results keep narrative primary and place complete records in collapsed review details", () => {
+  const screen = readFileSync(new URL("../src/screens/BusinessCalibration.tsx", import.meta.url), "utf8");
+  assert.equal((screen.match(/<details>/g) ?? []).length, 5);
+  assert.doesNotMatch(screen, /<details\s+open/);
+  for (const summary of [
+    "Stored Interpretation", "Original Answers", "Full Seven-Day Experiment",
+    "Participant Feedback", "Generation and Source",
+  ]) assert.match(screen, new RegExp(`<summary>${summary}</summary>`));
+  assert.equal(screen.indexOf('className="model-sections"') < screen.indexOf('className="review-details"'), true);
+  assert.match(screen, /<UncertaintyList items=\{displayedUnknowns\}/);
+  assert.match(screen, /<UncertaintyList items=\{displayedDisconfirmingEvidence\}/);
+  assert.doesNotMatch(screen, /join\(" · "\)/);
+  for (const label of [
+    "Minimum deliverable", "Owner", "Likely obstacle", "Support that may help",
+    "Result to record", "What the result would teach",
+  ]) assert.equal(screen.includes(`["${label}"`), true);
+});
+
 test("retry completion always exits connecting for success, fallback, timeout, and network failure", async () => {
   const outcomes = [
     [() => Promise.resolve({ outcome: "ai_assisted", provenance: {} }), "successful_ai_assisted"],

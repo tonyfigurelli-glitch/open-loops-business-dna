@@ -57,6 +57,14 @@ Instruction version `small_business_owner_v1.3_ai_generation@1.1.1` resolves the
 
 Every future provider pass now stores a safe validation diagnostic containing attempt number, outcome, stable failure codes, and fixed validator messages. Server operational diagnostics emit only those codes and non-sensitive generation metadata—never participant answers or generated prose. The interface distinguishes `validation rejected` from provider failure and timeout while preserving the deterministic result.
 
+### July 18 Participant-Presentation Finding
+
+A later successful GPT-5.6 result preserved the required evidence structure but exposed internal report language such as “This is a moderate-confidence interpretation because…”. The result page also gave dense interpretation and audit records equal visual weight with the participant narrative, used inline dot separators for uncertainty records, and repeated some unknowns and disconfirming explanations.
+
+Instruction version `small_business_owner_v1.3_ai_generation@1.1.2` prohibits internal confidence-report, validation, and evaluation rationale in all ten participant-facing bodies. It requires uncertainty to remain honest but sound natural to the participant. The contamination validator rejects this report language without weakening structured confidence, evidence rules, context isolation, retries, or fallback.
+
+The result presentation now keeps the ten canonical narrative sections primary. Unknowns and possible disconfirming evidence are conservatively deduplicated without rewriting the first retained wording and rendered as lists. Stored Interpretation, Original Answers, complete experiment details, Participant Feedback, and generation/source diagnostics remain complete but begin collapsed under `Review details`. Session history, provenance, original records, retry behavior, and deterministic fallback are unchanged.
+
 ## Development Versus Production
 
 Production differs from development in these required ways:

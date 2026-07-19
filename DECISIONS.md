@@ -36,6 +36,27 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Make The Business DNA Result Participant-First
+
+**Decision:** Advance the Small Business Owner AI generation instruction layer from `small_business_owner_v1.3_ai_generation@1.1.1` to `@1.1.2` without modifying either frozen Version 1.3 artifact. Keep all ten canonical section IDs, titles, and order. Prohibit internal confidence-report and evaluation rationale in participant-facing section bodies while allowing uncertainty to be expressed naturally. Deduplicate unknowns and possible disconfirming evidence conservatively, preserving the first retained wording, and display them as lists. Keep the ten narrative sections visually primary. Place Stored Interpretation, Original Answers, the full Seven-Day Experiment, Participant Feedback, and generation/source diagnostics in collapsed `Review details` disclosures while keeping every record complete and accessible.
+
+**Rationale:** A successful July 18 GPT-5.6 result was evidence-disciplined but still read like an internal report in places, including “This is a moderate-confidence interpretation because…”. Its stored interpretation was visually dense, uncertainty records used awkward inline separators and repeated ideas, and complete audit material competed with the participant reflection. The participant should encounter the useful narrative first while retaining transparent access to the underlying record.
+
+**Affected Files:**
+
+- [src/domain/calibrations/aiModelGenerationPipeline.ts](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [src/domain/calibrations/aiModelGenerationPipeline.test.mjs](src/domain/calibrations/aiModelGenerationPipeline.test.mjs)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [src/styles.css](src/styles.css)
+- [server/clientRecovery.test.mjs](server/clientRecovery.test.mjs)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Review participant comprehension during the controlled pilot. Treat any proposed change to the frozen questions, output requirements, or canonical Version 1.3 files as a separate Version 1.4 proposal. Preserve session history, provenance, source answers, generated output, retry records, and deterministic fallback behavior.
+
 ### 2026-07-18: Align Narrative Rendering And Preserve Safe Validation Diagnostics
 
 **Decision:** Advance the AI generation instruction layer from `small_business_owner_v1.3_ai_generation@1.1.0` to `@1.1.1`. Preserve every frozen Version 1.3 requirement, but interpret the labeled structures shown for participant-facing sections 4, 5, and 7 as semantic content to render in natural prose rather than literal field headings. Keep the complete seven-day experiment in its structured field and use only a concise participant-facing summary in section 7. Narrow label validation to actual headings. Persist a safe diagnostic for each provider attempt using attempt number, outcome, stable validation codes, and fixed error messages; emit only codes and non-sensitive metadata to server diagnostics. Display validation rejection separately from provider failure and timeout.

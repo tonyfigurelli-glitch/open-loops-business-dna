@@ -10,6 +10,7 @@ import {
   generationStateForAttempt,
   type GenerationDisplayState,
 } from "../storage/calibrationApi";
+import { deduplicateUncertaintyItems } from "../domain/calibrations/aiModelGenerationPipeline";
 
 type BusinessCalibrationProps = {
   session: CalibrationSession;
@@ -269,6 +270,13 @@ function CompletedCalibration({
   const displayedGeneration = successfulAttempt?.generation;
   const displayedProfile = displayedGeneration?.generatedProfile ?? session.generatedProfile;
   const displayedProvenance = successfulAttempt?.provenance ?? session.generationProvenance;
+  const displayedUnknowns = deduplicateUncertaintyItems(
+    displayedGeneration?.unknowns ?? session.unknowns,
+  );
+  const displayedDisconfirmingEvidence = deduplicateUncertaintyItems(
+    displayedGeneration?.possibleDisconfirmingEvidence ?? session.possibleDisconfirmingEvidence,
+  );
+  const displayedExperiment = displayedGeneration?.proposedExperiment ?? session.proposedExperiment;
   const canRetry = session.generationProvenance?.generatorType === "deterministic_fallback"
     && !successfulAttempt;
   const questionById = new Map(
@@ -287,13 +295,6 @@ function CompletedCalibration({
         <p className="eyebrow">Calibration preserved</p>
         <h1>Your complete session is saved.</h1>
         <p>Version {session.semanticVersion} · {session.participantResponses.length} answers · {displayedGeneration?.confidenceLevel ?? session.confidenceLevel} confidence</p>
-        <p>
-          Generator: {displayedProvenance?.generatorType ?? "legacy"}
-          {displayedProvenance
-            ? ` · ${displayedProvenance.provider} · ${displayedProvenance.modelIdentifier}`
-            : ""}
-        </p>
-        <p className="source-hash">Source {session.frozenSourceHash}</p>
         <SessionHistory onSelectSession={onSelectSession} session={session} sessions={sessions} />
       </article>
       <GenerationStatus
@@ -310,47 +311,94 @@ function CompletedCalibration({
           </article>
         ))}
       </div>
-      <article className="model-section">
-        <p className="section-label">Stored interpretation</p>
-        <p><strong>Central hypothesis:</strong> {displayedGeneration?.centralHypothesis ?? session.centralHypothesis}</p>
-        <p><strong>Confidence:</strong> {displayedGeneration?.confidenceLevel ?? session.confidenceLevel}</p>
-        <p><strong>Unknowns:</strong> {(displayedGeneration?.unknowns ?? session.unknowns).join(" · ")}</p>
-        <p><strong>Possible disconfirming evidence:</strong> {(displayedGeneration?.possibleDisconfirmingEvidence ?? session.possibleDisconfirmingEvidence).join(" · ")}</p>
-      </article>
-      <article className="model-section">
-        <p className="section-label">Original answers</p>
-        <dl className="session-record-list">
-          {session.participantResponses.map((response) => (
-            <div key={response.questionId}>
-              <dt>{questionById.get(response.questionId)?.prompt ?? response.questionId}</dt>
-              <dd>{Array.isArray(response.response) ? response.response.join(", ") : response.response}</dd>
-            </div>
-          ))}
-        </dl>
-      </article>
-      <article className="model-section">
-        <p className="section-label">Seven-day experiment</p>
-        <p>{(displayedGeneration?.proposedExperiment ?? session.proposedExperiment)?.action}</p>
-        <p><strong>Hypothesis:</strong> {(displayedGeneration?.proposedExperiment ?? session.proposedExperiment)?.hypothesis}</p>
-        <p><strong>Result to record:</strong> {(displayedGeneration?.proposedExperiment ?? session.proposedExperiment)?.resultToRecord}</p>
-      </article>
-      <article className="model-section">
-        <p className="section-label">Participant feedback</p>
-        <dl className="session-record-list">
-          {Object.entries(session.numericalFeedback).map(([feedbackId, value]) => (
-            <div key={feedbackId}>
-              <dt>{ratingById.get(feedbackId)?.statement ?? feedbackId}</dt>
-              <dd>{value} / 5</dd>
-            </div>
-          ))}
-          {Object.entries(session.openEndedFeedback).map(([feedbackId, value]) => (
-            <div key={feedbackId}>
-              <dt>{openFeedbackById.get(feedbackId)?.prompt ?? feedbackId}</dt>
-              <dd>{value}</dd>
-            </div>
-          ))}
-        </dl>
-      </article>
+      <section className="review-details" aria-labelledby="review-details-title">
+        <div className="review-details-heading">
+          <p className="eyebrow">Complete session record</p>
+          <h2 id="review-details-title">Review details</h2>
+          <p>Open any section when you want to inspect the evidence and saved record.</p>
+        </div>
+        <details>
+          <summary>Stored Interpretation</summary>
+          <div className="review-details-content">
+            <p><strong>Central hypothesis:</strong> {displayedGeneration?.centralHypothesis ?? session.centralHypothesis}</p>
+            <p><strong>Confidence:</strong> {displayedGeneration?.confidenceLevel ?? session.confidenceLevel}</p>
+            <p><strong>Unknowns</strong></p>
+            <UncertaintyList items={displayedUnknowns} />
+            <p><strong>Possible disconfirming evidence</strong></p>
+            <UncertaintyList items={displayedDisconfirmingEvidence} />
+          </div>
+        </details>
+        <details>
+          <summary>Original Answers</summary>
+          <div className="review-details-content">
+            <dl className="session-record-list">
+              {session.participantResponses.map((response) => (
+                <div key={response.questionId}>
+                  <dt>{questionById.get(response.questionId)?.prompt ?? response.questionId}</dt>
+                  <dd>{Array.isArray(response.response) ? response.response.join(", ") : response.response}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </details>
+        <details>
+          <summary>Full Seven-Day Experiment</summary>
+          <div className="review-details-content">
+            <dl className="session-record-list">
+              {experimentDetails(displayedExperiment).map(([label, value]) => (
+                <div key={label}><dt>{label}</dt><dd>{value}</dd></div>
+              ))}
+            </dl>
+          </div>
+        </details>
+        <details>
+          <summary>Participant Feedback</summary>
+          <div className="review-details-content">
+            <dl className="session-record-list">
+              {Object.entries(session.numericalFeedback).map(([feedbackId, value]) => (
+                <div key={feedbackId}>
+                  <dt>{ratingById.get(feedbackId)?.statement ?? feedbackId}</dt>
+                  <dd>{value} / 5</dd>
+                </div>
+              ))}
+              {Object.entries(session.openEndedFeedback).map(([feedbackId, value]) => (
+                <div key={feedbackId}>
+                  <dt>{openFeedbackById.get(feedbackId)?.prompt ?? feedbackId}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </details>
+        <details>
+          <summary>Generation and Source</summary>
+          <div className="review-details-content">
+            <p><strong>Generator:</strong> {displayedProvenance?.generatorType ?? "legacy"}</p>
+            {displayedProvenance ? (
+              <>
+                <p><strong>Provider:</strong> {displayedProvenance.provider}</p>
+                <p><strong>Model:</strong> {displayedProvenance.modelIdentifier}</p>
+                <p><strong>Instruction version:</strong> {displayedProvenance.promptInstructionVersion}</p>
+                <p><strong>Generated:</strong> {displayedProvenance.generationTimestamp}</p>
+                <p><strong>Provider retries:</strong> {displayedProvenance.retryCount}</p>
+                <p><strong>Evidence package hash:</strong> <span className="source-hash">{displayedProvenance.evidencePackageHash}</span></p>
+                <p><strong>Validation:</strong> {displayedProvenance.validationResult.valid ? "accepted" : "rejected"}</p>
+                {displayedProvenance.validationAttempts?.length ? (
+                  <ul className="interpretation-list">
+                    {displayedProvenance.validationAttempts.map((attempt) => (
+                      <li key={attempt.attempt}>
+                        Attempt {attempt.attempt}: {attempt.outcome}
+                        {attempt.codes.length ? ` · ${attempt.codes.join(", ")}` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </>
+            ) : null}
+            <p className="source-hash">Version {session.semanticVersion} · Source {session.frozenSourceHash}</p>
+          </div>
+        </details>
+      </section>
       <div className="calibration-actions">
         <button className="primary-button" onClick={onStartNewCalibration} type="button">
           Start New Calibration
@@ -377,6 +425,28 @@ function CompletedCalibration({
       </div>
     </section>
   );
+}
+
+function UncertaintyList({ items }: { items: string[] }) {
+  return items.length ? (
+    <ul className="interpretation-list">
+      {items.map((item) => <li key={item}>{item}</li>)}
+    </ul>
+  ) : <p>None recorded.</p>;
+}
+
+function experimentDetails(experiment: CalibrationSession["proposedExperiment"]) {
+  if (!experiment) return [];
+  return [
+    ["Action", experiment.action],
+    ["Hypothesis", experiment.hypothesis],
+    ["Minimum deliverable", experiment.minimumDeliverable],
+    ["Owner", experiment.owner],
+    ["Likely obstacle", experiment.likelyObstacle],
+    ["Support that may help", experiment.supportThatMayHelp],
+    ["Result to record", experiment.resultToRecord],
+    ["What the result would teach", experiment.whatResultWouldTeach],
+  ];
 }
 
 function SessionHistory({ session, sessions, onSelectSession }: {

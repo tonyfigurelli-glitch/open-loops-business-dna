@@ -168,6 +168,40 @@ test("accepts a clean Rapid Connection Narrator participant-facing result", () =
   assert.doesNotMatch(output.profileSections.map((section) => section.body).join(" "), /Rapid Connection Narrator|q04|Evidence:/i);
 });
 
+test("rejects internal confidence-report language while preserving natural uncertainty", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  output.profileSections[3].body = "This is a moderate-confidence interpretation because two answers support the assessment.";
+
+  const validation = pipeline.validateAIModelOutput(output, evidencePackage);
+  assert.equal(validation.valid, false);
+  assert.match(validation.errors.join(" "), /internal evaluation language/i);
+  assert.ok(validation.codes.includes("NARRATIVE_EVALUATION_LANGUAGE"));
+
+  output.profileSections[3].body = "Customer attentiveness appears to be a strength, though it may leave less room for recurring-revenue work.";
+  assert.equal(pipeline.validateAIModelOutput(output, evidencePackage).valid, true);
+});
+
+test("deduplicates repeated uncertainty items without rewriting the retained meaning", () => {
+  assert.deepEqual(pipeline.deduplicateUncertaintyItems([
+    "Pricing and profitability remain unknown.",
+    "Pricing and profitability are still unclear.",
+    "Team capacity remains unknown.",
+    "  Team capacity remains unknown.  ",
+  ]), [
+    "Pricing and profitability remain unknown.",
+    "Team capacity remains unknown.",
+  ]);
+  assert.deepEqual(pipeline.deduplicateUncertaintyItems([
+    "Demand may be the more important constraint.",
+    "Demand could be the limiting constraint.",
+    "Pricing may be the tighter constraint.",
+  ]), [
+    "Demand may be the more important constraint.",
+    "Pricing may be the tighter constraint.",
+  ]);
+});
+
 test("rejects live-test style boilerplate, metadata, and a raw answer dump", () => {
   const evidencePackage = packageFor();
   const output = validOutput(evidencePackage);
@@ -278,7 +312,7 @@ test("corrects the live section-4 and section-7 label mismatch and preserves bot
     "NARRATIVE_RAW_FIELD_LABEL",
     "NARRATIVE_TOO_LONG",
   ]);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.1");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.2");
 });
 
 test("rejects an unsupported evidence ID", () => {
@@ -421,6 +455,7 @@ test("retries once after validation failure and preserves provenance", async () 
     assert.match(request.systemInstructions, /Keep evidence references only in evidenceReferences/i);
     assert.match(request.systemInstructions, /rewrite it as natural prose without labels/i);
     assert.match(request.systemInstructions, /section 7, write only a two-to-four-sentence participant-facing summary/i);
+    assert.match(request.systemInstructions, /Never explain an internal confidence rating/i);
     assert.equal(
       request.systemInstructions.lastIndexOf("RENDERING OVERRIDES FOR THE FROZEN SPECIFICATION") >
         request.systemInstructions.lastIndexOf("# 12. REQUIRED PROFILE STRUCTURE"),
@@ -438,7 +473,7 @@ test("retries once after validation failure and preserves provenance", async () 
   });
   assert.equal(result.provenance.generatorType, "ai_assisted");
   assert.equal(result.provenance.retryCount, 1);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.1");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.2");
   assert.equal(result.provenance.validationResult.valid, true);
   assert.equal(result.provenance.evidencePackageHash.length, 64);
   assert.equal(result.originalStructuredOutput.profileSections.length, 10);

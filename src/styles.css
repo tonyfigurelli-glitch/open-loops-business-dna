@@ -783,6 +783,64 @@ h3 {
   line-height: 1.45;
 }
 
+.review-details {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 12px;
+  border: 1px solid rgba(109, 57, 232, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.review-details-heading {
+  padding: 4px 4px 10px;
+}
+
+.review-details-heading h2,
+.review-details-heading p {
+  margin-bottom: 5px;
+}
+
+.review-details details {
+  overflow: hidden;
+  border: 1px solid rgba(109, 57, 232, 0.12);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.review-details summary {
+  padding: 13px 14px;
+  color: #29305d;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.review-details details[open] summary {
+  border-bottom: 1px solid rgba(109, 57, 232, 0.1);
+}
+
+.review-details-content {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  color: #373d66;
+  line-height: 1.5;
+}
+
+.review-details-content p {
+  margin: 0;
+}
+
+.interpretation-list {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 20px;
+  color: #373d66;
+  line-height: 1.5;
+}
+
 .loops-view-card,
 .loop-detail {
   padding: 14px;

@@ -78,6 +78,8 @@ Generation provenance records whether the saved model came from validated AI-ass
 
 Generation provenance also retains one content-free validation diagnostic per provider attempt: attempt number, outcome, stable failure codes, and fixed validator error messages. These diagnostics support operational diagnosis without storing participant answers or rejected narrative in logs.
 
+The completed-session read presentation may conservatively collapse semantically repeated unknowns and possible disconfirming evidence, retaining the first wording, to avoid repetitive participant display. This does not remove or overwrite source answers, generated section bodies, provenance, feedback, or historical session records. Complete interpretation and audit records remain accessible through the result's review disclosures.
+
 The initial model remains historically distinguishable from later Business DNA evidence and revisions.
 
 The durable implementation also records participant code when present, last-update time, competing hypotheses, confidence rationale, direct statements, reasonable inferences, tentative hypotheses, original validated structured output, deterministic fallback output when used, and local-storage migration provenance. Session ownership is stored and enforced independently of client-supplied participant identifiers.

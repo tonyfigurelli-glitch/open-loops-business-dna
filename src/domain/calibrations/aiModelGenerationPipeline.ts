@@ -17,7 +17,7 @@ export { buildCalibrationEvidencePackage } from "./calibrationEvidencePackage";
 export type { CalibrationDefinition, CalibrationEvidenceAnswer, CalibrationEvidencePackage } from "./calibrationEvidencePackage";
 
 export const AI_GENERATION_INSTRUCTION_VERSION =
-  "small_business_owner_v1.3_ai_generation@1.1.1";
+  "small_business_owner_v1.3_ai_generation@1.1.2";
 
 export type AIModelOutput = {
   profileSections: Array<{
@@ -430,6 +430,7 @@ function validationFailureCode(error: string) {
   if (/question identifier/i.test(error)) return "NARRATIVE_QUESTION_IDENTIFIER";
   if (/calibration boilerplate|internal narrator label|internal instruction or prompt text/i.test(error)) return "NARRATIVE_INTERNAL_BOILERPLATE";
   if (/consultant-report language/i.test(error)) return "NARRATIVE_REPORT_LANGUAGE";
+  if (/internal evaluation language/i.test(error)) return "NARRATIVE_EVALUATION_LANGUAGE";
   if (/generic praise/i.test(error)) return "NARRATIVE_GENERIC_PRAISE";
   if (/unsupported certainty/i.test(error)) return "NARRATIVE_UNSUPPORTED_CERTAINTY";
   if (/must be concise/i.test(error)) return "NARRATIVE_TOO_LONG";
@@ -475,12 +476,12 @@ function mapAIOutputToGeneration(
     centralHypothesis: output.centralHypothesis,
     evidenceReferences,
     supportingEvidence,
-    possibleDisconfirmingEvidence: [
+    possibleDisconfirmingEvidence: deduplicateUncertaintyItems([
       ...output.possibleDisconfirmingEvidence,
       ...output.competingHypotheses.map((item) => item.hypothesis),
-    ],
+    ]),
     confidenceLevel,
-    unknowns: output.classifications.unknowns,
+    unknowns: deduplicateUncertaintyItems(output.classifications.unknowns),
     importantDirectQuotes: output.importantDirectQuotes.map((item) => item.quote),
     proposedExperiment: output.sevenDayExperiment,
     competingHypotheses: output.competingHypotheses,
@@ -507,12 +508,14 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "Use an exact direct quote only when it materially sharpens the reflection, list it in importantDirectQuotes, and integrate it naturally rather than presenting it as source data.",
     "Across the complete narrative, follow this sequence: identity → strength → possible hidden cost → business consequence → leverage point → respectful challenge → seven-day experiment → reason to continue.",
     "Write with perceptive, grounded, concise, nonclinical, participant-specific language. Avoid generic praise, repeated insights, unsupported certainty, diagnostic claims, and consultant-report language.",
+    "Keep uncertainty natural and participant-facing. Use phrases such as ‘may,’ ‘appears,’ ‘one possibility,’ or ‘we do not know yet’ where warranted.",
+    "Never explain an internal confidence rating, evidence count, classification, validation decision, or evaluation rationale inside a profileSections.body. Do not write phrases such as ‘moderate-confidence interpretation,’ ‘this is rated medium confidence because,’ or ‘the evidence supports this assessment.’ Put explicit confidence and its rationale only in confidenceLevel and confidenceRationale.",
     "Treat section titles as presentation chrome: do not repeat any canonical section title inside its body.",
     canonicalInstructions,
     "RENDERING OVERRIDES FOR THE FROZEN SPECIFICATION:",
     "The frozen specification's required header and internal summary are represented by structured fields outside profileSections.body. Never render that header, metadata, answer summary, or internal summary inside a section body.",
     "Where the frozen specification says ‘Use this structure’ or shows bold field labels, preserve the requested meaning but rewrite it as natural prose without labels.",
-    "For profile section 4, synthesize the strength, benefit, possible shadow, evidence-supported basis, and calibrated confidence into one or two short paragraphs. Put evidence IDs only in evidenceReferences.",
+    "For profile section 4, synthesize the strength, benefit, possible shadow, and evidence-supported basis into one or two short paragraphs. Express uncertainty naturally; put the explicit confidence rating and rationale only in confidenceLevel and confidenceRationale. Put evidence IDs only in evidenceReferences.",
     "For profile section 5, express both legitimate sides, their consequence, and the current tension as connected prose without field headings.",
     "For profile section 7, write only a two-to-four-sentence participant-facing summary of the action, hypothesis, fit, and learning value. Put the full deliverable, owner, obstacle, support, result, and learning details only in sevenDayExperiment.",
     "For profile sections 8 and 9, concise bullets are allowed, but do not prefix them with raw source, evidence, question, or answer labels.",
@@ -603,6 +606,7 @@ function participantFacingProhibitedPattern(body: string) {
     ["raw field label", /(?:^|\n)\s*(?:business(?: description)?|team size|role|priority|growth orientation|decision style|energy source|avoided task|best operating conditions|essential belief|answer|your strength|how it helps the business|its possible shadow|confidence|on one side|on the other side|why both matter|what happens if the tension remains unresolved|where it may be appearing today|experiment|hypothesis being tested|why this fits you and your business|minimum deliverable|who should own it|likely obstacle|support that may help|what result to record|what the result would teach us)\s*:/i],
     ["internal instruction or prompt text", /\b(?:internal instructions?|system instructions?|prompt text|do not (?:use|include|claim)|return structured json|matching the supplied schema)\b/i],
     ["consultant-report language", /\b(?:executive summary|strategic recommendation|key takeaway|best-in-class|actionable insights?|optimi[sz]e synergies|stakeholder alignment)\b/i],
+    ["internal evaluation language", /\b(?:(?:this|that) is (?:an? )?|i (?:would )?rate (?:this|that) as (?:an? )?|confidence (?:is|level is) |i have )(?:low|moderate|medium|high)[ -]confidence\b|\b(?:low|moderate|medium|high)-confidence (?:interpretation|assessment|conclusion|finding)\b|\bthe evidence supports (?:this|that|the) (?:interpretation|assessment|conclusion)\b/i],
     ["generic praise", /\b(?:you are (?:an? )?(?:exceptional|remarkable|visionary|outstanding|incredible)|natural-born leader)\b/i],
     ["unsupported certainty", /\b(?:clearly|definitely|undoubtedly|without question|the root cause is|this proves that)\b/i],
   ];
@@ -611,6 +615,43 @@ function participantFacingProhibitedPattern(body: string) {
 
 function normalizeNarrative(value: string) {
   return value.toLowerCase().replace(/[“”'"`*_#>|()[\]{}:;,.!?—–-]+/g, " ").replace(/\s+/g, " ").trim();
+}
+
+export function deduplicateUncertaintyItems(items: string[]) {
+  const kept: string[] = [];
+  const tokenSets: Set<string>[] = [];
+  for (const item of items) {
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    const tokens = uncertaintyTokens(trimmed);
+    const duplicate = tokenSets.some((existing) => equivalentUncertainty(tokens, existing));
+    if (duplicate) continue;
+    kept.push(trimmed);
+    tokenSets.push(tokens);
+  }
+  return kept;
+}
+
+function uncertaintyTokens(value: string) {
+  const ignored = new Set([
+    "a", "an", "and", "another", "are", "as", "be", "because", "could", "do", "does",
+    "evidence", "important", "is", "it", "know", "may", "might", "more", "not", "of", "or", "other",
+    "perhaps", "possible", "possibly", "remain", "remains", "still", "than", "that", "the", "this",
+    "to", "unknown", "unclear", "we", "whether", "yet",
+  ]);
+  return new Set(value.toLowerCase()
+    .replace(/\b(?:constraint|constraints|constraining|limitation|limitations|limiting|bottleneck|bottlenecks)\b/g, "constraint")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(/\s+/)
+    .filter((token) => token && !ignored.has(token)));
+}
+
+function equivalentUncertainty(first: Set<string>, second: Set<string>) {
+  if (!first.size || !second.size) return false;
+  const intersection = [...first].filter((token) => second.has(token)).length;
+  const union = new Set([...first, ...second]).size;
+  return intersection / union >= 0.8;
 }
 
 function validateExperiment(experiment: unknown, errors: string[]) {
