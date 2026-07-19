@@ -43,6 +43,14 @@ TBD
 - Me
 - Business DNA Calibration
 
+### Single-Service Production Runtime
+
+The production runtime builds the Vite frontend and serves `dist`, extensionless SPA fallback routes, and the existing `/api` through one Node 22 HTTP service and one public origin. The server binds the validated `HOST` and `PORT`. `GET /api/health` returns only `{"status":"ok"}`. Hashed `/assets` responses may be cached immutably; the HTML shell uses `no-cache`.
+
+The Docker build excludes Git metadata, dependencies, local build output, environment files, SQLite databases and journals, backups, participant exports, and local package caches from its context. Its runtime contains the built frontend plus only the server and calibration-domain sources required by the existing server-side TypeScript loader. Production SQLite uses an absolute `OPEN_LOOPS_DATABASE_PATH` on a mounted volume and remains limited to a single service instance.
+
+Production authentication fails closed behind a trusted identity-aware reverse proxy. The proxy authenticates the participant, strips inbound identity headers, and injects a stable user ID and server-only proxy secret over a private upstream connection. The Node service validates both on every protected request. Direct anonymous requests and spoofed user headers are rejected, development login is disabled, and no insecure public bypass exists. Choosing and configuring the public proxy remains an operator decision.
+
 ## Core Components
 
 - Authentication

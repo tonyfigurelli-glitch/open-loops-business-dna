@@ -36,6 +36,34 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Package Business DNA For Same-Origin Build Week Deployment
+
+**Decision:** Add a production path that builds the Vite frontend and serves its static assets, extensionless SPA fallback routes, health endpoint, and existing API from one Node 22 service bound to validated `HOST` and `PORT`. Package it with a multi-stage Dockerfile and a deployment context that excludes secrets, participant material, local SQLite files, backups, dependencies, and build artifacts. Require an absolute production database path on a mounted persistent volume. Keep provider credentials entirely server-side. Replace the prior unimplemented production-auth placeholder with a fail-closed trusted-proxy adapter that requires an authenticated upstream to inject both a stable user ID and a server-only shared secret; retain no anonymous or development-auth production bypass.
+
+**Rationale:** Build Week judges need a quick local evaluation path and a simple public topology, while participant privacy and immutable calibration records require a single authenticated data boundary. Serving frontend and API from one origin removes cross-origin deployment complexity. A trusted identity proxy makes the service deployable without inventing password handling, but the proxy and Node service must not be exposed independently. The repository licensing audit found no existing license, and selecting one changes ownership and commercialization rights, so the decision is explicitly blocked on Tony rather than silently inferred.
+
+**Affected Files:**
+
+- [README.md](README.md)
+- [BUILD_WEEK_SUBMISSION_CHECKLIST.md](BUILD_WEEK_SUBMISSION_CHECKLIST.md)
+- [LICENSE_DECISION_REQUIRED.md](LICENSE_DECISION_REQUIRED.md)
+- [Dockerfile](Dockerfile)
+- [.dockerignore](.dockerignore)
+- [.env.example](.env.example)
+- [.gitignore](.gitignore)
+- [package.json](package.json)
+- [server/applicationHandler.mjs](server/applicationHandler.mjs)
+- [server/start.mjs](server/start.mjs)
+- [server/config.mjs](server/config.mjs)
+- [server/auth.mjs](server/auth.mjs)
+- [server/productionReadiness.test.mjs](server/productionReadiness.test.mjs)
+- [server/README.md](server/README.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Tony must choose repository visibility, an open-source license and copyright holder (or explicitly retain all rights), a hosting platform, and an identity-aware proxy. Configure the proxy to strip inbound trusted headers, inject them only after authentication, and prevent any direct route to Node. Complete the YouTube demo, audio explanation, screenshots, `/feedback` Codex Session ID, final acceptance test, and submission before July 21, 2026 at 5:00 PM PT. Both frozen Version 1.3 canonical files remain unchanged.
+
 ### 2026-07-18: Make Calibration Generation Retries Server-Owned And Refresh-Safe
 
 **Decision:** Treat every generation retry as an append-only server-owned `CalibrationGenerationAttempt`, separate from the immutable completed calibration session and its original Business DNA record. Persist successful and failed attempts before returning the retry response, retain safe validation diagnostics, and attach all attempts newest-first whenever a session is read. On the client, preserve attempts during local normalization and merge them by immutable attempt ID without allowing a local completed-session copy to replace the server's original data. Exclude the server-owned `generationAttempts` read model from session write fingerprints so a retry result never triggers a completed-session `PUT`.

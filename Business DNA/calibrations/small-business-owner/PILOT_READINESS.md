@@ -25,6 +25,14 @@ Define the remaining decisions, production controls, and acceptable limitations 
 | Acceptable pilot limitation | Provider outage uses deterministic fallback | Display and verify provenance for every output. |
 | Future improvement | Hosted PostgreSQL, point-in-time recovery, automated alerting, self-service deletion, and richer evaluation reporting | Revisit after pilot evidence supports expansion. |
 
+## Build Week Deployment Packaging
+
+The application can now build and run as one Node service that serves the Vite `dist` output, extensionless SPA fallback routes, and the existing API from one origin. It binds configured `HOST` and `PORT`; `/api/health` exposes only a fixed status value. The production Docker image uses a build stage and excludes environment files, local databases, journals, backups, participant exports, dependencies, Git history, and local build output from its context.
+
+Production continues to fail closed. It requires HTTPS public origin, an absolute SQLite path on a mounted persistent volume, high-entropy secrets, external authentication mode, and a trusted identity-aware proxy that injects a stable user ID plus a server-only proxy secret. The service rejects requests that bypass the proxy, and development authentication cannot be enabled. Tony must choose the hosting platform and identity proxy before a public judging URL can be considered ready.
+
+The repository has no approved open-source license. [LICENSE_DECISION_REQUIRED.md](../../../LICENSE_DECISION_REQUIRED.md) records the blocker; Tony must select a license and copyright holder or intentionally keep all rights reserved before representing the repository as open source.
+
 ## Build Week Calibration Continuity
 
 The July 18, 2026 Build Week enhancement keeps every Version 1.3 calibration session accessible and allows a participant to begin a new uniquely identified session without replacing prior answers, output, feedback, or the initial Business DNA record.

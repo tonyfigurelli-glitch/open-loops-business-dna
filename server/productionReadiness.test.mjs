@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { assertAuthenticationAdapter, sessionCookie, TokenAuthService } from "./auth.mjs";
+import { assertAuthenticationAdapter, sessionCookie, TokenAuthService, TrustedProxyAuthService } from "./auth.mjs";
+import { createApplicationHandler } from "./applicationHandler.mjs";
 import { createApi } from "./api.mjs";
 import { readServerConfig } from "./config.mjs";
 import { CalibrationDatabase } from "./database.mjs";
@@ -53,11 +54,20 @@ test("production cookie and startup configuration fail closed", () => {
     OPEN_LOOPS_SESSION_SECRET: "x".repeat(40), OPEN_LOOPS_PUBLIC_ORIGIN: "https://pilot.example",
     OPEN_LOOPS_AUTH_MODE: "development", OPEN_LOOPS_ALLOW_DEVELOPMENT_AUTH: "true",
   }), /Development authentication cannot run in production/);
-  const valid = readServerConfig({
+  assert.throws(() => readServerConfig({
     NODE_ENV: "production", OPEN_LOOPS_DATABASE_PATH: "/data/open-loops.sqlite",
     OPEN_LOOPS_SESSION_SECRET: "x".repeat(40), OPEN_LOOPS_PUBLIC_ORIGIN: "https://pilot.example",
     OPEN_LOOPS_AUTH_MODE: "external",
+  }), /TRUSTED_PROXY_SECRET/);
+  const valid = readServerConfig({
+    NODE_ENV: "production", OPEN_LOOPS_DATABASE_PATH: "/data/open-loops.sqlite",
+    OPEN_LOOPS_SESSION_SECRET: "x".repeat(40), OPEN_LOOPS_PUBLIC_ORIGIN: "https://pilot.example",
+    OPEN_LOOPS_AUTH_MODE: "external", OPEN_LOOPS_TRUSTED_PROXY_SECRET: "p".repeat(40),
+    HOST: "0.0.0.0", PORT: "8080",
   });
+  assert.equal(valid.host, "0.0.0.0");
+  assert.equal(valid.port, 8080);
+  assert.match(valid.staticRoot, /dist$/);
   assert.equal(valid.modelProviderTimeoutMs, 180_000);
   assert.equal(readServerConfig({
     OPEN_LOOPS_DATABASE_PATH: "development.sqlite",
@@ -71,6 +81,77 @@ test("production cookie and startup configuration fail closed", () => {
       MODEL_PROVIDER_TIMEOUT_MS: invalid,
     }), /MODEL_PROVIDER_TIMEOUT_MS/);
   }
+});
+
+test("trusted production identity rejects direct public requests", () => {
+  const secret = "trusted-proxy-test-secret-value-123456";
+  const auth = new TrustedProxyAuthService({ secret, userHeader: "x-open-loops-user-id" });
+  assert.equal(auth.restore(new Request("https://pilot.example/api/auth/session", {
+    headers: { "x-open-loops-user-id": "judge-user" },
+  })), null);
+  assert.equal(auth.restore(new Request("https://pilot.example/api/auth/session", {
+    headers: {
+      "x-open-loops-user-id": "judge-user",
+      "x-open-loops-proxy-secret": "incorrect-secret-value-1234567890",
+    },
+  })), null);
+  assert.equal(auth.restore(new Request("https://pilot.example/api/auth/session", {
+    headers: {
+      "x-open-loops-user-id": "judge-user",
+      "x-open-loops-proxy-secret": secret,
+    },
+  })), "judge-user");
+});
+
+test("production handler serves static files, SPA fallback, and safe health from one origin", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "open-loops-static-"));
+  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  mkdirSync(join(directory, "assets"));
+  writeFileSync(join(directory, "index.html"), "<!doctype html><title>Open Loops</title><div id=\"root\"></div>");
+  writeFileSync(join(directory, "assets", "app.js"), "globalThis.openLoopsLoaded=true;");
+  const api = createApi({ database: {}, auth: {}, generationService: {}, canonical: {} });
+  const handler = createApplicationHandler({ api, staticRoot: directory });
+
+  const home = await handler(new Request("https://pilot.example/"));
+  assert.equal(home.status, 200);
+  assert.match(home.headers.get("content-type"), /text\/html/);
+  assert.match(await home.text(), /Open Loops/);
+  const asset = await handler(new Request("https://pilot.example/assets/app.js"));
+  assert.equal(asset.status, 200);
+  assert.match(asset.headers.get("cache-control"), /immutable/);
+  assert.match(await asset.text(), /openLoopsLoaded/);
+  const spa = await handler(new Request("https://pilot.example/business-dna/calibration/session-1"));
+  assert.equal(spa.status, 200);
+  assert.match(await spa.text(), /Open Loops/);
+  assert.equal((await handler(new Request("https://pilot.example/assets/missing.js"))).status, 404);
+
+  const health = await handler(new Request("https://pilot.example/api/health"));
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { status: "ok" });
+  assert.doesNotMatch(JSON.stringify(Object.fromEntries(health.headers)), /secret|participant|sqlite/i);
+});
+
+test("deployment artifacts exclude secrets, participant databases, and frontend provider keys", () => {
+  const gitignore = readFileSync(new URL("../.gitignore", import.meta.url), "utf8");
+  const dockerignore = readFileSync(new URL("../.dockerignore", import.meta.url), "utf8");
+  const example = readFileSync(new URL("../.env.example", import.meta.url), "utf8");
+  const clientSource = readFileSync(new URL("../src/storage/calibrationApi.ts", import.meta.url), "utf8");
+  for (const ignore of [gitignore, dockerignore]) {
+    assert.match(ignore, /\.env/);
+    assert.match(ignore, /\*\.sqlite/);
+    assert.match(ignore, /pilot-backups/);
+  }
+  for (const name of [
+    "NODE_ENV", "HOST", "PORT", "OPEN_LOOPS_STATIC_ROOT", "OPEN_LOOPS_DATABASE_PATH",
+    "OPEN_LOOPS_SESSION_SECRET", "OPEN_LOOPS_PUBLIC_ORIGIN", "OPEN_LOOPS_AUTH_MODE",
+    "OPEN_LOOPS_ALLOW_DEVELOPMENT_AUTH", "OPEN_LOOPS_TRUSTED_PROXY_SECRET",
+    "OPEN_LOOPS_TRUSTED_USER_HEADER", "OPEN_LOOPS_CONFIRM_DELETE", "MODEL_PROVIDER_TYPE",
+    "MODEL_PROVIDER_URL", "MODEL_PROVIDER_API_KEY", "MODEL_PROVIDER_NAME", "MODEL_IDENTIFIER",
+    "MODEL_PROVIDER_TIMEOUT_MS",
+  ]) assert.match(example, new RegExp(`^${name}=$`, "m"));
+  assert.match(example, /^MODEL_PROVIDER_API_KEY=$/m);
+  assert.doesNotMatch(example, /=.+/);
+  assert.doesNotMatch(clientSource, /MODEL_PROVIDER_API_KEY|OPENAI_API_KEY|Bearer sk-/);
 });
 
 test("development login is disabled and sign-out clears the session cookie", async () => {

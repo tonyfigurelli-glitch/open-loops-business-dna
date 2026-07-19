@@ -1,15 +1,19 @@
-import { isAbsolute } from "node:path";
+import { isAbsolute, resolve } from "node:path";
 import { DEFAULT_MODEL_PROVIDER_TIMEOUT_MS } from "./modelProvider.mjs";
 
 export function readServerConfig(env = process.env) {
   const production = env.NODE_ENV === "production";
   const config = {
     production,
+    host: env.HOST ?? "127.0.0.1",
     port: Number(env.PORT ?? 8787),
+    staticRoot: resolve(env.OPEN_LOOPS_STATIC_ROOT ?? "dist"),
     databasePath: env.OPEN_LOOPS_DATABASE_PATH,
     sessionSecret: env.OPEN_LOOPS_SESSION_SECRET,
     publicOrigin: env.OPEN_LOOPS_PUBLIC_ORIGIN,
     authMode: env.OPEN_LOOPS_AUTH_MODE ?? (production ? undefined : "development"),
+    trustedProxySecret: env.OPEN_LOOPS_TRUSTED_PROXY_SECRET,
+    trustedUserHeader: (env.OPEN_LOOPS_TRUSTED_USER_HEADER ?? "x-open-loops-user-id").toLowerCase(),
     allowDevelopmentAuth: env.OPEN_LOOPS_ALLOW_DEVELOPMENT_AUTH === "true",
     modelProviderUrl: env.MODEL_PROVIDER_URL,
     modelProviderApiKey: env.MODEL_PROVIDER_API_KEY,
@@ -32,12 +36,19 @@ export function validateServerConfig(config) {
   if (!Number.isInteger(config.port) || config.port < 1 || config.port > 65535) {
     throw new Error("PORT must be a valid TCP port.");
   }
+  if (!config.host || typeof config.host !== "string") throw new Error("HOST must be configured.");
   if (config.production) {
     if (config.allowDevelopmentAuth || config.authMode === "development") {
       throw new Error("Development authentication cannot run in production.");
     }
     if (config.authMode !== "external") {
       throw new Error("OPEN_LOOPS_AUTH_MODE=external is required after a production identity adapter is approved.");
+    }
+    if (!config.trustedProxySecret || config.trustedProxySecret.length < 32) {
+      throw new Error("OPEN_LOOPS_TRUSTED_PROXY_SECRET must contain at least 32 characters in production.");
+    }
+    if (!/^[a-z0-9-]+$/.test(config.trustedUserHeader)) {
+      throw new Error("OPEN_LOOPS_TRUSTED_USER_HEADER must be a valid HTTP header name.");
     }
     if (!config.publicOrigin?.startsWith("https://")) {
       throw new Error("OPEN_LOOPS_PUBLIC_ORIGIN must be an HTTPS origin in production.");

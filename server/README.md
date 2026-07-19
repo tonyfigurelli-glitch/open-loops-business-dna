@@ -20,7 +20,10 @@ The development authentication route is available only when `OPEN_LOOPS_ALLOW_DE
 - `OPEN_LOOPS_SESSION_SECRET`: required encryption secret for opaque, authenticated HttpOnly session cookies.
 - `OPEN_LOOPS_ALLOW_DEVELOPMENT_AUTH`: optional local-only identity adapter.
 - `OPEN_LOOPS_PUBLIC_ORIGIN`: required HTTPS origin in production.
-- `OPEN_LOOPS_AUTH_MODE`: must be `external` in production after an identity adapter is approved.
+- `OPEN_LOOPS_AUTH_MODE`: must be `external` in production.
+- `OPEN_LOOPS_TRUSTED_PROXY_SECRET`: required high-entropy production secret injected by the authenticated reverse proxy; never sent by browser code.
+- `OPEN_LOOPS_TRUSTED_USER_HEADER`: identity header injected by the authenticated reverse proxy; defaults to `x-open-loops-user-id`.
+- `OPEN_LOOPS_STATIC_ROOT`: built frontend directory; defaults to `dist`.
 - `MODEL_PROVIDER_URL`: optional approved structured-generation endpoint. Its absence activates deterministic fallback.
 - `MODEL_PROVIDER_API_KEY`: required when a model-provider URL is configured; server-only.
 - `MODEL_IDENTIFIER`: required when a model-provider URL is configured.
@@ -28,10 +31,17 @@ The development authentication route is available only when `OPEN_LOOPS_ALLOW_DE
 - `MODEL_PROVIDER_TYPE`: `openai_responses` or `configured_http`; defaults to the vendor-neutral HTTP adapter.
 - `MODEL_PROVIDER_TIMEOUT_MS`: per-attempt provider timeout from `30000` through `600000` milliseconds; defaults to `180000` for the full ten-section strict structured result.
 - `PORT`: optional API port; defaults to `8787`.
+- `HOST`: bind address; defaults to `127.0.0.1`, while the container sets `0.0.0.0`.
 
-Production must supply an approved authentication adapter or gateway identity and must not enable development authentication. The current SQLite implementation requires a persistent single-instance filesystem. A multi-instance or serverless deployment should replace the storage adapter with hosted PostgreSQL while preserving the same ownership and immutability contracts.
+Production must run behind an approved identity-aware reverse proxy or gateway. The proxy must authenticate the user, strip client-supplied identity/proxy-secret headers, and inject the stable user ID plus `x-open-loops-proxy-secret` over a private upstream connection. Requests missing either value receive HTTP 401. The Node service must not be exposed through a route that bypasses the proxy. Development authentication remains disabled in production.
 
-Production startup intentionally fails until the approved external identity adapter is installed. Required production secrets must come from the deployment secret manager, and the database path must be absolute and persistent.
+The current SQLite implementation requires one service instance and a mounted persistent filesystem. A multi-instance or serverless deployment should replace the storage adapter with hosted PostgreSQL while preserving the same ownership and immutability contracts. Production startup fails when HTTPS origin, absolute database path, session secret, external auth mode, trusted proxy secret, provider settings, host, port, or timeout settings are invalid. Required secrets must come from the deployment secret manager.
+
+## Production Operation
+
+`npm run start:production` builds Vite and starts Node. Node serves the resulting `dist` files, returns `index.html` for extensionless SPA routes, and serves `/api` from the same origin. `GET /api/health` returns only `{"status":"ok"}`. The Docker image performs the build in a separate stage and starts the same Node entrypoint.
+
+Mount a volume and set an absolute path such as `OPEN_LOOPS_DATABASE_PATH=/data/open-loops.sqlite`. Supply environment variables from [.env.example](../.env.example); do not copy a populated environment file into the image. See the root [README](../README.md) for commands and judge workflow.
 
 ## Pilot Operations
 
@@ -52,7 +62,7 @@ Every data route authenticates the request and scopes database access by user ID
 
 ## Open Questions
 
-- Which production identity provider and deployment platform will be approved?
+- Which production identity proxy and deployment platform will be approved?
 - Will production use a persistent single instance or require hosted PostgreSQL?
 
 ## Version 1 Boundaries

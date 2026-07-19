@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
 export class TokenAuthService {
   constructor(secret) {
@@ -47,6 +47,30 @@ export class TokenAuthService {
       return parsed.userId;
     } catch { return null; }
   }
+}
+
+export class TrustedProxyAuthService {
+  constructor({ secret, userHeader = "x-open-loops-user-id" }) {
+    if (!secret || secret.length < 32) {
+      throw new Error("A trusted proxy secret of at least 32 characters is required.");
+    }
+    if (!/^[a-z0-9-]+$/.test(userHeader)) throw new Error("A valid trusted user header is required.");
+    this.secret = Buffer.from(secret);
+    this.userHeader = userHeader;
+  }
+
+  authenticate(request) {
+    const suppliedSecret = Buffer.from(request.headers.get("x-open-loops-proxy-secret") ?? "");
+    if (suppliedSecret.length !== this.secret.length || !timingSafeEqual(suppliedSecret, this.secret)) return null;
+    const userId = request.headers.get(this.userHeader)?.trim();
+    return userId && /^[A-Za-z0-9][A-Za-z0-9._:@/-]{0,199}$/.test(userId) ? userId : null;
+  }
+
+  restore(request) { return this.authenticate(request); }
+
+  async signIn() { return null; }
+
+  signOut({ secure = true } = {}) { return { clearCookie: clearSessionCookie(secure) }; }
 }
 
 export function assertAuthenticationAdapter(adapter) {
