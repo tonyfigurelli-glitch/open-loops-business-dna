@@ -65,6 +65,12 @@ Instruction version `small_business_owner_v1.3_ai_generation@1.1.2` prohibits in
 
 The result presentation now keeps the ten canonical narrative sections primary. Unknowns and possible disconfirming evidence are conservatively deduplicated without rewriting the first retained wording and rendered as lists. Stored Interpretation, Original Answers, complete experiment details, Participant Feedback, and generation/source diagnostics remain complete but begin collapsed under `Review details`. Session history, provenance, original records, retry behavior, and deterministic fallback are unchanged.
 
+### July 18 Retry Refresh-Recovery Finding
+
+Live testing produced a successful AI-assisted retry and an HTTP 200 response, but browser refresh returned to the original deterministic result and removed the retry's success state and provenance. A completed-session `PUT` had also returned HTTP 409. The retry endpoint and SQLite attempt table were present, but the client dropped attempts during local normalization, could prefer a later local completed-session copy during merge, and treated an appended server attempt as a writable session change.
+
+Retry attempts are now explicitly server-owned append-only records. The retry endpoint persists each AI-assisted or failed-with-fallback attempt directly, and session reads return all attempts newest-first after refresh, authentication-service recreation, or database restart. Failed attempts retain only safe validation diagnostics. Local recovery preserves and unions attempt records by ID, the immutable server completed session remains authoritative, and retry-only changes are excluded from client write synchronization. The original answers, timestamps, feedback, deterministic model, completed session, and Initial Business DNA Record remain unchanged.
+
 ## Development Versus Production
 
 Production differs from development in these required ways:

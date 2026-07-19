@@ -42,6 +42,58 @@ test("session merge retains the more complete recoverable local copy", () => {
   assert.equal(client.mergeSessions([local], [remote])[0], local);
 });
 
+test("refresh merge preserves server-owned retry attempts and immutable completed data", () => {
+  const base = {
+    id: "completed", startedAt: "2026-07-17T12:00:00.000Z",
+    lastUpdatedAt: "2026-07-17T13:00:00.000Z", status: "completed",
+    centralHypothesis: "Original deterministic hypothesis",
+    participantResponses: Array.from({ length: 12 }, () => ({})),
+    numericalFeedback: {}, openEndedFeedback: {},
+  };
+  const failedAttempt = {
+    id: "attempt-failed", outcome: "failed_with_fallback",
+    createdAt: "2026-07-18T12:00:00.000Z", provenance: { failureReason: "validation_failure" },
+  };
+  const successfulAttempt = {
+    id: "attempt-success", outcome: "ai_assisted",
+    createdAt: "2026-07-18T13:00:00.000Z", provenance: { generatorType: "ai_assisted" },
+  };
+  const local = {
+    ...base, lastUpdatedAt: "2026-07-18T14:00:00.000Z",
+    centralHypothesis: "Invalid local overwrite", generationAttempts: [failedAttempt],
+  };
+  const remote = { ...base, generationAttempts: [successfulAttempt, failedAttempt] };
+  const merged = client.mergeSessions([local], [remote])[0];
+
+  assert.equal(merged.centralHypothesis, "Original deterministic hypothesis");
+  assert.deepEqual(merged.generationAttempts.map((attempt) => attempt.id), [
+    "attempt-success", "attempt-failed",
+  ]);
+  assert.equal(merged.generationAttempts.find((attempt) => attempt.outcome === "ai_assisted"), successfulAttempt);
+});
+
+test("server-owned retry attempts do not change the session write fingerprint", () => {
+  const session = {
+    id: "completed", startedAt: "2026-07-17T12:00:00.000Z", status: "completed",
+    participantResponses: [], numericalFeedback: {}, openEndedFeedback: {},
+  };
+  const withoutAttempt = client.calibrationSessionWriteFingerprint(session);
+  const withAttempt = client.calibrationSessionWriteFingerprint({
+    ...session,
+    generationAttempts: [{ id: "server-attempt", outcome: "ai_assisted", createdAt: "2026-07-18T12:00:00.000Z" }],
+  });
+  assert.equal(withAttempt, withoutAttempt);
+
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  assert.match(app, /changedSessions\.map\(\(session\) => syncCalibrationSession\(session\)\)/);
+  assert.doesNotMatch(app, /calibrationSessions\.map\(\(session\) => syncCalibrationSession\(session\)\)/);
+});
+
+test("local-storage recovery retains generation attempts", () => {
+  const storage = readFileSync(new URL("../src/storage/prototypeStorage.ts", import.meta.url), "utf8");
+  assert.match(storage, /generationAttempts: session\.generationAttempts \?\? \[\]/);
+});
+
 test("local migration filter uses the exact canonical identity", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;
@@ -98,6 +150,7 @@ test("completed results expose history, new-session, retry, and safe generation 
     "Connecting securely to GPT-5.6", "AI-assisted generation succeeded",
     "AI-assisted generation failed", "GPT-5.6 timed out", "did not pass narrative and evidence validation",
   ]) assert.match(screen, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.match(screen, /session\.generationAttempts\?\.find\(\s*\(attempt\) => attempt\.outcome === "ai_assisted"/);
   assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
 });
 

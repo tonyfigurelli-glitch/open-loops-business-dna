@@ -51,6 +51,7 @@ import {
 } from "./storage/prototypeStorage";
 import {
   establishCalibrationSession,
+  calibrationSessionWriteFingerprint,
   migrateAndLoadCalibrationSessions,
   requestGenerationWithNetworkFallback,
   retryCalibrationGeneration,
@@ -101,7 +102,7 @@ function App() {
     selectCalibrationToOpen(loadPrototypeState(seedPrototypeState).calibrationSessions)?.id ?? "",
   );
   const durableStorageReady = useRef(false);
-  const previousCalibrationSnapshot = useRef("");
+  const previousCalibrationWriteFingerprints = useRef(new Map<string, string>());
 
   const {
     calibrationSessions,
@@ -123,7 +124,10 @@ function App() {
         const sessions = await migrateAndLoadCalibrationSessions(calibrationSessions);
         if (!active || !sessions) return;
         durableStorageReady.current = true;
-        previousCalibrationSnapshot.current = JSON.stringify(sessions);
+        previousCalibrationWriteFingerprints.current = new Map(sessions.map((session) => [
+          session.id,
+          calibrationSessionWriteFingerprint(session),
+        ]));
         updatePrototypeState((current) => ({ ...current, calibrationSessions: sessions }));
       } catch {
         // localStorage remains a recoverable cache while the API is unavailable.
@@ -136,10 +140,16 @@ function App() {
 
   useEffect(() => {
     if (!durableStorageReady.current) return;
-    const snapshot = JSON.stringify(calibrationSessions);
-    if (snapshot === previousCalibrationSnapshot.current) return;
-    previousCalibrationSnapshot.current = snapshot;
-    void Promise.all(calibrationSessions.map((session) => syncCalibrationSession(session))).catch(() => {
+    const prior = previousCalibrationWriteFingerprints.current;
+    const next = new Map(calibrationSessions.map((session) => [
+      session.id,
+      calibrationSessionWriteFingerprint(session),
+    ]));
+    const changedSessions = calibrationSessions.filter((session) =>
+      prior.get(session.id) !== next.get(session.id));
+    previousCalibrationWriteFingerprints.current = next;
+    if (!changedSessions.length) return;
+    void Promise.all(changedSessions.map((session) => syncCalibrationSession(session))).catch(() => {
       // The local cache already contains the update and will be retried after reconnect/reload.
     });
   }, [calibrationSessions]);

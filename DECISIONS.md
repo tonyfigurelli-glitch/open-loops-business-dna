@@ -36,6 +36,28 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Make Calibration Generation Retries Server-Owned And Refresh-Safe
+
+**Decision:** Treat every generation retry as an append-only server-owned `CalibrationGenerationAttempt`, separate from the immutable completed calibration session and its original Business DNA record. Persist successful and failed attempts before returning the retry response, retain safe validation diagnostics, and attach all attempts newest-first whenever a session is read. On the client, preserve attempts during local normalization and merge them by immutable attempt ID without allowing a local completed-session copy to replace the server's original data. Exclude the server-owned `generationAttempts` read model from session write fingerprints so a retry result never triggers a completed-session `PUT`.
+
+**Rationale:** Live testing showed an AI-assisted retry correctly after HTTP 200, but refresh restored the deterministic model and removed the AI success state and provenance. A subsequent completed-session `PUT` had previously returned HTTP 409. Review found that the endpoint already created a durable attempt row, while local-storage normalization omitted attempts, whole-session merge could prefer a later local copy over the server copy, and the global synchronization effect interpreted the appended attempt as a mutation of the immutable completed session. Retry persistence must belong entirely to the retry endpoint and append-only attempt table, not to a frontend overwrite of the source session.
+
+**Affected Files:**
+
+- [server/database.mjs](server/database.mjs)
+- [server/backend.test.mjs](server/backend.test.mjs)
+- [server/clientRecovery.test.mjs](server/clientRecovery.test.mjs)
+- [src/App.tsx](src/App.tsx)
+- [src/storage/calibrationApi.ts](src/storage/calibrationApi.ts)
+- [src/storage/prototypeStorage.ts](src/storage/prototypeStorage.ts)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Monitor retry creation and reload behavior in the controlled pilot. Any future attempt lifecycle state must remain append-only and must not relax completed-session, original-model, answer, timestamp, feedback, or Initial Business DNA Record immutability. Both frozen Version 1.3 canonical files remain unchanged.
+
 ### 2026-07-18: Make The Business DNA Result Participant-First
 
 **Decision:** Advance the Small Business Owner AI generation instruction layer from `small_business_owner_v1.3_ai_generation@1.1.1` to `@1.1.2` without modifying either frozen Version 1.3 artifact. Keep all ten canonical section IDs, titles, and order. Prohibit internal confidence-report and evaluation rationale in participant-facing section bodies while allowing uncertainty to be expressed naturally. Deduplicate unknowns and possible disconfirming evidence conservatively, preserving the first retained wording, and display them as lists. Keep the ten narrative sections visually primary. Place Stored Interpretation, Original Answers, the full Seven-Day Experiment, Participant Feedback, and generation/source diagnostics in collapsed `Review details` disclosures while keeping every record complete and accessible.

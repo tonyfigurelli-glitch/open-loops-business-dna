@@ -99,6 +99,7 @@ function normalizeCalibrationSession(
     generationProvenance: session.generationProvenance,
     originalStructuredGenerationOutput: session.originalStructuredGenerationOutput,
     deterministicFallbackOutput: session.deterministicFallbackOutput,
+    generationAttempts: session.generationAttempts ?? [],
     migrationProvenance: session.migrationProvenance,
     numericalFeedback,
     openEndedFeedback,

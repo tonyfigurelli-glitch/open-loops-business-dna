@@ -78,6 +78,8 @@ Generation provenance records whether the saved model came from validated AI-ass
 
 Generation provenance also retains one content-free validation diagnostic per provider attempt: attempt number, outcome, stable failure codes, and fixed validator error messages. These diagnostics support operational diagnosis without storing participant answers or rejected narrative in logs.
 
+`CalibrationGenerationAttempt` is an append-only child record owned by the durable server store. It contains its immutable attempt ID, source session ID, outcome, generated result, provenance, optional accepted structured output, and creation timestamp. It is not written back into the completed calibration session row. Session API reads expose attempts as a newest-first read model; local caching and merge may preserve that read model but may not use it to mutate the original completed session or Initial Business DNA Record.
+
 The completed-session read presentation may conservatively collapse semantically repeated unknowns and possible disconfirming evidence, retaining the first wording, to avoid repetitive participant display. This does not remove or overwrite source answers, generated section bodies, provenance, feedback, or historical session records. Complete interpretation and audit records remain accessible through the result's review disclosures.
 
 The initial model remains historically distinguishable from later Business DNA evidence and revisions.

@@ -185,7 +185,7 @@ export class CalibrationDatabase {
 
   listGenerationAttempts(userId, sessionId) {
     return this.db.prepare(`SELECT attempt_json FROM calibration_generation_attempts
-      WHERE user_id=? AND source_session_id=? ORDER BY created_at DESC`).all(
+      WHERE user_id=? AND source_session_id=? ORDER BY created_at DESC, rowid DESC`).all(
       userId, sessionId,
     ).map((row) => JSON.parse(row.attempt_json));
   }

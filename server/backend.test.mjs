@@ -313,6 +313,93 @@ test("retry uses the exact stored 12-answer evidence and preserves the completed
   assert.equal(denied.status, 404);
 });
 
+test("retry attempts survive refresh, auth recreation, and database restart newest-first", async (t) => {
+  const directory = mkdtempSync(join(tmpdir(), "open-loops-retry-restart-"));
+  const databasePath = join(directory, "calibrations.sqlite");
+  const secret = "retry-restart-test-secret";
+  let database = new CalibrationDatabase(databasePath);
+  t.after(() => {
+    try { database.close(); } catch {}
+    rmSync(directory, { recursive: true, force: true });
+  });
+
+  const base = session("restart-retry-session");
+  const responses = domain.canonical.onboarding_questions.map((question, index) => ({
+    questionId: question.id,
+    response: `Restart-safe exact answer ${index + 1}.`,
+    answeredAt: base.startedAt,
+  }));
+  const fallback = domain.generator.generateInitialBusinessModel(responses);
+  const completed = {
+    ...base, ...fallback, participantResponses: responses, currentQuestionIndex: 12,
+    status: "completed", completedAt: "2026-07-17T13:00:00.000Z",
+    generationProvenance: {
+      generatorType: "deterministic_fallback", provider: "unavailable", modelIdentifier: "unavailable",
+      promptInstructionVersion: "test", calibrationVersion: domain.canonical.version,
+      frozenCalibrationHash: base.frozenSourceHash, generationTimestamp: base.startedAt,
+      validationResult: { valid: false, errors: ["outage"] }, retryCount: 1,
+      evidencePackageHash: "c".repeat(64),
+    },
+    deterministicFallbackOutput: fallback,
+  };
+  database.createSession("user-a", completed);
+  const originalRecord = structuredClone(database.getBusinessDNARecord("user-a", base.id));
+  const originalProfile = structuredClone(database.getSession("user-a", base.id).generatedProfile);
+
+  let providerCall = 0;
+  const provider = new domain.pipeline.LocalMockCalibrationModelProvider((request) => {
+    providerCall += 1;
+    if (providerCall <= 2) throw new Error("sensitive provider failure body");
+    return validAIOutput(request.evidencePackage);
+  }, "approved_server_test", "gpt-5.6-test");
+  const service = new CalibrationGenerationService({
+    canonical: domain.canonical, pipeline: domain.pipeline, generator: domain.generator, provider,
+  });
+  const auth = new TokenAuthService(secret);
+  const token = auth.issue("user-a");
+  const api = createApi({ database, auth, generationService: service, canonical: domain.canonical });
+  const retryRequest = () => new Request(
+    "http://local/api/calibration-sessions/restart-retry-session/retry-generation",
+    { method: "POST", body: "{}", headers: { authorization: `Bearer ${token}`, "content-type": "application/json" } },
+  );
+
+  assert.equal((await api(retryRequest())).status, 200);
+  assert.equal((await api(retryRequest())).status, 200);
+  const refreshed = await api(new Request("http://local/api/calibration-sessions", {
+    headers: { authorization: `Bearer ${token}` },
+  }));
+  const beforeRestart = (await refreshed.json()).sessions[0];
+  assert.deepEqual(beforeRestart.generationAttempts.map((attempt) => attempt.outcome), [
+    "ai_assisted", "failed_with_fallback",
+  ]);
+  assert.equal(beforeRestart.generationAttempts[1].provenance.failureReason, "provider_failure");
+  assert.equal(beforeRestart.generationAttempts[1].provenance.validationAttempts.length, 2);
+  assert.doesNotMatch(JSON.stringify(beforeRestart.generationAttempts[1].provenance), /sensitive provider failure body/);
+
+  database.close();
+  database = new CalibrationDatabase(databasePath);
+  const recreatedAuth = new TokenAuthService(secret);
+  const recreatedApi = createApi({
+    database,
+    auth: recreatedAuth,
+    generationService: new CalibrationGenerationService({
+      canonical: domain.canonical,
+      pipeline: domain.pipeline,
+      generator: domain.generator,
+      provider: new domain.pipeline.UnavailableCalibrationModelProvider(),
+    }),
+    canonical: domain.canonical,
+  });
+  const afterRestartResponse = await recreatedApi(new Request("http://local/api/calibration-sessions", {
+    headers: { authorization: `Bearer ${token}` },
+  }));
+  assert.equal(afterRestartResponse.status, 200);
+  const afterRestart = (await afterRestartResponse.json()).sessions[0];
+  assert.deepEqual(afterRestart.generationAttempts, beforeRestart.generationAttempts);
+  assert.deepEqual(afterRestart.generatedProfile, originalProfile);
+  assert.deepEqual(database.getBusinessDNARecord("user-a", base.id), originalRecord);
+});
+
 test("retry records a failed-with-fallback state when the provider remains unavailable", async (t) => {
   const f = fixture(); t.after(() => f.close());
   const base = session("fallback-retry");

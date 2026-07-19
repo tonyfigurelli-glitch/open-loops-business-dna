@@ -143,13 +143,42 @@ export function mergeSessions(local: CalibrationSession[], remote: CalibrationSe
   const merged = new Map(remote.map((session) => [session.id, session]));
   for (const session of local) {
     const existing = merged.get(session.id);
-    if (!existing || completionScore(session) > completionScore(existing) ||
-        Date.parse(session.lastUpdatedAt ?? session.startedAt) > Date.parse(existing.lastUpdatedAt ?? existing.startedAt)) {
+    if (!existing) {
       merged.set(session.id, session);
+      continue;
     }
+    const preferredBase = existing.status === "completed"
+      ? existing
+      : completionScore(session) > completionScore(existing) ||
+          Date.parse(session.lastUpdatedAt ?? session.startedAt) > Date.parse(existing.lastUpdatedAt ?? existing.startedAt)
+        ? session
+        : existing;
+    const generationAttempts = mergeGenerationAttempts(
+      session.generationAttempts ?? [],
+      existing.generationAttempts ?? [],
+    );
+    merged.set(session.id, generationAttempts.length
+      ? { ...preferredBase, generationAttempts }
+      : preferredBase);
   }
   return [...merged.values()].sort((a, b) =>
     Date.parse(b.lastUpdatedAt ?? b.startedAt) - Date.parse(a.lastUpdatedAt ?? a.startedAt));
+}
+
+export function calibrationSessionWriteFingerprint(session: CalibrationSession) {
+  const { generationAttempts: _serverOwnedGenerationAttempts, ...persistedSession } = session;
+  return JSON.stringify(persistedSession);
+}
+
+function mergeGenerationAttempts(
+  local: CalibrationGenerationAttempt[],
+  remote: CalibrationGenerationAttempt[],
+) {
+  const attempts = new Map(remote.map((attempt) => [attempt.id, attempt]));
+  for (const attempt of local) {
+    if (!attempts.has(attempt.id)) attempts.set(attempt.id, attempt);
+  }
+  return [...attempts.values()].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
 }
 
 async function request(path: string, init: RequestInit = {}) {
