@@ -132,3 +132,17 @@ export function saveOpenEndedFeedback(
 export function selectCalibrationToOpen(sessions: CalibrationSession[]) {
   return sessions.find((session) => session.status !== "completed") ?? sessions[0];
 }
+
+export function preserveAndPrependCalibrationSession(
+  sessions: CalibrationSession[],
+  newSession: CalibrationSession,
+) {
+  if (sessions.some((session) => session.id === newSession.id)) {
+    throw new Error("A calibration session with this ID already exists.");
+  }
+  return [newSession, ...sessions];
+}
+
+export function selectCalibrationSession(sessions: CalibrationSession[], sessionId: string) {
+  return sessions.find((session) => session.id === sessionId) ?? selectCalibrationToOpen(sessions);
+}

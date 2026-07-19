@@ -65,3 +65,32 @@ test("local migration filter uses the exact canonical identity", async () => {
     assert.deepEqual(uploaded.map((item) => item.id), ["canonical"]);
   } finally { globalThis.fetch = originalFetch; }
 });
+
+test("retry status maps AI success and failed fallback without exposing generation content", () => {
+  assert.equal(client.generationStateForAttempt({ outcome: "ai_assisted" }), "successful_ai_assisted");
+  assert.equal(client.generationStateForAttempt({ outcome: "failed_with_fallback" }), "failed_with_fallback");
+});
+
+test("retry errors are redacted before reaching the participant interface", async () => {
+  const originalFetch = globalThis.fetch;
+  const sensitive = "provider-credential-private provider prompt and participant answer";
+  globalThis.fetch = async () => new Response(JSON.stringify({ error: sensitive }), { status: 500 });
+  try {
+    let captured;
+    await client.retryCalibrationGeneration("saved-session").catch((error) => { captured = error; });
+    const safe = client.safeGenerationError(captured);
+    assert.match(safe, /GPT-5.6/);
+    assert.doesNotMatch(safe, /provider-credential-private|provider prompt|participant answer/);
+    assert.doesNotMatch(JSON.stringify(captured), /provider-credential-private|provider prompt|participant answer/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("completed results expose history, new-session, retry, and safe generation states", () => {
+  const screen = readFileSync(new URL("../src/screens/BusinessCalibration.tsx", import.meta.url), "utf8");
+  for (const copy of [
+    "Start New Calibration", "Retry with GPT-5.6", "Calibration history",
+    "Connecting securely to GPT-5.6", "AI-assisted generation succeeded",
+    "AI-assisted generation failed",
+  ]) assert.match(screen, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
+});

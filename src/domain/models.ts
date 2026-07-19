@@ -180,6 +180,17 @@ export type CalibrationGenerationProvenance = {
   usage?: Record<string, number>;
 };
 
+export type CalibrationGenerationAttempt = {
+  id: string;
+  sourceSessionId: string;
+  outcome: "ai_assisted" | "failed_with_fallback";
+  requestedModelFamily: "GPT-5.6";
+  generation: CalibrationGenerationResult;
+  provenance: CalibrationGenerationProvenance;
+  originalStructuredOutput?: Record<string, unknown>;
+  createdAt: string;
+};
+
 export type CalibrationSessionStatus =
   | "collecting_answers"
   | "model_ready"
@@ -216,6 +227,7 @@ export type CalibrationSession = {
   generationProvenance?: CalibrationGenerationProvenance;
   originalStructuredGenerationOutput?: Record<string, unknown>;
   deterministicFallbackOutput?: CalibrationGenerationResult;
+  generationAttempts?: CalibrationGenerationAttempt[];
   migrationProvenance?: {
     source: "localStorage";
     importedAt: string;

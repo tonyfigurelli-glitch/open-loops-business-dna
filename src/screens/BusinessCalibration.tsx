@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { smallBusinessOwnerCalibration } from "../domain/calibrations/smallBusinessOwnerCalibration";
 import type {
+  CalibrationGenerationAttempt,
   CalibrationResponse,
   CalibrationSession,
 } from "../domain/models";
+import { generationStateForAttempt, safeGenerationError } from "../storage/calibrationApi";
 
 type BusinessCalibrationProps = {
   session: CalibrationSession;
@@ -11,6 +13,10 @@ type BusinessCalibrationProps = {
   onBackHome: () => void;
   onNumericalFeedback: (feedbackId: string, value: 1 | 2 | 3 | 4 | 5) => void;
   onOpenEndedFeedback: (feedbackId: string, value: string) => void;
+  onRetryGeneration: (sessionId: string) => Promise<CalibrationGenerationAttempt>;
+  onSelectSession: (sessionId: string) => void;
+  onStartNewCalibration: () => void | Promise<void>;
+  sessions: CalibrationSession[];
 };
 
 export function BusinessCalibration({
@@ -19,6 +25,10 @@ export function BusinessCalibration({
   onBackHome,
   onNumericalFeedback,
   onOpenEndedFeedback,
+  onRetryGeneration,
+  onSelectSession,
+  onStartNewCalibration,
+  sessions,
 }: BusinessCalibrationProps) {
   const [draft, setDraft] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -29,7 +39,16 @@ export function BusinessCalibration({
   const currentQuestion = questions[session.currentQuestionIndex];
 
   if (session.status === "completed") {
-    return <CompletedCalibration session={session} onBackHome={onBackHome} />;
+    return (
+      <CompletedCalibration
+        onBackHome={onBackHome}
+        onRetryGeneration={onRetryGeneration}
+        onSelectSession={onSelectSession}
+        onStartNewCalibration={onStartNewCalibration}
+        session={session}
+        sessions={sessions}
+      />
+    );
   }
 
   if (currentQuestion) {
@@ -43,6 +62,7 @@ export function BusinessCalibration({
           <h1>Let’s begin with your business.</h1>
           <p className="hero-copy">Question {currentQuestion.order} of {questions.length}</p>
           <CalibrationIdentity session={session} />
+          <SessionHistory onSelectSession={onSelectSession} session={session} sessions={sessions} />
         </header>
         <div className="calibration-progress" aria-hidden="true">
           <span style={{ width: `${(currentQuestion.order / questions.length) * 100}%` }} />
@@ -221,7 +241,34 @@ function CalibrationIdentity({ session }: { session: CalibrationSession }) {
   return <p className="source-hash">Version {session.semanticVersion} · Source {session.frozenSourceHash}</p>;
 }
 
-function CompletedCalibration({ session, onBackHome }: { session: CalibrationSession; onBackHome: () => void }) {
+function CompletedCalibration({
+  session,
+  sessions,
+  onBackHome,
+  onRetryGeneration,
+  onSelectSession,
+  onStartNewCalibration,
+}: {
+  session: CalibrationSession;
+  sessions: CalibrationSession[];
+  onBackHome: () => void;
+  onRetryGeneration: (sessionId: string) => Promise<CalibrationGenerationAttempt>;
+  onSelectSession: (sessionId: string) => void;
+  onStartNewCalibration: () => void | Promise<void>;
+}) {
+  const [generationState, setGenerationState] = useState<
+    "idle" | "connecting" | "successful_ai_assisted" | "failed_with_fallback"
+  >("idle");
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const latestAttempt = session.generationAttempts?.[0];
+  const successfulAttempt = session.generationAttempts?.find(
+    (attempt) => attempt.outcome === "ai_assisted",
+  );
+  const displayedGeneration = successfulAttempt?.generation;
+  const displayedProfile = displayedGeneration?.generatedProfile ?? session.generatedProfile;
+  const displayedProvenance = successfulAttempt?.provenance ?? session.generationProvenance;
+  const canRetry = session.generationProvenance?.generatorType === "deterministic_fallback"
+    && !successfulAttempt;
   const questionById = new Map(
     smallBusinessOwnerCalibration.onboarding_questions.map((question) => [question.id, question]),
   );
@@ -237,17 +284,24 @@ function CompletedCalibration({ session, onBackHome }: { session: CalibrationSes
       <article className="calibration-card completion-card">
         <p className="eyebrow">Calibration preserved</p>
         <h1>Your complete session is saved.</h1>
-        <p>Version {session.semanticVersion} · {session.participantResponses.length} answers · {session.confidenceLevel} confidence</p>
+        <p>Version {session.semanticVersion} · {session.participantResponses.length} answers · {displayedGeneration?.confidenceLevel ?? session.confidenceLevel} confidence</p>
         <p>
-          Generator: {session.generationProvenance?.generatorType ?? "legacy"}
-          {session.generationProvenance
-            ? ` · ${session.generationProvenance.provider} · ${session.generationProvenance.modelIdentifier}`
+          Generator: {displayedProvenance?.generatorType ?? "legacy"}
+          {displayedProvenance
+            ? ` · ${displayedProvenance.provider} · ${displayedProvenance.modelIdentifier}`
             : ""}
         </p>
         <p className="source-hash">Source {session.frozenSourceHash}</p>
+        <SessionHistory onSelectSession={onSelectSession} session={session} sessions={sessions} />
       </article>
+      <GenerationStatus
+        error={generationError}
+        state={generationState === "idle" && latestAttempt
+          ? generationStateForAttempt(latestAttempt)
+          : generationState}
+      />
       <div className="model-sections">
-        {session.generatedProfile?.sections.map((section) => (
+        {displayedProfile?.sections.map((section) => (
           <article className="model-section" key={section.id}>
             <p className="section-label">{section.title}</p>
             <p>{section.body}</p>
@@ -256,10 +310,10 @@ function CompletedCalibration({ session, onBackHome }: { session: CalibrationSes
       </div>
       <article className="model-section">
         <p className="section-label">Stored interpretation</p>
-        <p><strong>Central hypothesis:</strong> {session.centralHypothesis}</p>
-        <p><strong>Confidence:</strong> {session.confidenceLevel}</p>
-        <p><strong>Unknowns:</strong> {session.unknowns.join(" · ")}</p>
-        <p><strong>Possible disconfirming evidence:</strong> {session.possibleDisconfirmingEvidence.join(" · ")}</p>
+        <p><strong>Central hypothesis:</strong> {displayedGeneration?.centralHypothesis ?? session.centralHypothesis}</p>
+        <p><strong>Confidence:</strong> {displayedGeneration?.confidenceLevel ?? session.confidenceLevel}</p>
+        <p><strong>Unknowns:</strong> {(displayedGeneration?.unknowns ?? session.unknowns).join(" · ")}</p>
+        <p><strong>Possible disconfirming evidence:</strong> {(displayedGeneration?.possibleDisconfirmingEvidence ?? session.possibleDisconfirmingEvidence).join(" · ")}</p>
       </article>
       <article className="model-section">
         <p className="section-label">Original answers</p>
@@ -274,9 +328,9 @@ function CompletedCalibration({ session, onBackHome }: { session: CalibrationSes
       </article>
       <article className="model-section">
         <p className="section-label">Seven-day experiment</p>
-        <p>{session.proposedExperiment?.action}</p>
-        <p><strong>Hypothesis:</strong> {session.proposedExperiment?.hypothesis}</p>
-        <p><strong>Result to record:</strong> {session.proposedExperiment?.resultToRecord}</p>
+        <p>{(displayedGeneration?.proposedExperiment ?? session.proposedExperiment)?.action}</p>
+        <p><strong>Hypothesis:</strong> {(displayedGeneration?.proposedExperiment ?? session.proposedExperiment)?.hypothesis}</p>
+        <p><strong>Result to record:</strong> {(displayedGeneration?.proposedExperiment ?? session.proposedExperiment)?.resultToRecord}</p>
       </article>
       <article className="model-section">
         <p className="section-label">Participant feedback</p>
@@ -295,7 +349,82 @@ function CompletedCalibration({ session, onBackHome }: { session: CalibrationSes
           ))}
         </dl>
       </article>
-      <button className="primary-button" onClick={onBackHome} type="button">Return home</button>
+      <div className="calibration-actions">
+        <button className="primary-button" onClick={onStartNewCalibration} type="button">
+          Start New Calibration
+        </button>
+        {canRetry ? (
+          <button
+            className="ghost-button"
+            disabled={generationState === "connecting"}
+            onClick={() => {
+              setGenerationState("connecting");
+              setGenerationError(null);
+              onRetryGeneration(session.id)
+                .then((attempt) => setGenerationState(generationStateForAttempt(attempt)))
+                .catch((error: unknown) => {
+                  setGenerationState("failed_with_fallback");
+                  setGenerationError(safeGenerationError(error));
+                });
+            }}
+            type="button"
+          >
+            {generationState === "connecting" ? "Connecting…" : "Retry with GPT-5.6"}
+          </button>
+        ) : null}
+        <button className="ghost-button" onClick={onBackHome} type="button">Return home</button>
+      </div>
     </section>
+  );
+}
+
+function SessionHistory({ session, sessions, onSelectSession }: {
+  session: CalibrationSession;
+  sessions: CalibrationSession[];
+  onSelectSession: (sessionId: string) => void;
+}) {
+  if (sessions.length < 2) return null;
+
+  return (
+    <label className="session-history">
+      <span>Calibration history</span>
+      <select
+        aria-label="Calibration history"
+        onChange={(event) => onSelectSession(event.target.value)}
+        value={session.id}
+      >
+        {sessions.map((candidate, index) => (
+          <option key={candidate.id} value={candidate.id}>
+            {formatSessionLabel(candidate, index)}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
+function formatSessionLabel(session: CalibrationSession, index: number) {
+  const date = new Date(session.startedAt);
+  const dateLabel = Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleDateString();
+  return `${index === 0 ? "Latest" : dateLabel} · Version ${session.semanticVersion} · ${session.status}`;
+}
+
+function GenerationStatus({ state, error }: {
+  state: "idle" | "connecting" | "successful_ai_assisted" | "failed_with_fallback";
+  error: string | null;
+}) {
+  if (state === "idle") return null;
+
+  const copy = state === "connecting"
+    ? "Connecting securely to GPT-5.6…"
+    : state === "successful_ai_assisted"
+      ? "AI-assisted generation succeeded. Your original saved result is still preserved."
+      : "AI-assisted generation failed. Your saved deterministic result remains available.";
+
+  return (
+    <div className={`generation-status ${state}`} role="status">
+      <strong>{copy}</strong>
+      {error ? <p>{error}</p> : null}
+    </div>
   );
 }

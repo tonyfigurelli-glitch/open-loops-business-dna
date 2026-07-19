@@ -219,6 +219,87 @@ test("completion creates an immutable initial Business DNA record and original m
   assert.equal(f.database.getSession("user-a", base.id).centralHypothesis, generation.centralHypothesis);
 });
 
+test("retry uses the exact stored 12-answer evidence and preserves the completed result", async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  const base = session("retry-session");
+  const responses = domain.canonical.onboarding_questions.map((question, index) => ({
+    questionId: question.id,
+    response: `Exact private answer ${index + 1} — punctuation preserved.`,
+    answeredAt: `2026-07-17T12:${String(index).padStart(2, "0")}:00.000Z`,
+  }));
+  const fallback = domain.generator.generateInitialBusinessModel(responses);
+  const completed = {
+    ...base, ...fallback, participantResponses: responses, currentQuestionIndex: 12,
+    status: "completed", completedAt: "2026-07-17T13:00:00.000Z",
+    generationProvenance: {
+      generatorType: "deterministic_fallback", provider: "unavailable", modelIdentifier: "unavailable",
+      promptInstructionVersion: "test", calibrationVersion: domain.canonical.version,
+      frozenCalibrationHash: base.frozenSourceHash, generationTimestamp: base.startedAt,
+      validationResult: { valid: false, errors: ["outage"] }, retryCount: 1,
+      evidencePackageHash: "a".repeat(64),
+    },
+    deterministicFallbackOutput: fallback,
+  };
+  f.database.createSession("user-a", completed);
+  const originalRecord = structuredClone(f.database.getBusinessDNARecord("user-a", base.id));
+  let providerEvidence;
+  const provider = new domain.pipeline.LocalMockCalibrationModelProvider((request) => {
+    providerEvidence = request.evidencePackage;
+    return validAIOutput(request.evidencePackage);
+  }, "approved_server_test", "gpt-5.6-test");
+  const service = new CalibrationGenerationService({
+    canonical: domain.canonical, pipeline: domain.pipeline, generator: domain.generator, provider,
+  });
+  const api = createApi({ database: f.database, auth: f.auth, generationService: service, canonical: domain.canonical });
+
+  const response = await api(authenticatedRequest(
+    f.auth, "user-a", "/api/calibration-sessions/retry-session/retry-generation",
+    { method: "POST", body: "{}" },
+  ));
+  assert.equal(response.status, 200);
+  const { attempt } = await response.json();
+  assert.equal(attempt.outcome, "ai_assisted");
+  assert.equal(attempt.requestedModelFamily, "GPT-5.6");
+  assert.deepEqual(
+    providerEvidence.participantAnswers.map((answer) => answer.exactWording),
+    responses.map((answer) => answer.response),
+  );
+  assert.equal(f.database.getSession("user-a", base.id).centralHypothesis, fallback.centralHypothesis);
+  assert.deepEqual(f.database.getBusinessDNARecord("user-a", base.id), originalRecord);
+  assert.equal(f.database.listGenerationAttempts("user-a", base.id).length, 1);
+  const denied = await api(authenticatedRequest(
+    f.auth, "user-b", "/api/calibration-sessions/retry-session/retry-generation",
+    { method: "POST", body: "{}" },
+  ));
+  assert.equal(denied.status, 404);
+});
+
+test("retry records a failed-with-fallback state when the provider remains unavailable", async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  const base = session("fallback-retry");
+  const responses = domain.canonical.onboarding_questions.map((question) => ({
+    questionId: question.id, response: answerValues[question.id], answeredAt: base.startedAt,
+  }));
+  const fallback = domain.generator.generateInitialBusinessModel(responses);
+  f.database.createSession("user-a", {
+    ...base, ...fallback, status: "completed", completedAt: base.startedAt,
+    currentQuestionIndex: 12, participantResponses: responses,
+    generationProvenance: {
+      generatorType: "deterministic_fallback", provider: "unavailable", modelIdentifier: "unavailable",
+      promptInstructionVersion: "test", calibrationVersion: domain.canonical.version,
+      frozenCalibrationHash: base.frozenSourceHash, generationTimestamp: base.startedAt,
+      validationResult: { valid: false, errors: ["outage"] }, retryCount: 1,
+      evidencePackageHash: "b".repeat(64),
+    },
+  });
+  const response = await f.api(authenticatedRequest(
+    f.auth, "user-a", "/api/calibration-sessions/fallback-retry/retry-generation",
+    { method: "POST", body: "{}" },
+  ));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).attempt.outcome, "failed_with_fallback");
+});
+
 test("canonical files remain unchanged and frontend source contains no provider secret", () => {
   const markdown = readFileSync(new URL("../Business DNA/calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md", import.meta.url));
   const json = readFileSync(new URL("../Business DNA/calibrations/small-business-owner/v1.3.json", import.meta.url));

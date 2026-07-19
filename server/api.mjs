@@ -51,6 +51,13 @@ export function createApi({ database, auth, generationService, canonical, allowD
       if (url.pathname === "/api/calibrations/generate" && request.method === "POST") {
         return json(await generationService.generate(await readJson(request)));
       }
+      const retryMatch = url.pathname.match(/^\/api\/calibration-sessions\/([^/]+)\/retry-generation$/);
+      if (retryMatch && request.method === "POST") {
+        const sessionId = decodeURIComponent(retryMatch[1]);
+        const session = database.getSession(userId, sessionId);
+        const result = await generationService.retryStoredSession(session);
+        return json({ attempt: database.createGenerationAttempt(userId, sessionId, result) });
+      }
       const sessionMatch = url.pathname.match(/^\/api\/calibration-sessions\/([^/]+)$/);
       if (sessionMatch && request.method === "GET") {
         return json({ session: database.getSession(userId, decodeURIComponent(sessionMatch[1])) });

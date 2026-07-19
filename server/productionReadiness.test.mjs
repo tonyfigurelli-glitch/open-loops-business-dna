@@ -139,6 +139,10 @@ test("database survives restart and backup restores complete participant data", 
 test("participant export and confirmed deletion cover sessions, records, and evaluations", () => {
   const database = new CalibrationDatabase();
   database.createSession("pilot-user", session());
+  database.createGenerationAttempt("pilot-user", "pilot-session", {
+    generation: { generatedProfile: { sections: [] } },
+    provenance: { generatorType: "deterministic_fallback" },
+  });
   const scores = Object.fromEntries(evaluationDimensions.map((dimension) => [dimension, 3]));
   storeCalibrationEvaluation(database, "reviewer", "pilot-user", {
     sourceSessionId: "pilot-session", sourceKind: "deterministic_fallback",
@@ -146,12 +150,13 @@ test("participant export and confirmed deletion cover sessions, records, and eva
   });
   const exported = database.exportParticipant("pilot-user");
   assert.equal(exported.sessions.length, 1);
+  assert.equal(exported.generationAttempts.length, 1);
   assert.equal(exported.evaluations.length, 1);
   assert.equal(database.getSession("pilot-user", "pilot-session").generatedProfile, undefined);
   const comparison = compareCalibrationEvaluations(exported.evaluations);
   assert.equal(comparison[0].total, 30);
   assert.deepEqual(database.deleteParticipant("pilot-user").deleted, {
-    sessions: 1, businessDNARecords: 0, evaluations: 1,
+    sessions: 1, generationAttempts: 1, businessDNARecords: 0, evaluations: 1,
   });
   assert.equal(database.exportParticipant("pilot-user").sessions.length, 0);
   database.close();

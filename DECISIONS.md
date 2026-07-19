@@ -1,7 +1,7 @@
 # Decisions
 
 Status: Approved
-Last Updated: 2026-07-17
+Last Updated: 2026-07-18
 Owner: TBD
 
 ## Purpose
@@ -35,6 +35,32 @@ Every entry should include:
 **Follow-Up:** TBD
 
 ## Log
+
+### 2026-07-18: Add Build Week Calibration Continuity And GPT-5.6 Retry
+
+**Decision:** Add completed-session history and repeat-calibration continuity to the existing Open Loops Business DNA flow. A participant may start a new uniquely identified Version 1.3 session while every prior session remains preserved and selectable. When the original completed result used deterministic fallback, the participant may request a GPT-5.6 retry. The retry accepts only the saved session ID from the browser, rebuilds the exact twelve-answer evidence package on the authenticated server, and stores its AI-assisted or failed-with-fallback result as a separate generation attempt. It does not overwrite the source session, participant answers, original generated model, feedback, or Initial Business DNA Record. Participant-facing generation states and errors use fixed redacted language.
+
+**Rationale:** Build Week needs a complete repeat-use and recovery loop without weakening Version 1.3 source control, historical integrity, ownership enforcement, or provider secrecy. Separate attempts make AI recovery useful while preserving the deterministic result as an auditable original and keeping Business DNA inside the existing Open Loops architecture.
+
+**Affected Files:**
+
+- [src/App.tsx](src/App.tsx)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [src/storage/calibrationApi.ts](src/storage/calibrationApi.ts)
+- [src/domain/calibrations/calibrationSession.ts](src/domain/calibrations/calibrationSession.ts)
+- [src/domain/models.ts](src/domain/models.ts)
+- [server/api.mjs](server/api.mjs)
+- [server/database.mjs](server/database.mjs)
+- [server/generationService.mjs](server/generationService.mjs)
+- [server/backend.test.mjs](server/backend.test.mjs)
+- [server/clientRecovery.test.mjs](server/clientRecovery.test.mjs)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Keep provider activation, credentials, data terms, and paid usage subject to Tony's separate approval. Record any proposed calibration wording or rule changes only as Version 1.4 proposals; the frozen Version 1.3 Markdown and JSON remain unchanged.
 
 ### 2026-07-17: Establish Controlled Version 1.3 Pilot Readiness Controls
 

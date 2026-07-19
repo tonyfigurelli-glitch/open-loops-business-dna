@@ -18,6 +18,7 @@ import {
   saveCalibrationAnswer,
   saveNumericalFeedback,
   saveOpenEndedFeedback,
+  preserveAndPrependCalibrationSession,
   selectCalibrationToOpen,
 } from "./domain/calibrations/calibrationSession";
 import {
@@ -28,6 +29,7 @@ import type {
   BubbleSize,
   BubbleTone,
   CalibrationResponse,
+  CalibrationSession,
   ChatMessage,
   ChatSession,
   OpenLoop,
@@ -50,6 +52,7 @@ import {
   establishCalibrationSession,
   migrateAndLoadCalibrationSessions,
   requestGenerationWithNetworkFallback,
+  retryCalibrationGeneration,
   syncCalibrationSession,
 } from "./storage/calibrationApi";
 
@@ -270,22 +273,37 @@ function App() {
       if (existingSession) {
         setActiveCalibrationSessionId(existingSession.id);
       } else {
-        const now = new Date().toISOString();
-        const session = createCalibrationSession({
-          id: `calibration-${Date.now()}`,
-          participantId: `participant-${Date.now()}`,
-          startedAt: now,
-          ...smallBusinessOwnerCalibrationIdentity,
-        });
-        updatePrototypeState((currentState) => ({
-          ...currentState,
-          calibrationSessions: [session, ...currentState.calibrationSessions],
-        }));
-        setActiveCalibrationSessionId(session.id);
+        handleStartNewCalibration();
       }
 
       setActiveSurface("Calibration");
     }
+  }
+
+  function handleStartNewCalibration() {
+    const session = createNewCalibrationSession();
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      calibrationSessions: preserveAndPrependCalibrationSession(
+        currentState.calibrationSessions,
+        session,
+      ),
+    }));
+    setActiveCalibrationSessionId(session.id);
+    setActiveSurface("Calibration");
+  }
+
+  async function handleRetryCalibrationGeneration(sessionId: string) {
+    const attempt = await retryCalibrationGeneration(sessionId);
+    updatePrototypeState((currentState) => ({
+      ...currentState,
+      calibrationSessions: currentState.calibrationSessions.map((session) =>
+        session.id === sessionId
+          ? { ...session, generationAttempts: [attempt, ...(session.generationAttempts ?? [])] }
+          : session,
+      ),
+    }));
+    return attempt;
   }
 
   async function handleCalibrationAnswer(response: CalibrationResponse) {
@@ -545,14 +563,19 @@ function App() {
 
         {activeSurface === "Calibration" ? (
           <BusinessCalibration
+            key={activeCalibrationSessionId}
             onAnswer={handleCalibrationAnswer}
             onBackHome={() => setActiveSurface("Home")}
             onNumericalFeedback={handleNumericalCalibrationFeedback}
             onOpenEndedFeedback={handleOpenEndedCalibrationFeedback}
+            onRetryGeneration={handleRetryCalibrationGeneration}
+            onSelectSession={setActiveCalibrationSessionId}
+            onStartNewCalibration={handleStartNewCalibration}
             session={
               calibrationSessions.find((session) => session.id === activeCalibrationSessionId) ??
               calibrationSessions[0]
             }
+            sessions={calibrationSessions}
           />
         ) : null}
 
@@ -588,6 +611,19 @@ function App() {
       </section>
     </main>
   );
+}
+
+function createNewCalibrationSession(): CalibrationSession {
+  const now = new Date().toISOString();
+  const uniqueId = typeof globalThis.crypto?.randomUUID === "function"
+    ? globalThis.crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  return createCalibrationSession({
+    id: `calibration-${uniqueId}`,
+    participantId: `participant-${uniqueId}`,
+    startedAt: now,
+    ...smallBusinessOwnerCalibrationIdentity,
+  });
 }
 
 type SurfacePlaceholderProps = {

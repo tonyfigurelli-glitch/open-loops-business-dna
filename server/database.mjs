@@ -27,6 +27,17 @@ export class CalibrationDatabase {
       );
       CREATE INDEX IF NOT EXISTS calibration_sessions_owner_updated
         ON calibration_sessions(user_id, updated_at DESC);
+      CREATE TABLE IF NOT EXISTS calibration_generation_attempts (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        source_session_id TEXT NOT NULL,
+        outcome TEXT NOT NULL CHECK(outcome IN ('ai_assisted','failed_with_fallback')),
+        attempt_json TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(source_session_id) REFERENCES calibration_sessions(id)
+      );
+      CREATE INDEX IF NOT EXISTS calibration_generation_attempts_session
+        ON calibration_generation_attempts(user_id, source_session_id, created_at DESC);
       CREATE TABLE IF NOT EXISTS business_dna_records (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
@@ -83,6 +94,7 @@ export class CalibrationDatabase {
   }
 
   saveSession(userId, session) {
+    session = stripSessionReadModel(session);
     const existing = this.#rowForOwner(userId, session.id);
     if (!existing) throw Object.assign(new Error("Session not found."), { status: 404 });
     if (existing.status === "completed") {
@@ -138,13 +150,44 @@ export class CalibrationDatabase {
   getSession(userId, id) {
     const row = this.#rowForOwner(userId, id);
     if (!row) throw Object.assign(new Error("Session not found."), { status: 404 });
-    return JSON.parse(row.session_json);
+    return this.#withGenerationAttempts(userId, JSON.parse(row.session_json));
   }
 
   listSessions(userId) {
     return this.db.prepare(
       "SELECT session_json FROM calibration_sessions WHERE user_id=? ORDER BY updated_at DESC",
-    ).all(userId).map((row) => JSON.parse(row.session_json));
+    ).all(userId).map((row) => this.#withGenerationAttempts(userId, JSON.parse(row.session_json)));
+  }
+
+  createGenerationAttempt(userId, sessionId, pipelineResult) {
+    const session = this.#rowForOwner(userId, sessionId);
+    if (!session) throw Object.assign(new Error("Session not found."), { status: 404 });
+    const createdAt = new Date().toISOString();
+    const attempt = {
+      id: randomUUID(),
+      sourceSessionId: sessionId,
+      outcome: pipelineResult.provenance.generatorType === "ai_assisted"
+        ? "ai_assisted"
+        : "failed_with_fallback",
+      requestedModelFamily: "GPT-5.6",
+      generation: pipelineResult.generation,
+      provenance: pipelineResult.provenance,
+      originalStructuredOutput: pipelineResult.originalStructuredOutput,
+      createdAt,
+    };
+    this.db.prepare(`INSERT INTO calibration_generation_attempts
+      (id,user_id,source_session_id,outcome,attempt_json,created_at)
+      VALUES (?,?,?,?,?,?)`).run(
+      attempt.id, userId, sessionId, attempt.outcome, JSON.stringify(attempt), createdAt,
+    );
+    return attempt;
+  }
+
+  listGenerationAttempts(userId, sessionId) {
+    return this.db.prepare(`SELECT attempt_json FROM calibration_generation_attempts
+      WHERE user_id=? AND source_session_id=? ORDER BY created_at DESC`).all(
+      userId, sessionId,
+    ).map((row) => JSON.parse(row.attempt_json));
   }
 
   importSessions(userId, sessions, canonical) {
@@ -233,7 +276,10 @@ export class CalibrationDatabase {
       source: JSON.parse(row.source_json), scores: JSON.parse(row.scores_json),
       notes: row.notes, createdAt: row.created_at,
     }));
-    return { exportedAt: new Date().toISOString(), userId, sessions, businessDNARecords: records, evaluations };
+    const generationAttempts = this.db.prepare(
+      "SELECT attempt_json FROM calibration_generation_attempts WHERE user_id=? ORDER BY created_at",
+    ).all(userId).map((row) => JSON.parse(row.attempt_json));
+    return { exportedAt: new Date().toISOString(), userId, sessions, generationAttempts, businessDNARecords: records, evaluations };
   }
 
   deleteParticipant(userId) {
@@ -242,10 +288,13 @@ export class CalibrationDatabase {
       const evaluations = this.db.prepare(
         "DELETE FROM calibration_evaluations WHERE participant_user_id=?",
       ).run(userId).changes;
+      const generationAttempts = this.db.prepare(
+        "DELETE FROM calibration_generation_attempts WHERE user_id=?",
+      ).run(userId).changes;
       const records = this.db.prepare("DELETE FROM business_dna_records WHERE user_id=?").run(userId).changes;
       const sessions = this.db.prepare("DELETE FROM calibration_sessions WHERE user_id=?").run(userId).changes;
       this.db.exec("COMMIT");
-      return { userId, deleted: { sessions, businessDNARecords: records, evaluations } };
+      return { userId, deleted: { sessions, generationAttempts, businessDNARecords: records, evaluations } };
     } catch (error) {
       this.db.exec("ROLLBACK");
       throw error;
@@ -259,6 +308,7 @@ export class CalibrationDatabase {
   }
 
   #insert(userId, session, fingerprint, migration) {
+    session = stripSessionReadModel(session);
     const original = session.originalStructuredGenerationOutput ?? session.generatedProfile ?? null;
     this.db.prepare(`INSERT INTO calibration_sessions (
       id,user_id,participant_code,calibration_id,semantic_version,frozen_hash,status,
@@ -280,6 +330,10 @@ export class CalibrationDatabase {
     return this.db.prepare(
       "SELECT * FROM calibration_sessions WHERE id=? AND user_id=?",
     ).get(id, userId);
+  }
+
+  #withGenerationAttempts(userId, session) {
+    return { ...session, generationAttempts: this.listGenerationAttempts(userId, session.id) };
   }
 
   #createBusinessDNARecord(userId, session) {
@@ -347,4 +401,9 @@ function migrationFingerprint(userId, session) {
 
 function statusRank(status) {
   return { collecting_answers: 0, model_ready: 1, collecting_feedback: 2, completed: 3 }[status] ?? -1;
+}
+
+function stripSessionReadModel(session) {
+  const { generationAttempts: _generationAttempts, ...persisted } = session;
+  return persisted;
 }

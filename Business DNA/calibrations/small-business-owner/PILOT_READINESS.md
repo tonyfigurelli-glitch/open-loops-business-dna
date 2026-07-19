@@ -1,7 +1,7 @@
 # Small Business Owner Calibration Pilot Readiness
 
 Status: Working Readiness Review
-Last Updated: 2026-07-17
+Last Updated: 2026-07-18
 Owner: Tony
 
 ## Purpose
@@ -24,6 +24,14 @@ Define the remaining decisions, production controls, and acceptable limitations 
 | Acceptable pilot limitation | Manual invitations, consent tracking, output safety review, and issue triage | Limit participant count and assign a named operator/reviewer. |
 | Acceptable pilot limitation | Provider outage uses deterministic fallback | Display and verify provenance for every output. |
 | Future improvement | Hosted PostgreSQL, point-in-time recovery, automated alerting, self-service deletion, and richer evaluation reporting | Revisit after pilot evidence supports expansion. |
+
+## Build Week Calibration Continuity
+
+The July 18, 2026 Build Week enhancement keeps every Version 1.3 calibration session accessible and allows a participant to begin a new uniquely identified session without replacing prior answers, output, feedback, or the initial Business DNA record.
+
+When a completed session used deterministic fallback, the participant may request a GPT-5.6 retry. The browser sends only the saved session ID. The authenticated server reloads that owner's completed session, reconstructs the evidence package from the exact stored twelve answers, runs the existing validator and fallback pipeline, and stores the result as a separate generation attempt linked to the source session. A retry never overwrites the original generated model or initial Business DNA record and never requires answers to be re-entered.
+
+The interface distinguishes connecting, successful AI-assisted generation, and failed-with-fallback states. Participant-facing errors use fixed redacted copy and do not display credentials, provider responses, prompts, or answers. This enhancement does not activate a provider, approve paid usage, or change either frozen Version 1.3 artifact.
 
 ## Development Versus Production
 

@@ -1,4 +1,4 @@
-import type { CalibrationSession } from "../domain/models";
+import type { CalibrationGenerationAttempt, CalibrationSession } from "../domain/models";
 import type { CalibrationEvidencePackage, ModelGenerationPipelineResult } from "../domain/calibrations/aiModelGenerationPipeline";
 import { smallBusinessOwnerCalibrationIdentity } from "../domain/calibrations/smallBusinessOwnerCalibration";
 
@@ -57,6 +57,28 @@ export async function requestServerGeneration(evidencePackage: CalibrationEviden
   return response.json() as Promise<ModelGenerationPipelineResult>;
 }
 
+export async function retryCalibrationGeneration(sessionId: string) {
+  const response = await request(
+    `/api/calibration-sessions/${encodeURIComponent(sessionId)}/retry-generation`,
+    { method: "POST", body: "{}" },
+  );
+  if (!response.ok) throw new CalibrationGenerationRequestError(response.status);
+  return (await response.json() as { attempt: CalibrationGenerationAttempt }).attempt;
+}
+
+export function safeGenerationError(error: unknown) {
+  if (error instanceof CalibrationGenerationRequestError) {
+    if (error.status === 401) return "Your session expired. Sign in again before retrying.";
+    if (error.status === 409) return "This saved calibration is not eligible for another generation attempt.";
+    if (error.status === 429) return "GPT-5.6 is busy right now. Your saved result is unchanged.";
+  }
+  return "GPT-5.6 could not be reached. Your saved fallback result is unchanged.";
+}
+
+export function generationStateForAttempt(attempt: CalibrationGenerationAttempt) {
+  return attempt.outcome === "ai_assisted" ? "successful_ai_assisted" : "failed_with_fallback";
+}
+
 export async function requestGenerationWithNetworkFallback(
   evidencePackage: CalibrationEvidencePackage,
   fallback: () => Promise<ModelGenerationPipelineResult>,
@@ -97,4 +119,10 @@ function completionScore(session: CalibrationSession) {
 
 function isDevelopmentBuild() {
   return Boolean((import.meta as ImportMeta & { env?: { DEV?: boolean } }).env?.DEV);
+}
+
+class CalibrationGenerationRequestError extends Error {
+  constructor(readonly status: number) {
+    super("Calibration generation request failed.");
+  }
 }

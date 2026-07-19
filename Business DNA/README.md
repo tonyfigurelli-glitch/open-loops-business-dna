@@ -1,7 +1,7 @@
 # Business DNA
 
 Status: Approved Working Direction
-Last Updated: 2026-07-17
+Last Updated: 2026-07-18
 Owner: Tony
 
 ## Purpose
@@ -49,6 +49,8 @@ Required source-of-truth locations:
 Both frozen Version 1.3 artifacts are memorialized at their canonical locations. Automated validation protects the Markdown source hash, compares the structured questions back to the specification, verifies required counts and rules, and rejects unlabelled competing calibration prompts.
 
 Application code consumes the JSON through a shared domain adapter. User-interface components and prompts must not duplicate Version 1.3 wording. Session records use the inherited Open Loops authenticated API and durable storage architecture and carry the calibration identity, frozen source hash, participant material, generated model, evidence, uncertainty, experiment, feedback, and generation provenance. Local storage remains a recoverable network-loss cache rather than the sole source of truth. Completion creates an immutable `initial_provisional_model` Business DNA record without overwriting the original calibration.
+
+Completed results provide a session-history selector and a Start New Calibration action. Each new run receives a unique Version 1.3 session identity while all older sessions remain available. If a completed result used deterministic fallback, a GPT-5.6 retry may create a separate immutable generation attempt from the exact stored twelve-answer evidence package. The retry does not alter the source session, its original output, or its initial Business DNA record.
 
 ## Evidence And Memory Principles
 

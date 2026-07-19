@@ -167,3 +167,28 @@ test("reopens an incomplete session first and a completed session after return",
   assert.equal(lifecycle.selectCalibrationToOpen([completed, incomplete]).id, "session-2");
   assert.equal(lifecycle.selectCalibrationToOpen([completed]).id, "session-1");
 });
+
+test("starts a unique new Version 1.3 session without replacing session history", () => {
+  const completed = { ...startSession(), status: "completed", completedAt: "done" };
+  const next = { ...startSession(), id: "session-2", participantId: "participant-2" };
+  const sessions = lifecycle.preserveAndPrependCalibrationSession([completed], next);
+
+  assert.deepEqual(sessions.map((item) => item.id), ["session-2", "session-1"]);
+  assert.equal(sessions[1], completed);
+  assert.equal(sessions[0].semanticVersion, definition.version);
+  assert.equal(sessions[0].frozenSourceHash, definition.canonical_source.sha256);
+  assert.throws(
+    () => lifecycle.preserveAndPrependCalibrationSession(sessions, next),
+    /already exists/,
+  );
+});
+
+test("selects an older calibration session from preserved history", () => {
+  const newest = { ...startSession(), id: "session-new" };
+  const historical = { ...startSession(), id: "session-old", status: "completed", completedAt: "done" };
+
+  assert.equal(
+    lifecycle.selectCalibrationSession([newest, historical], "session-old"),
+    historical,
+  );
+});

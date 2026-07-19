@@ -25,6 +25,20 @@ export class CalibrationGenerationService {
       deterministicFallback: this.generator.generateInitialBusinessModel,
     });
   }
+
+  async retryStoredSession(session) {
+    if (session.status !== "completed" || session.participantResponses?.length !== 12) {
+      throw Object.assign(new Error("Only a completed 12-answer calibration can be retried."), { status: 409 });
+    }
+    if (session.generationProvenance?.generatorType !== "deterministic_fallback") {
+      throw Object.assign(new Error("Only a deterministic fallback result can be retried."), { status: 409 });
+    }
+    const evidencePackage = this.pipeline.buildCalibrationEvidencePackage(
+      this.canonical,
+      session.participantResponses,
+    );
+    return this.generate({ evidencePackage, requestedAt: new Date().toISOString() });
+  }
 }
 
 function validateEvidencePackageShape(value, canonical) {

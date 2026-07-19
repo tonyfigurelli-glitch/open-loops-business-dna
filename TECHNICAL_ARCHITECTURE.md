@@ -1,7 +1,7 @@
 # Technical Architecture
 
 Status: Draft
-Last Updated: 2026-07-17
+Last Updated: 2026-07-18
 Owner: TBD
 
 ## Purpose
@@ -94,6 +94,8 @@ The calibration domain constructs a current-session-only evidence package, combi
 The React client contains no provider secret and makes no direct vendor call. `CalibrationModelProvider` is the vendor-neutral boundary. The server provides a configurable HTTP adapter for an approved structured-output model endpoint. When it is unavailable or unconfigured, the deterministic generator remains the functioning runtime path.
 
 The `/api/calibrations/generate` route accepts only the canonical evidence package, rebuilds it from its twelve answers, rejects any mismatch or added context, loads canonical instructions server-side, invokes the configured provider, runs the existing validator, retries once, and returns validated output or deterministic fallback with provenance. It does not add prior chats, account memory, other Business DNA records, outside research, or unrelated metadata.
+
+For a completed deterministic-fallback session, `/api/calibration-sessions/:id/retry-generation` accepts no participant evidence from the browser. It restores the authenticated owner's session, rebuilds the exact twelve-answer evidence package server-side, and stores each validated AI result or repeated fallback as a separate generation-attempt record. The source session, original model, and Initial Business DNA Record remain immutable. The client exposes only fixed connecting, success, fallback, and redacted-error states.
 
 ## Authentication
 

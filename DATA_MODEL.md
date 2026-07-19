@@ -1,7 +1,7 @@
 # Data Model
 
 Status: Draft
-Last Updated: 2026-07-17
+Last Updated: 2026-07-18
 Owner: TBD
 
 ## Purpose
@@ -28,6 +28,7 @@ Define the conceptual data model for Open Loops before implementation-specific s
 - Calibration Participant Feedback
 - Initial Business DNA Record
 - Calibration Evaluation
+- Calibration Generation Attempt
 
 ## Entity Notes
 
@@ -83,6 +84,10 @@ The durable implementation also records participant code when present, last-upda
 
 An immutable historical record created when a calibration completes. It links to its source session and preserves effective date, calibration version and source hash, central hypothesis, supporting and disconfirming evidence, confidence, unknowns, contradictions, seven-day experiment, generation provenance, and the status `initial_provisional_model`. Later observations or revised conclusions must create separate records or revisions rather than overwrite this starting point.
 
+### Calibration Generation Attempt
+
+An immutable retry result linked to one completed owner-scoped calibration session. It records a unique attempt ID, source session ID, requested model family, outcome (`ai_assisted` or `failed_with_fallback`), generation result, provenance, available original structured output, and creation time. The attempt is generated only from the source session's exact stored twelve answers and remains separate from the original session output and Initial Business DNA Record.
+
 ### Calibration Evaluation
 
 A reviewer-owned record stored separately from participant sessions and immutable Business DNA records. It may reference deterministic fallback output, AI-assisted output, or manually supplied historical pilot output and records 1–5 scores for specificity, evidence grounding, confidence discipline, participant voice, alternative hypotheses, respectful challenge, seven-day experiment quality, usefulness, repetition, and unsupported-inference risk. Evaluation data never becomes generation context and never updates the original output.
@@ -96,6 +101,7 @@ A reviewer-owned record stored separately from participant sessions and immutabl
 - Calibration Sessions reference one immutable Calibration Definition version and contain ordered Calibration Responses.
 - A completed Calibration Session preserves its Initial Model, Evidence References, Experiment, and Participant Feedback without overwriting later Business DNA learning.
 - A completed Calibration Session creates exactly one owner-scoped Initial Business DNA Record.
+- A completed fallback Calibration Session may have multiple separate Calibration Generation Attempts without modifying the source session or Initial Business DNA Record.
 - Calibration Evaluations may reference a source session but remain separate from its immutable output and later Business DNA learning.
 
 ## Data Principles

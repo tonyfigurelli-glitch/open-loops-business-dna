@@ -700,6 +700,61 @@ h3 {
   font-size: 0.72rem;
 }
 
+.session-history {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  color: #555d80;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.session-history select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid rgba(109, 57, 232, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #11195d;
+  font: inherit;
+}
+
+.calibration-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.generation-status {
+  display: grid;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid rgba(109, 57, 232, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.78);
+  color: #30375f;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.generation-status p {
+  margin: 0;
+}
+
+.generation-status.connecting {
+  border-color: rgba(30, 156, 175, 0.38);
+}
+
+.generation-status.successful_ai_assisted {
+  border-color: rgba(36, 139, 83, 0.38);
+  color: #165c38;
+}
+
+.generation-status.failed_with_fallback {
+  border-color: rgba(180, 116, 31, 0.38);
+  color: #795018;
+}
+
 .session-record-list {
   display: grid;
   gap: 12px;
