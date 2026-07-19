@@ -36,6 +36,31 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Correct GPT-5.6 Retry Timeout After Build Week Live Test
+
+**Decision:** Replace the model providers' fixed forty-five-second per-attempt timeout with the validated `MODEL_PROVIDER_TIMEOUT_MS` configuration. Use 180,000 milliseconds per attempt by default for the full ten-section strict structured Business DNA result, allow integer values from 30,000 through 600,000 milliseconds, and continue selecting the provider model only through `MODEL_IDENTIFIER`. Preserve the existing two-attempt validation pipeline and deterministic fallback. Normalize timeout and provider failures into safe provenance categories, display timeout separately from other fallback causes, and ensure every retry request leaves the connecting interface state after success, fallback, timeout, or network failure.
+
+**Rationale:** July 18 live testing showed that direct Responses API calls worked with both tested GPT-5.6 model identifiers, but Business DNA retries fell back at exactly ninety seconds because two forty-five-second provider limits expired before the large strict output completed. A longer configurable boundary fixes the integration constraint without weakening validation, hardcoding a model, or exposing sensitive provider or participant material.
+
+**Affected Files:**
+
+- [server/config.mjs](server/config.mjs)
+- [server/modelProvider.mjs](server/modelProvider.mjs)
+- [server/start.mjs](server/start.mjs)
+- [server/README.md](server/README.md)
+- [server/productionReadiness.test.mjs](server/productionReadiness.test.mjs)
+- [src/domain/calibrations/aiModelGenerationPipeline.ts](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [src/domain/calibrations/aiModelGenerationPipeline.test.mjs](src/domain/calibrations/aiModelGenerationPipeline.test.mjs)
+- [src/domain/models.ts](src/domain/models.ts)
+- [src/storage/calibrationApi.ts](src/storage/calibrationApi.ts)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [server/clientRecovery.test.mjs](server/clientRecovery.test.mjs)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Measure real end-to-end latency and timeout/fallback rates during controlled testing before changing the 180-second default. Provider/model activation and paid usage remain separately governed. The frozen Version 1.3 specification and JSON are unchanged.
+
 ### 2026-07-18: Add Build Week Calibration Continuity And GPT-5.6 Retry
 
 **Decision:** Add completed-session history and repeat-calibration continuity to the existing Open Loops Business DNA flow. A participant may start a new uniquely identified Version 1.3 session while every prior session remains preserved and selectable. When the original completed result used deterministic fallback, the participant may request a GPT-5.6 retry. The retry accepts only the saved session ID from the browser, rebuilds the exact twelve-answer evidence package on the authenticated server, and stores its AI-assisted or failed-with-fallback result as a separate generation attempt. It does not overwrite the source session, participant answers, original generated model, feedback, or Initial Business DNA Record. Participant-facing generation states and errors use fixed redacted language.

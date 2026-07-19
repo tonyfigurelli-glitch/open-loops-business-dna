@@ -1,7 +1,7 @@
 # Open Loops Version 1 API
 
 Status: Approved Working Implementation
-Last Updated: 2026-07-17
+Last Updated: 2026-07-18
 Owner: TBD
 
 ## Purpose
@@ -26,6 +26,7 @@ The development authentication route is available only when `OPEN_LOOPS_ALLOW_DE
 - `MODEL_IDENTIFIER`: required when a model-provider URL is configured.
 - `MODEL_PROVIDER_NAME`: optional provenance label.
 - `MODEL_PROVIDER_TYPE`: `openai_responses` or `configured_http`; defaults to the vendor-neutral HTTP adapter.
+- `MODEL_PROVIDER_TIMEOUT_MS`: per-attempt provider timeout from `30000` through `600000` milliseconds; defaults to `180000` for the full ten-section strict structured result.
 - `PORT`: optional API port; defaults to `8787`.
 
 Production must supply an approved authentication adapter or gateway identity and must not enable development authentication. The current SQLite implementation requires a persistent single-instance filesystem. A multi-instance or serverless deployment should replace the storage adapter with hosted PostgreSQL while preserving the same ownership and immutability contracts.

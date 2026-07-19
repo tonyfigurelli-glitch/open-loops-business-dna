@@ -201,6 +201,7 @@ export async function runAIModelGenerationPipeline({
   let lastProvider = "unavailable";
   let lastModelIdentifier = "unavailable";
   let lastUsage: Record<string, number> | undefined;
+  let lastFailureReason: CalibrationGenerationProvenance["failureReason"];
 
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
@@ -238,8 +239,12 @@ export async function runAIModelGenerationPipeline({
       }
 
       validationErrors = validation.errors;
+      lastFailureReason = "validation_failure";
     } catch (error) {
-      validationErrors = [error instanceof Error ? error.message : "Unknown provider failure"];
+      lastFailureReason = isProviderTimeout(error) ? "provider_timeout" : "provider_failure";
+      validationErrors = [lastFailureReason === "provider_timeout"
+        ? "Model provider timed out."
+        : "Model provider generation failed."];
     }
   }
 
@@ -258,8 +263,13 @@ export async function runAIModelGenerationPipeline({
       retryCount: 1,
       evidencePackageHash,
       usage: lastUsage,
+      failureReason: lastFailureReason,
     },
   };
+}
+
+function isProviderTimeout(error: unknown) {
+  return error instanceof Error && ["ModelProviderTimeoutError", "TimeoutError", "AbortError"].includes(error.name);
 }
 
 export function validateAIModelOutput(

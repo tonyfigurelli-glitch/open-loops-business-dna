@@ -33,6 +33,12 @@ When a completed session used deterministic fallback, the participant may reques
 
 The interface distinguishes connecting, successful AI-assisted generation, and failed-with-fallback states. Participant-facing errors use fixed redacted copy and do not display credentials, provider responses, prompts, or answers. This enhancement does not activate a provider, approve paid usage, or change either frozen Version 1.3 artifact.
 
+### July 18 Live-Test Timeout Finding
+
+Direct Responses API tests completed successfully with both tested GPT-5.6 model identifiers, while the Business DNA retry consistently fell back after exactly ninety seconds. Review confirmed that the provider adapter imposed a fixed forty-five-second limit on each of the pipeline's two protected attempts. The limit was too short for the full ten-section strict structured result and caused fallback before a working model could finish.
+
+The provider timeout is now configured by `MODEL_PROVIDER_TIMEOUT_MS`, with a 180,000-millisecond per-attempt default and safe validation from 30,000 through 600,000 milliseconds. `MODEL_IDENTIFIER` remains the sole model selection setting; no GPT-5.6 variant is hardcoded. The two-attempt validation flow and deterministic fallback remain unchanged. Provider timeouts are stored and displayed as a redacted timeout category distinct from other failures, and the participant interface exits connecting after success, fallback, timeout, or network failure.
+
 ## Development Versus Production
 
 Production differs from development in these required ways:
@@ -85,6 +91,7 @@ References: [OpenAI model guidance](https://developers.openai.com/api/docs/model
 - `MODEL_PROVIDER_URL`, `MODEL_PROVIDER_API_KEY`, and `MODEL_IDENTIFIER`: configured together only after provider approval
 - `MODEL_PROVIDER_TYPE`: `openai_responses` for the recommended adapter or `configured_http` for the vendor-neutral contract
 - `MODEL_PROVIDER_NAME`: provenance label
+- `MODEL_PROVIDER_TIMEOUT_MS`: optional per-attempt timeout; integer `30000`–`600000`, default `180000`
 - `PORT`: deployment-assigned or explicit
 
 ## Retention And Deletion Decision

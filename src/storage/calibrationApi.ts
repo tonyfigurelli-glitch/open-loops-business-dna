@@ -2,6 +2,15 @@ import type { CalibrationGenerationAttempt, CalibrationSession } from "../domain
 import type { CalibrationEvidencePackage, ModelGenerationPipelineResult } from "../domain/calibrations/aiModelGenerationPipeline";
 import { smallBusinessOwnerCalibrationIdentity } from "../domain/calibrations/smallBusinessOwnerCalibration";
 
+export type GenerationDisplayState =
+  | "idle"
+  | "connecting"
+  | "successful_ai_assisted"
+  | "failed_with_fallback"
+  | "timed_out_with_fallback";
+
+const CALIBRATION_RETRY_CLIENT_TIMEOUT_MS = 1_230_000;
+
 export async function establishCalibrationSession(userId: string) {
   const current = await fetch("/api/auth/session", { credentials: "include" });
   if (current.ok) return true;
@@ -58,10 +67,22 @@ export async function requestServerGeneration(evidencePackage: CalibrationEviden
 }
 
 export async function retryCalibrationGeneration(sessionId: string) {
-  const response = await request(
-    `/api/calibration-sessions/${encodeURIComponent(sessionId)}/retry-generation`,
-    { method: "POST", body: "{}" },
-  );
+  let response: Response;
+  try {
+    response = await request(
+      `/api/calibration-sessions/${encodeURIComponent(sessionId)}/retry-generation`,
+      {
+        method: "POST",
+        body: "{}",
+        signal: AbortSignal.timeout(CALIBRATION_RETRY_CLIENT_TIMEOUT_MS),
+      },
+    );
+  } catch (error) {
+    throw new CalibrationGenerationRequestError(
+      undefined,
+      isTimeoutError(error) ? "network_timeout" : "network_failure",
+    );
+  }
   if (!response.ok) throw new CalibrationGenerationRequestError(response.status);
   return (await response.json() as { attempt: CalibrationGenerationAttempt }).attempt;
 }
@@ -71,12 +92,36 @@ export function safeGenerationError(error: unknown) {
     if (error.status === 401) return "Your session expired. Sign in again before retrying.";
     if (error.status === 409) return "This saved calibration is not eligible for another generation attempt.";
     if (error.status === 429) return "GPT-5.6 is busy right now. Your saved result is unchanged.";
+    if (error.reason === "network_timeout") {
+      return "The secure generation connection timed out. Your saved fallback result is unchanged.";
+    }
   }
   return "GPT-5.6 could not be reached. Your saved fallback result is unchanged.";
 }
 
-export function generationStateForAttempt(attempt: CalibrationGenerationAttempt) {
-  return attempt.outcome === "ai_assisted" ? "successful_ai_assisted" : "failed_with_fallback";
+export function generationStateForAttempt(attempt: CalibrationGenerationAttempt): GenerationDisplayState {
+  if (attempt.outcome === "ai_assisted") return "successful_ai_assisted";
+  return attempt.provenance?.failureReason === "provider_timeout"
+    ? "timed_out_with_fallback"
+    : "failed_with_fallback";
+}
+
+export async function completeCalibrationGenerationRetry(
+  operation: () => Promise<CalibrationGenerationAttempt>,
+) {
+  try {
+    const attempt = await operation();
+    return { attempt, state: generationStateForAttempt(attempt), error: null } as const;
+  } catch (error) {
+    return {
+      attempt: null,
+      state: isTimeoutError(error) ||
+        (error instanceof CalibrationGenerationRequestError && error.reason === "network_timeout")
+        ? "timed_out_with_fallback" as const
+        : "failed_with_fallback" as const,
+      error: safeGenerationError(error),
+    };
+  }
 }
 
 export async function requestGenerationWithNetworkFallback(
@@ -122,7 +167,14 @@ function isDevelopmentBuild() {
 }
 
 class CalibrationGenerationRequestError extends Error {
-  constructor(readonly status: number) {
+  constructor(
+    readonly status?: number,
+    readonly reason?: "network_timeout" | "network_failure",
+  ) {
     super("Calibration generation request failed.");
   }
+}
+
+function isTimeoutError(error: unknown) {
+  return error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name);
 }

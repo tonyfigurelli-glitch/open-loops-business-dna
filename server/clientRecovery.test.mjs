@@ -69,6 +69,9 @@ test("local migration filter uses the exact canonical identity", async () => {
 test("retry status maps AI success and failed fallback without exposing generation content", () => {
   assert.equal(client.generationStateForAttempt({ outcome: "ai_assisted" }), "successful_ai_assisted");
   assert.equal(client.generationStateForAttempt({ outcome: "failed_with_fallback" }), "failed_with_fallback");
+  assert.equal(client.generationStateForAttempt({
+    outcome: "failed_with_fallback", provenance: { failureReason: "provider_timeout" },
+  }), "timed_out_with_fallback");
 });
 
 test("retry errors are redacted before reaching the participant interface", async () => {
@@ -90,7 +93,25 @@ test("completed results expose history, new-session, retry, and safe generation 
   for (const copy of [
     "Start New Calibration", "Retry with GPT-5.6", "Calibration history",
     "Connecting securely to GPT-5.6", "AI-assisted generation succeeded",
-    "AI-assisted generation failed",
+    "AI-assisted generation failed", "GPT-5.6 timed out",
   ]) assert.match(screen, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
+});
+
+test("retry completion always exits connecting for success, fallback, timeout, and network failure", async () => {
+  const outcomes = [
+    [() => Promise.resolve({ outcome: "ai_assisted", provenance: {} }), "successful_ai_assisted"],
+    [() => Promise.resolve({ outcome: "failed_with_fallback", provenance: {} }), "failed_with_fallback"],
+    [() => Promise.resolve({
+      outcome: "failed_with_fallback", provenance: { failureReason: "provider_timeout" },
+    }), "timed_out_with_fallback"],
+    [() => Promise.reject(new DOMException("private timeout detail", "TimeoutError")), "timed_out_with_fallback"],
+    [() => Promise.reject(new Error("network failed with private response body")), "failed_with_fallback"],
+  ];
+  for (const [operation, expected] of outcomes) {
+    const result = await client.completeCalibrationGenerationRetry(operation);
+    assert.equal(result.state, expected);
+    assert.notEqual(result.state, "connecting");
+    assert.doesNotMatch(JSON.stringify(result), /private timeout detail|private response body/);
+  }
 });

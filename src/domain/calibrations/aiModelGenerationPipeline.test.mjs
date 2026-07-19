@@ -317,6 +317,29 @@ test("two failed attempts trigger the deterministic fallback", async () => {
   assert.equal(result.generation.generatedProfile.sections.length, 10);
 });
 
+test("provider timeout falls back with a safe timeout category and no sensitive exception text", async () => {
+  let calls = 0;
+  const provider = {
+    async generate() {
+      calls += 1;
+      const error = new Error("private credential, prompt, answer, and response body");
+      error.name = "ModelProviderTimeoutError";
+      throw error;
+    },
+  };
+  const result = await pipeline.runAIModelGenerationPipeline({
+    definition,
+    responses: responses(),
+    provider,
+    deterministicFallback: fallbackResult,
+  });
+  assert.equal(calls, 2);
+  assert.equal(result.provenance.generatorType, "deterministic_fallback");
+  assert.equal(result.provenance.failureReason, "provider_timeout");
+  assert.deepEqual(result.provenance.validationResult.errors, ["Model provider timed out."]);
+  assert.doesNotMatch(JSON.stringify(result), /private credential|private prompt|private answer|response body/);
+});
+
 test("evidence package contains exact current-session context and nothing else", () => {
   const sessionResponses = responses().map((response) => ({
     ...response,

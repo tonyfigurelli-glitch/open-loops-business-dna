@@ -53,11 +53,24 @@ test("production cookie and startup configuration fail closed", () => {
     OPEN_LOOPS_SESSION_SECRET: "x".repeat(40), OPEN_LOOPS_PUBLIC_ORIGIN: "https://pilot.example",
     OPEN_LOOPS_AUTH_MODE: "development", OPEN_LOOPS_ALLOW_DEVELOPMENT_AUTH: "true",
   }), /Development authentication cannot run in production/);
-  assert.doesNotThrow(() => readServerConfig({
+  const valid = readServerConfig({
     NODE_ENV: "production", OPEN_LOOPS_DATABASE_PATH: "/data/open-loops.sqlite",
     OPEN_LOOPS_SESSION_SECRET: "x".repeat(40), OPEN_LOOPS_PUBLIC_ORIGIN: "https://pilot.example",
     OPEN_LOOPS_AUTH_MODE: "external",
-  }));
+  });
+  assert.equal(valid.modelProviderTimeoutMs, 180_000);
+  assert.equal(readServerConfig({
+    OPEN_LOOPS_DATABASE_PATH: "development.sqlite",
+    OPEN_LOOPS_SESSION_SECRET: "development-secret",
+    MODEL_PROVIDER_TIMEOUT_MS: "240000",
+  }).modelProviderTimeoutMs, 240_000);
+  for (const invalid of ["", "not-a-number", "29999", "600001", "45000.5"]) {
+    assert.throws(() => readServerConfig({
+      OPEN_LOOPS_DATABASE_PATH: "development.sqlite",
+      OPEN_LOOPS_SESSION_SECRET: "development-secret",
+      MODEL_PROVIDER_TIMEOUT_MS: invalid,
+    }), /MODEL_PROVIDER_TIMEOUT_MS/);
+  }
 });
 
 test("development login is disabled and sign-out clears the session cookie", async () => {
@@ -117,6 +130,32 @@ test("OpenAI Responses adapter requests strict non-stored structured output", as
   assert.match(body.input, /retry correction/);
   assert.deepEqual(response.structuredResult, { result: true });
   assert.equal(response.modelIdentifier, "gpt-pilot-snapshot");
+});
+
+test("OpenAI Responses timeout is configurable and redacts the aborted provider request", async () => {
+  let timeoutSignal;
+  const provider = new OpenAIResponsesCalibrationModelProvider({
+    apiKey: "server-secret", modelIdentifier: "configured-model", timeoutMs: 10,
+    fetchImpl: async (_url, init) => {
+      timeoutSignal = init.signal;
+      return new Promise((_resolve, reject) => init.signal.addEventListener("abort", () => {
+        reject(new DOMException("private prompt, answer, and provider response body", "TimeoutError"));
+      }));
+    },
+  });
+  await assert.rejects(
+    () => provider.generate({
+      systemInstructions: "private prompt", evidencePackage: { answer: "private answer" },
+      structuredOutputSchema: {}, modelConfiguration: { maxOutputTokens: 6000 }, correctionErrors: [],
+    }),
+    (error) => {
+      assert.equal(error.name, "ModelProviderTimeoutError");
+      assert.equal(error.message, "Model provider timed out.");
+      assert.doesNotMatch(JSON.stringify(error), /private prompt|private answer|provider response body|server-secret/);
+      return true;
+    },
+  );
+  assert.equal(timeoutSignal.aborted, true);
 });
 
 test("database survives restart and backup restores complete participant data", async (t) => {

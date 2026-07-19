@@ -178,6 +178,7 @@ export type CalibrationGenerationProvenance = {
   retryCount: number;
   evidencePackageHash: string;
   usage?: Record<string, number>;
+  failureReason?: "provider_timeout" | "provider_failure" | "validation_failure";
 };
 
 export type CalibrationGenerationAttempt = {

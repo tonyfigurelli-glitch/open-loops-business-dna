@@ -1,4 +1,5 @@
 import { isAbsolute } from "node:path";
+import { DEFAULT_MODEL_PROVIDER_TIMEOUT_MS } from "./modelProvider.mjs";
 
 export function readServerConfig(env = process.env) {
   const production = env.NODE_ENV === "production";
@@ -15,6 +16,9 @@ export function readServerConfig(env = process.env) {
     modelIdentifier: env.MODEL_IDENTIFIER,
     modelProviderName: env.MODEL_PROVIDER_NAME,
     modelProviderType: env.MODEL_PROVIDER_TYPE ?? "configured_http",
+    modelProviderTimeoutMs: env.MODEL_PROVIDER_TIMEOUT_MS === undefined
+      ? DEFAULT_MODEL_PROVIDER_TIMEOUT_MS
+      : Number(env.MODEL_PROVIDER_TIMEOUT_MS),
   };
   validateServerConfig(config);
   return config;
@@ -48,5 +52,9 @@ export function validateServerConfig(config) {
   }
   if (!['configured_http', 'openai_responses'].includes(config.modelProviderType)) {
     throw new Error("MODEL_PROVIDER_TYPE must be configured_http or openai_responses.");
+  }
+  if (!Number.isInteger(config.modelProviderTimeoutMs) ||
+      config.modelProviderTimeoutMs < 30_000 || config.modelProviderTimeoutMs > 600_000) {
+    throw new Error("MODEL_PROVIDER_TIMEOUT_MS must be an integer from 30000 through 600000 milliseconds.");
   }
 }

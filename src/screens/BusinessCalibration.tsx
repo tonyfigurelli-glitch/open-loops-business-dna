@@ -5,7 +5,11 @@ import type {
   CalibrationResponse,
   CalibrationSession,
 } from "../domain/models";
-import { generationStateForAttempt, safeGenerationError } from "../storage/calibrationApi";
+import {
+  completeCalibrationGenerationRetry,
+  generationStateForAttempt,
+  type GenerationDisplayState,
+} from "../storage/calibrationApi";
 
 type BusinessCalibrationProps = {
   session: CalibrationSession;
@@ -256,9 +260,7 @@ function CompletedCalibration({
   onSelectSession: (sessionId: string) => void;
   onStartNewCalibration: () => void | Promise<void>;
 }) {
-  const [generationState, setGenerationState] = useState<
-    "idle" | "connecting" | "successful_ai_assisted" | "failed_with_fallback"
-  >("idle");
+  const [generationState, setGenerationState] = useState<GenerationDisplayState>("idle");
   const [generationError, setGenerationError] = useState<string | null>(null);
   const latestAttempt = session.generationAttempts?.[0];
   const successfulAttempt = session.generationAttempts?.find(
@@ -357,15 +359,14 @@ function CompletedCalibration({
           <button
             className="ghost-button"
             disabled={generationState === "connecting"}
-            onClick={() => {
+            onClick={async () => {
               setGenerationState("connecting");
               setGenerationError(null);
-              onRetryGeneration(session.id)
-                .then((attempt) => setGenerationState(generationStateForAttempt(attempt)))
-                .catch((error: unknown) => {
-                  setGenerationState("failed_with_fallback");
-                  setGenerationError(safeGenerationError(error));
-                });
+              const result = await completeCalibrationGenerationRetry(
+                () => onRetryGeneration(session.id),
+              );
+              setGenerationState(result.state);
+              setGenerationError(result.error);
             }}
             type="button"
           >
@@ -410,7 +411,7 @@ function formatSessionLabel(session: CalibrationSession, index: number) {
 }
 
 function GenerationStatus({ state, error }: {
-  state: "idle" | "connecting" | "successful_ai_assisted" | "failed_with_fallback";
+  state: GenerationDisplayState;
   error: string | null;
 }) {
   if (state === "idle") return null;
@@ -419,7 +420,9 @@ function GenerationStatus({ state, error }: {
     ? "Connecting securely to GPT-5.6…"
     : state === "successful_ai_assisted"
       ? "AI-assisted generation succeeded. Your original saved result is still preserved."
-      : "AI-assisted generation failed. Your saved deterministic result remains available.";
+      : state === "timed_out_with_fallback"
+        ? "GPT-5.6 timed out before completing the full model. Your saved deterministic result remains available."
+        : "AI-assisted generation failed. Your saved deterministic result remains available.";
 
   return (
     <div className={`generation-status ${state}`} role="status">

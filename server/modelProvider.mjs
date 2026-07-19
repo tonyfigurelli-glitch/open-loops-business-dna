@@ -1,5 +1,17 @@
+export const DEFAULT_MODEL_PROVIDER_TIMEOUT_MS = 180_000;
+
+export class ModelProviderTimeoutError extends Error {
+  constructor() {
+    super("Model provider timed out.");
+    this.name = "ModelProviderTimeoutError";
+  }
+}
+
 export class ConfiguredHttpCalibrationModelProvider {
-  constructor({ endpoint, apiKey, modelIdentifier, providerName = "configured_http", fetchImpl = fetch }) {
+  constructor({
+    endpoint, apiKey, modelIdentifier, providerName = "configured_http", fetchImpl = fetch,
+    timeoutMs = DEFAULT_MODEL_PROVIDER_TIMEOUT_MS,
+  }) {
     if (!endpoint || !apiKey || !modelIdentifier) {
       throw new Error("The server-side model provider is not fully configured.");
     }
@@ -8,10 +20,11 @@ export class ConfiguredHttpCalibrationModelProvider {
     this.modelIdentifier = modelIdentifier;
     this.providerName = providerName;
     this.fetchImpl = fetchImpl;
+    this.timeoutMs = timeoutMs;
   }
 
   async generate(request) {
-    const response = await this.fetchImpl(this.endpoint, {
+    const response = await fetchWithSafeTimeout(this.fetchImpl, this.endpoint, {
       method: "POST",
       headers: {
         authorization: `Bearer ${this.apiKey}`,
@@ -26,8 +39,7 @@ export class ConfiguredHttpCalibrationModelProvider {
         max_output_tokens: request.modelConfiguration.maxOutputTokens,
         correction_errors: request.correctionErrors,
       }),
-      signal: AbortSignal.timeout(45_000),
-    });
+    }, this.timeoutMs);
     if (!response.ok) throw new Error(`Model provider request failed with status ${response.status}.`);
     const payload = await response.json();
     const structuredResult = payload.structuredResult ?? payload.output ?? payload.result;
@@ -43,16 +55,20 @@ export class ConfiguredHttpCalibrationModelProvider {
 }
 
 export class OpenAIResponsesCalibrationModelProvider {
-  constructor({ apiKey, modelIdentifier, endpoint = "https://api.openai.com/v1/responses", fetchImpl = fetch }) {
+  constructor({
+    apiKey, modelIdentifier, endpoint = "https://api.openai.com/v1/responses", fetchImpl = fetch,
+    timeoutMs = DEFAULT_MODEL_PROVIDER_TIMEOUT_MS,
+  }) {
     if (!apiKey || !modelIdentifier) throw new Error("OpenAI provider credentials and model are required.");
     this.apiKey = apiKey;
     this.modelIdentifier = modelIdentifier;
     this.endpoint = endpoint;
     this.fetchImpl = fetchImpl;
+    this.timeoutMs = timeoutMs;
   }
 
   async generate(request) {
-    const response = await this.fetchImpl(this.endpoint, {
+    const response = await fetchWithSafeTimeout(this.fetchImpl, this.endpoint, {
       method: "POST",
       headers: { authorization: `Bearer ${this.apiKey}`, "content-type": "application/json" },
       body: JSON.stringify({
@@ -70,8 +86,7 @@ export class OpenAIResponsesCalibrationModelProvider {
         max_output_tokens: request.modelConfiguration.maxOutputTokens,
         store: false,
       }),
-      signal: AbortSignal.timeout(45_000),
-    });
+    }, this.timeoutMs);
     if (!response.ok) throw new Error(`OpenAI Responses request failed with status ${response.status}.`);
     const payload = await response.json();
     const text = payload.output?.flatMap((item) => item.content ?? [])
@@ -84,5 +99,16 @@ export class OpenAIResponsesCalibrationModelProvider {
       structuredResult, provider: "openai", modelIdentifier: payload.model ?? this.modelIdentifier,
       generationTimestamp: new Date().toISOString(), usage: payload.usage,
     };
+  }
+}
+
+async function fetchWithSafeTimeout(fetchImpl, endpoint, init, timeoutMs) {
+  try {
+    return await fetchImpl(endpoint, { ...init, signal: AbortSignal.timeout(timeoutMs) });
+  } catch (error) {
+    if (error?.name === "TimeoutError" || error?.name === "AbortError") {
+      throw new ModelProviderTimeoutError();
+    }
+    throw error;
   }
 }

@@ -22,12 +22,14 @@ const provider = config.modelProviderUrl
         endpoint: config.modelProviderUrl,
         apiKey: config.modelProviderApiKey,
         modelIdentifier: config.modelIdentifier,
+        timeoutMs: config.modelProviderTimeoutMs,
       })
     : new ConfiguredHttpCalibrationModelProvider({
       endpoint: config.modelProviderUrl,
       apiKey: config.modelProviderApiKey,
       modelIdentifier: config.modelIdentifier,
       providerName: config.modelProviderName,
+      timeoutMs: config.modelProviderTimeoutMs,
       })
   : new domain.pipeline.UnavailableCalibrationModelProvider();
 const database = new CalibrationDatabase(config.databasePath);
