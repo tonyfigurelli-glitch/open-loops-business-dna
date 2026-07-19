@@ -31,7 +31,7 @@ The application can now build and run as one Node service that serves the Vite `
 
 Production continues to fail closed. It requires HTTPS public origin, an absolute SQLite path on a mounted persistent volume, high-entropy secrets, external authentication mode, and a trusted identity-aware proxy that injects a stable user ID plus a server-only proxy secret. The service rejects requests that bypass the proxy, and development authentication cannot be enabled. Tony must choose the hosting platform and identity proxy before a public judging URL can be considered ready.
 
-The repository has no approved open-source license. [LICENSE_DECISION_REQUIRED.md](../../../LICENSE_DECISION_REQUIRED.md) records the blocker; Tony must select a license and copyright holder or intentionally keep all rights reserved before representing the repository as open source.
+The repository is approved for public Build Week judging under the [MIT License](../../../LICENSE), Copyright © 2026 Tony Figurelli. Judges will use the runnable public repository, README local setup, fictional sample workflow, and demo video. A hosted application and its production identity-proxy selection are deferred until after submission.
 
 ## Build Week Calibration Continuity
 

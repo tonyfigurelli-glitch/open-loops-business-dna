@@ -11,15 +11,16 @@ Track the remaining repository, demo, judging, and submission work for the Open 
 ## Submission Checklist
 
 - [x] Target category is **Work and productivity**.
-- [ ] Decide repository visibility for judging.
-- [ ] Approve and add an open-source license, or explicitly accept that a public repository without one is not open source. See [LICENSE_DECISION_REQUIRED.md](LICENSE_DECISION_REQUIRED.md).
+- [x] Repository will be public for judging.
+- [x] License the repository under MIT: Copyright © 2026 Tony Figurelli.
 - [x] Provide a judge-oriented root [README.md](README.md) with problem, product, GPT-5.6, Codex, architecture, setup, privacy, and demo guidance.
+- [x] Use the runnable public repository, README local setup, fictional sample workflow, and local demo video as the submission testing path; hosted deployment is deferred until after submission.
 - [ ] Publish a public YouTube demo under three minutes.
 - [ ] Confirm the video audio clearly explains how Codex accelerated development and how GPT-5.6 generates the evidence-constrained model.
 - [ ] Submit the final Codex Session ID through `/feedback` and record it below.
 - [ ] Capture screenshots of the twelve-question flow, ten-section result, Review details, AI success state, session history, and refresh recovery.
 - [ ] Run the final acceptance test in [Business DNA/calibrations/small-business-owner/PILOT_ACCEPTANCE_TEST.md](Business%20DNA/calibrations/small-business-owner/PILOT_ACCEPTANCE_TEST.md).
-- [ ] Verify the public HTTPS URL, same-origin API, `/api/health`, identity proxy, persistent volume, and deterministic fallback.
+- [ ] Verify a clean checkout can run the README local setup, `/api/health`, fictional sample workflow, and deterministic fallback.
 - [ ] Verify no `.env`, provider key, participant export, backup, or SQLite file is tracked or included in the container context.
 - [ ] Run `npm run test:calibration` and record the passing count.
 - [ ] Run `npm run build` and record the result.
@@ -29,7 +30,7 @@ Track the remaining repository, demo, judging, and submission work for the Open 
 ## Submission Record
 
 - Repository URL: TBD
-- Public demo URL: TBD
+- Hosted application: Deferred until after submission
 - YouTube URL: TBD
 - Codex Session ID submitted through `/feedback`: TBD
 - Screenshot location: TBD
@@ -45,12 +46,12 @@ Track the remaining repository, demo, judging, and submission work for the Open 
 4. The result contains ten canonical narrative sections and complete review details.
 5. AI-assisted output shows provenance; fallback remains functional without a provider.
 6. Refresh and service restart preserve generation attempts and original immutable records.
-7. Production rejects missing identity, secret, HTTPS-origin, and persistent-path configuration.
+7. Production configuration tests reject missing identity, secret, HTTPS-origin, and persistent-path configuration even though hosting is deferred.
 8. The repository and image context contain no secrets, participant data, or SQLite files.
 
 ## Open Questions
 
-- Which repository visibility, license, hosting provider, identity proxy, and final demo URL will Tony approve?
+- What public repository and YouTube URLs should be recorded?
 - Which Codex Session ID should be recorded after `/feedback` succeeds?
 
 ## Version 1 Boundaries

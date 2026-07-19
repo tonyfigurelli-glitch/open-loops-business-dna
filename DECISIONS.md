@@ -36,6 +36,23 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Approve MIT License And Repository-First Build Week Judging
+
+**Decision:** License the Open Loops repository under the standard MIT License with `Copyright (c) 2026 Tony Figurelli`, declare `MIT` in `package.json`, and make the repository public for Build Week judging. Remove the temporary licensing-decision blocker. Defer a hosted application until after submission. The approved judging and testing path is the runnable public repository, README local setup instructions, fictional sample calibration workflow, and local demo recording published as the submission video.
+
+**Rationale:** Tony explicitly approved the license, copyright holder, year, and public repository status. A public runnable repository and concise demo provide judges a complete evaluation path without introducing a rushed hosted identity or participant-data deployment before submission. The previously documented license and hosting decisions are therefore resolved for Build Week scope.
+
+**Affected Files:**
+
+- [LICENSE](LICENSE)
+- [README.md](README.md)
+- [BUILD_WEEK_SUBMISSION_CHECKLIST.md](BUILD_WEEK_SUBMISSION_CHECKLIST.md)
+- [package.json](package.json)
+- `LICENSE_DECISION_REQUIRED.md` (removed after approval)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Publish the repository, record its URL, publish the under-three-minute local demo video with the required Codex and GPT-5.6 audio explanation, add screenshots, submit the Codex Session ID through `/feedback`, complete the final clean-checkout acceptance test, and submit before July 21, 2026 at 5:00 PM PT. Hosted deployment remains post-submission work. Both frozen Version 1.3 canonical files remain unchanged.
+
 ### 2026-07-18: Package Business DNA For Same-Origin Build Week Deployment
 
 **Decision:** Add a production path that builds the Vite frontend and serves its static assets, extensionless SPA fallback routes, health endpoint, and existing API from one Node 22 service bound to validated `HOST` and `PORT`. Package it with a multi-stage Dockerfile and a deployment context that excludes secrets, participant material, local SQLite files, backups, dependencies, and build artifacts. Require an absolute production database path on a mounted persistent volume. Keep provider credentials entirely server-side. Replace the prior unimplemented production-auth placeholder with a fail-closed trusted-proxy adapter that requires an authenticated upstream to inject both a stable user ID and a server-only shared secret; retain no anonymous or development-auth production bypass.
@@ -46,7 +63,7 @@ Every entry should include:
 
 - [README.md](README.md)
 - [BUILD_WEEK_SUBMISSION_CHECKLIST.md](BUILD_WEEK_SUBMISSION_CHECKLIST.md)
-- [LICENSE_DECISION_REQUIRED.md](LICENSE_DECISION_REQUIRED.md)
+- `LICENSE_DECISION_REQUIRED.md` (temporary blocker later removed after approval)
 - [Dockerfile](Dockerfile)
 - [.dockerignore](.dockerignore)
 - [.env.example](.env.example)
@@ -62,7 +79,7 @@ Every entry should include:
 - [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
 - [DECISIONS.md](DECISIONS.md)
 
-**Follow-Up:** Tony must choose repository visibility, an open-source license and copyright holder (or explicitly retain all rights), a hosting platform, and an identity-aware proxy. Configure the proxy to strip inbound trusted headers, inject them only after authentication, and prevent any direct route to Node. Complete the YouTube demo, audio explanation, screenshots, `/feedback` Codex Session ID, final acceptance test, and submission before July 21, 2026 at 5:00 PM PT. Both frozen Version 1.3 canonical files remain unchanged.
+**Follow-Up:** Repository visibility and licensing were resolved by the later MIT approval decision. Hosted deployment and identity-proxy selection are deferred until after submission. Complete the YouTube demo, audio explanation, screenshots, `/feedback` Codex Session ID, final acceptance test, and submission before July 21, 2026 at 5:00 PM PT. Both frozen Version 1.3 canonical files remain unchanged.
 
 ### 2026-07-18: Make Calibration Generation Retries Server-Owned And Refresh-Safe
 

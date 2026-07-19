@@ -128,18 +128,21 @@ Demo sequence: complete the twelve questions, review the ten-section model, insp
 ## Build Week Judging Notes
 
 - Category: **Work and productivity**.
-- The fastest evaluation path is the local two-terminal workflow and fictional sample above.
+- The approved submission testing path is the public runnable repository, this README's local two-terminal setup, the fictional sample workflow above, and the local demo recording published as the submission video.
+- A hosted application is intentionally deferred until after Build Week submission.
 - `/api/health` returns only `{"status":"ok"}` and requires no participant context.
 - The frozen Version 1.3 Markdown and JSON are protected by exact SHA-256 regression tests.
 - The project demonstrates GPT-5.6 structured reasoning with deterministic resilience, not a generic chat wrapper.
 - Codex contribution and the required submission assets are tracked in [BUILD_WEEK_SUBMISSION_CHECKLIST.md](BUILD_WEEK_SUBMISSION_CHECKLIST.md).
-- No open-source license is currently approved. See [LICENSE_DECISION_REQUIRED.md](LICENSE_DECISION_REQUIRED.md) before making the repository public as open source.
+
+## License
+
+Open Loops is available under the [MIT License](LICENSE). Copyright © 2026 Tony Figurelli.
 
 ## Open Questions
 
-- Which identity-aware proxy and hosting platform will Tony approve for the public judging URL?
-- Will Tony select MIT, Apache-2.0, another license, or keep the repository source-available without an open-source license?
 - Which exact Build Week Codex Session ID should be submitted through `/feedback`?
+- What public repository and YouTube URLs should be recorded in the final checklist?
 
 ## Version 1 Boundaries
 
