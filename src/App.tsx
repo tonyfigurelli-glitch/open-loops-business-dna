@@ -25,6 +25,7 @@ import {
   buildCalibrationEvidencePackage,
   hashCalibrationEvidencePackage,
 } from "./domain/calibrations/calibrationEvidencePackage";
+import { AI_GENERATION_INSTRUCTION_VERSION } from "./domain/calibrations/aiModelGenerationPipeline";
 import type {
   BubbleSize,
   BubbleTone,
@@ -325,7 +326,7 @@ function App() {
           generatorType: "deterministic_fallback",
           provider: "network_unavailable",
           modelIdentifier: "unavailable",
-          promptInstructionVersion: "small_business_owner_v1.3_ai_generation@1.0.0",
+          promptInstructionVersion: AI_GENERATION_INSTRUCTION_VERSION,
           calibrationVersion: smallBusinessOwnerCalibration.version,
           frozenCalibrationHash: smallBusinessOwnerCalibration.canonical_source.sha256,
           generationTimestamp: new Date().toISOString(),

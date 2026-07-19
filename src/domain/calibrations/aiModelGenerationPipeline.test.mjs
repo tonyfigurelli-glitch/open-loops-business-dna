@@ -62,11 +62,23 @@ function validOutput(evidencePackage, overrides = {}) {
     .map((answer) => answer.questionId);
   const answer = (id) =>
     evidencePackage.participantAnswers.find((item) => item.questionId === id)?.exactWording ?? "";
+  const narrativeBodies = [
+    "You are building a neighborhood business around practical care for customers, while trying to make growth durable rather than merely fast.",
+    "Your strongest pattern is commercial curiosity paired with a willingness to adjust once you have enough information. That keeps decisions moving without pretending every uncertainty is resolved.",
+    `Your stated aim—“${answer("q04")}”—points toward one useful focus: test whether execution capacity is limiting progress before changing the offer itself.`,
+    "Customer attentiveness appears to be a real strength. Its possible hidden cost is that daily responsiveness can consume the space needed to develop recurring work.",
+    "The business consequence may be a tension between serving today's customers well and creating enough protected capacity for tomorrow's revenue.",
+    "A respectful challenge is to avoid treating the task you dislike most as the explanation for everything. Demand, pricing, and capacity still deserve comparison.",
+    "For seven days, protect one short block for a single catering step and record what actually prevents completion. The observation matters more than forcing a preferred conclusion.",
+    "You may operate best when priorities are visible, demand is steady, and one person is not carrying every urgent choice at once.",
+    "We do not yet know whether demand, pricing, profitability, or team capacity is the tighter constraint, so these remain open rather than implied facts.",
+    "Continuing will show whether the same tension appears in real decisions and outcomes. That evidence can make the model more specific without making it more certain than the facts allow.",
+  ];
   const base = {
-    profileSections: evidencePackage.requiredOutputSections.map((section) => ({
+    profileSections: evidencePackage.requiredOutputSections.map((section, index) => ({
       id: section.id,
       title: section.title,
-      body: `A participant-specific working section supported by ${answer("q04")}`,
+      body: narrativeBodies[index],
       evidenceReferences: ["q04", "q08"],
     })),
     centralHypothesis: "Execution capacity may be affecting progress on the stated priority.",
@@ -145,6 +157,65 @@ test("accepts valid AI-generated structured output", () => {
   const evidencePackage = packageFor();
   const validation = pipeline.validateAIModelOutput(validOutput(evidencePackage), evidencePackage);
   assert.deepEqual(validation, { valid: true, errors: [] });
+});
+
+test("accepts a clean Rapid Connection Narrator participant-facing result", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  const validation = pipeline.validateAIModelOutput(output, evidencePackage);
+
+  assert.deepEqual(validation, { valid: true, errors: [] });
+  assert.doesNotMatch(output.profileSections.map((section) => section.body).join(" "), /Rapid Connection Narrator|q04|Evidence:/i);
+});
+
+test("rejects live-test style boilerplate, metadata, and a raw answer dump", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  output.profileSections[0].body = [
+    "OPEN LOOPS — SMALL BUSINESS OWNER INITIAL CALIBRATION — RAPID CONNECTION NARRATOR",
+    "Participant Code: BW-104",
+    "Date: July 18, 2026",
+    "Estimated Completion Time: 8–12 minutes",
+    "Context Isolation: using only current-session evidence.",
+    "Evidence Source: Question q01 through q12",
+    `Business: ${answerValues.q01}`,
+    `Priority: ${answerValues.q04}`,
+    `Decision Style: ${answerValues.q07}`,
+    `Energy Source: ${answerValues.q09}`,
+    `Essential Belief: ${answerValues.q12}`,
+    "Internal Instructions: return structured JSON matching the supplied schema.",
+  ].join("\n");
+
+  const validation = pipeline.validateAIModelOutput(output, evidencePackage);
+  assert.equal(validation.valid, false);
+  assert.match(validation.errors.join(" "), /internal or non-narrative material/i);
+  assert.match(validation.errors.join(" "), /raw-answer dump|complete dump/i);
+});
+
+test("rejects generic praise, repeated insights, unsupported certainty, and report language", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  output.profileSections[1].body = "You are an exceptional visionary with unusual instincts for every business decision.";
+  output.profileSections[2].body = "Executive summary: the key takeaway is stakeholder alignment.";
+  output.profileSections[4].body = output.profileSections[3].body;
+  output.profileSections[8].body = "Clearly, this proves that the current theory is the root cause.";
+
+  const errors = pipeline.validateAIModelOutput(output, evidencePackage).errors.join(" ");
+  assert.match(errors, /generic praise/i);
+  assert.match(errors, /unsupported certainty/i);
+  assert.match(errors, /consultant-report language/i);
+  assert.match(errors, /must not repeat/i);
+});
+
+test("requires declared direct quotes to appear naturally in participant-facing prose", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  output.profileSections[2].body = "The stated growth priority deserves a focused capacity test before it becomes a broad theory.";
+
+  assert.match(
+    pipeline.validateAIModelOutput(output, evidencePackage).errors.join(" "),
+    /direct quotes must be used naturally/i,
+  );
 });
 
 test("rejects an unsupported evidence ID", () => {
@@ -282,6 +353,9 @@ test("retries once after validation failure and preserves provenance", async () 
   const evidencePackage = packageFor(sessionResponses);
   const provider = new pipeline.LocalMockCalibrationModelProvider((request, attempt) => {
     assert.equal(request.evidencePackage.calibrationId, definition.identifier);
+    assert.match(request.systemInstructions, /participant-facing narrative quality contract/i);
+    assert.match(request.systemInstructions, /identity → strength → possible hidden cost → business consequence/i);
+    assert.match(request.systemInstructions, /Keep evidence references only in evidenceReferences/i);
     if (attempt === 0) return { invalid: true };
     assert.equal(request.correctionErrors.length > 0, true);
     return validOutput(evidencePackage);
@@ -294,6 +368,7 @@ test("retries once after validation failure and preserves provenance", async () 
   });
   assert.equal(result.provenance.generatorType, "ai_assisted");
   assert.equal(result.provenance.retryCount, 1);
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.0");
   assert.equal(result.provenance.validationResult.valid, true);
   assert.equal(result.provenance.evidencePackageHash.length, 64);
   assert.equal(result.originalStructuredOutput.profileSections.length, 10);

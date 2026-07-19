@@ -39,6 +39,14 @@ Direct Responses API tests completed successfully with both tested GPT-5.6 model
 
 The provider timeout is now configured by `MODEL_PROVIDER_TIMEOUT_MS`, with a 180,000-millisecond per-attempt default and safe validation from 30,000 through 600,000 milliseconds. `MODEL_IDENTIFIER` remains the sole model selection setting; no GPT-5.6 variant is hardcoded. The two-attempt validation flow and deterministic fallback remain unchanged. Provider timeouts are stored and displayed as a redacted timeout category distinct from other failures, and the participant interface exits connecting after success, fallback, timeout, or network failure.
 
+### July 18 Live-Test Narrative Quality Finding
+
+GPT-5.6 Terra completed and stored a valid AI-assisted generation during live testing, but the first participant-facing section exposed internal calibration boilerplate, metadata, and a raw answer summary. The structured result satisfied the earlier technical schema while failing the participant experience standard required for a Build Week demonstration.
+
+AI generation instruction version `small_business_owner_v1.3_ai_generation@1.1.0` now separates participant-facing prose from internal calibration structure. The ten canonical section IDs, titles, and order remain unchanged. Section bodies must contain only concise, specific narrative and must not display calibration titles, narrator labels, participant metadata, dates, completion estimates, context-isolation confirmations, evidence labels, question IDs, raw field labels, instructions, prompt text, or answer dumps. Evidence references remain in structured fields. Exact quotes are allowed only when declared and integrated naturally.
+
+The validator rejects internal boilerplate, answer-dump density, undeclared verbatim answers, repeated narrative, generic praise, unsupported certainty, and consultant-report language. The existing retry, evidence discipline, safety validation, context isolation, provenance, immutable storage, and deterministic fallback behavior remain in force. This is a versioned generation-instruction and validation improvement; it does not modify either frozen Version 1.3 canonical artifact.
+
 ## Development Versus Production
 
 Production differs from development in these required ways:

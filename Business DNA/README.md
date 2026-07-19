@@ -52,6 +52,8 @@ Application code consumes the JSON through a shared domain adapter. User-interfa
 
 Completed results provide a session-history selector and a Start New Calibration action. Each new run receives a unique Version 1.3 session identity while all older sessions remain available. If a completed result used deterministic fallback, a GPT-5.6 retry may create a separate immutable generation attempt from the exact stored twelve-answer evidence package. The retry does not alter the source session, its original output, or its initial Business DNA record.
 
+AI-assisted participant narrative uses the traceable instruction version `small_business_owner_v1.3_ai_generation@1.1.0`. It preserves the ten canonical Version 1.3 section IDs and titles while requiring section bodies to read as polished reflection rather than expose calibration machinery, evidence labels, metadata, prompt text, or raw answer summaries. Narrative validation remains part of the same retry, evidence, safety, provenance, immutability, and deterministic-fallback boundary.
+
 ## Evidence And Memory Principles
 
 - Major conclusions should generally require at least two independent pieces of evidence.

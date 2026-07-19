@@ -36,6 +36,25 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Strengthen GPT-5.6 Participant-Facing Narrative Quality
+
+**Decision:** Advance the Small Business Owner AI generation instruction layer from `small_business_owner_v1.3_ai_generation@1.0.0` to `@1.1.0` without changing either frozen Version 1.3 canonical file. Preserve all ten canonical section IDs, titles, and order. Require each section body to contain only polished participant-facing narrative, follow the approved identity-to-continuation sequence, and keep evidence references in structured evidence fields. Prohibit calibration and narrator labels, participant metadata, dates and completion estimates, context-isolation confirmations, evidence labels, question IDs, raw field labels, internal instructions, prompt text, and participant-answer dumps. Reject undeclared or unnatural direct-quote use, repeated prose, generic praise, unsupported certainty, and consultant-report language.
+
+**Rationale:** July 18 live testing produced a successfully stored GPT-5.6 Terra result that passed the technical schema but exposed internal calibration boilerplate, metadata, and a raw answer summary in its first participant-facing section. Technical validity alone is insufficient for a trusted or demo-ready reflection. A traceable generation-instruction revision and enforceable narrative validator improve participant quality while preserving canonical calibration comparability and all existing safety boundaries.
+
+**Affected Files:**
+
+- [src/domain/calibrations/aiModelGenerationPipeline.ts](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [src/domain/calibrations/aiModelGenerationPipeline.test.mjs](src/domain/calibrations/aiModelGenerationPipeline.test.mjs)
+- [src/App.tsx](src/App.tsx)
+- [server/backend.test.mjs](server/backend.test.mjs)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Evaluate participant-facing specificity, repetition, tone, and quote usefulness during the controlled pilot. Record any proposed change to canonical questions, section identities, or Version 1.3 rules separately for Version 1.4 consideration. The frozen Version 1.3 Markdown and JSON remain unchanged.
+
 ### 2026-07-18: Correct GPT-5.6 Retry Timeout After Build Week Live Test
 
 **Decision:** Replace the model providers' fixed forty-five-second per-attempt timeout with the validated `MODEL_PROVIDER_TIMEOUT_MS` configuration. Use 180,000 milliseconds per attempt by default for the full ten-section strict structured Business DNA result, allow integer values from 30,000 through 600,000 milliseconds, and continue selecting the provider model only through `MODEL_IDENTIFIER`. Preserve the existing two-attempt validation pipeline and deterministic fallback. Normalize timeout and provider failures into safe provenance categories, display timeout separately from other fallback causes, and ensure every retry request leaves the connecting interface state after success, fallback, timeout, or network failure.

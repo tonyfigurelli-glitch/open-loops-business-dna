@@ -16,6 +16,9 @@ import {
 export { buildCalibrationEvidencePackage } from "./calibrationEvidencePackage";
 export type { CalibrationDefinition, CalibrationEvidenceAnswer, CalibrationEvidencePackage } from "./calibrationEvidencePackage";
 
+export const AI_GENERATION_INSTRUCTION_VERSION =
+  "small_business_owner_v1.3_ai_generation@1.1.0";
+
 export type AIModelOutput = {
   profileSections: Array<{
     id: string;
@@ -192,7 +195,7 @@ export async function runAIModelGenerationPipeline({
   responses,
   provider,
   deterministicFallback,
-  promptInstructionVersion = "small_business_owner_v1.3_ai_generation@1.0.0",
+  promptInstructionVersion = AI_GENERATION_INSTRUCTION_VERSION,
 }: PipelineInput): Promise<ModelGenerationPipelineResult> {
   const evidencePackage = buildCalibrationEvidencePackage(definition, responses);
   const evidencePackageHash = await hashCalibrationEvidencePackage(evidencePackage);
@@ -311,6 +314,12 @@ export function validateAIModelOutput(
       errors.push(`Profile section ${required.order} requires evidence references.`);
     }
   });
+  validateParticipantFacingNarrative(
+    sections,
+    evidencePackage,
+    Array.isArray(output.importantDirectQuotes) ? output.importantDirectQuotes : [],
+    errors,
+  );
 
   const validAnswers = new Map(
     evidencePackage.participantAnswers
@@ -443,8 +452,110 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "Use only the supplied current-session evidence package.",
     "Return structured JSON matching the supplied schema; do not add prose outside it.",
     "Do not claim access to prior chats, memory, profiles, research, or metadata.",
+    "PARTICIPANT-FACING NARRATIVE QUALITY CONTRACT:",
+    "The ten profileSections must retain the exact supplied canonical IDs, titles, and order.",
+    "Each profileSections.body must contain only polished narrative written directly for the participant. Do not expose calibration titles, the phrase Rapid Connection Narrator, participant code, dates, estimated completion time, context-isolation confirmations, evidence-source labels, question IDs, raw field labels, internal instructions, prompt text, or a list/dump of participant answers.",
+    "Keep evidence references only in evidenceReferences and the other structured evidence fields. Never write question IDs or evidence labels inside participant-facing prose.",
+    "Use an exact direct quote only when it materially sharpens the reflection, list it in importantDirectQuotes, and integrate it naturally rather than presenting it as source data.",
+    "Across the complete narrative, follow this sequence: identity → strength → possible hidden cost → business consequence → leverage point → respectful challenge → seven-day experiment → reason to continue.",
+    "Write with perceptive, grounded, concise, nonclinical, participant-specific language. Avoid generic praise, repeated insights, unsupported certainty, diagnostic claims, and consultant-report language.",
+    "Treat section titles as presentation chrome: do not repeat any canonical section title inside its body.",
     canonicalInstructions,
   ].join("\n\n");
+}
+
+function validateParticipantFacingNarrative(
+  sections: any[],
+  evidencePackage: CalibrationEvidencePackage,
+  importantDirectQuotes: any[],
+  errors: string[],
+) {
+  const bodies = sections.map((section) => typeof section?.body === "string" ? section.body : "");
+  const allowedQuotes = new Set(
+    importantDirectQuotes
+      .map((item) => typeof item?.quote === "string" ? normalizeNarrative(item.quote) : "")
+      .filter(Boolean),
+  );
+  const longAnswers = evidencePackage.participantAnswers.filter(
+    (answer) => answer.meaningful && normalizeNarrative(answer.exactWording).length >= 20,
+  );
+  let exactAnswerAppearances = 0;
+  const seenBodies = new Set<string>();
+  const seenSentences = new Set<string>();
+
+  bodies.forEach((body, index) => {
+    if (!body) return;
+    const label = `Profile section ${index + 1}`;
+    const normalizedBody = normalizeNarrative(body);
+    const prohibited = participantFacingProhibitedPattern(body);
+    if (prohibited) errors.push(`${label} contains internal or non-narrative material (${prohibited}).`);
+    if (body.length > 1_400) errors.push(`${label} must be concise participant-facing narrative.`);
+    if (seenBodies.has(normalizedBody)) errors.push("Participant-facing sections must not repeat the same insight.");
+    seenBodies.add(normalizedBody);
+
+    for (const required of evidencePackage.requiredOutputSections) {
+      if (normalizedBody.includes(normalizeNarrative(required.title))) {
+        errors.push(`${label} must not repeat canonical section titles inside its body.`);
+        break;
+      }
+    }
+
+    const matchedAnswers = longAnswers.filter((answer) =>
+      normalizedBody.includes(normalizeNarrative(answer.exactWording)),
+    );
+    exactAnswerAppearances += matchedAnswers.length;
+    if (matchedAnswers.length >= 3) {
+      errors.push(`${label} contains a raw-answer dump instead of participant-facing narrative.`);
+    }
+    for (const answer of matchedAnswers) {
+      if (!allowedQuotes.has(normalizeNarrative(answer.exactWording))) {
+        errors.push(`${label} reproduces an answer verbatim without declaring a material direct quote.`);
+        break;
+      }
+    }
+
+    for (const sentence of body.split(/(?<=[.!?])\s+/)) {
+      const normalizedSentence = normalizeNarrative(sentence);
+      if (normalizedSentence.length < 45) continue;
+      if (seenSentences.has(normalizedSentence)) {
+        errors.push("Participant-facing sections must not repeat the same narrative sentence.");
+        break;
+      }
+      seenSentences.add(normalizedSentence);
+    }
+  });
+
+  if (exactAnswerAppearances >= Math.max(5, Math.ceil(longAnswers.length / 2))) {
+    errors.push("Participant-facing sections must not contain a complete dump of participant answers.");
+  }
+  for (const quote of allowedQuotes) {
+    const containingBody = bodies.find((body) => normalizeNarrative(body).includes(quote));
+    if (!containingBody || normalizeNarrative(containingBody) === quote) {
+      errors.push("Important direct quotes must be used naturally inside participant-facing narrative.");
+    }
+  }
+}
+
+function participantFacingProhibitedPattern(body: string) {
+  const patterns: Array<[string, RegExp]> = [
+    ["calibration boilerplate", /\b(?:open loops\s*[-—:|]\s*)?small business owner initial calibration\b|\bcalibration\s+(?:version\s*)?1\.3\b/i],
+    ["internal narrator label", /\brapid connection narrator\b/i],
+    ["participant metadata", /\bparticipant\s+(?:code|id)\b\s*[:#-]?/i],
+    ["date or completion metadata", /(?:^|\n)\s*(?:date|completed on|generated on|estimated completion(?: time)?)\s*:|\b(?:estimated completion|takes? approximately)\s+\d+\s*(?:minutes?|mins?)\b|\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/i],
+    ["context-isolation confirmation", /\b(?:context isolation|current-session evidence only|using only (?:the )?(?:current|supplied) (?:session|answers)|no prior (?:chat|memory|profile))\b/i],
+    ["evidence-source label", /\b(?:evidence|evidence source|supporting evidence|source answers?|source)\s*:/i],
+    ["question identifier", /\bq(?:0[1-9]|1[0-2])\b|\bquestion\s*(?:number\s*)?(?:[1-9]|1[0-2])\b/i],
+    ["raw field label", /\b(?:business(?: description)?|team size|role|priority|growth orientation|decision style|energy source|avoided task|best operating conditions|essential belief|answer)\s*:/i],
+    ["internal instruction or prompt text", /\b(?:internal instructions?|system instructions?|prompt text|do not (?:use|include|claim)|return structured json|matching the supplied schema)\b/i],
+    ["consultant-report language", /\b(?:executive summary|strategic recommendation|key takeaway|best-in-class|actionable insights?|optimi[sz]e synergies|stakeholder alignment)\b/i],
+    ["generic praise", /\b(?:you are (?:an? )?(?:exceptional|remarkable|visionary|outstanding|incredible)|natural-born leader)\b/i],
+    ["unsupported certainty", /\b(?:clearly|definitely|undoubtedly|without question|the root cause is|this proves that)\b/i],
+  ];
+  return patterns.find(([, pattern]) => pattern.test(body))?.[0];
+}
+
+function normalizeNarrative(value: string) {
+  return value.toLowerCase().replace(/[“”'"`*_#>|()[\]{}:;,.!?—–-]+/g, " ").replace(/\s+/g, " ").trim();
 }
 
 function validateExperiment(experiment: unknown, errors: string[]) {

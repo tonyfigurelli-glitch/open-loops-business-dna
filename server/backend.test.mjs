@@ -58,10 +58,21 @@ function session(id = "session-a") {
 }
 
 function validAIOutput(evidencePackage) {
-  const answer = (id) => evidencePackage.participantAnswers.find((item) => item.questionId === id).exactWording;
+  const bodies = [
+    "You are building from direct customer knowledge while trying to make the next stage of the business more deliberate.",
+    "Your pattern combines practical action with adjustment after new information arrives, which can keep uncertainty from becoming paralysis.",
+    "Your stated priority deserves a focused test of capacity before it becomes a broad theory about the business.",
+    "Responsiveness appears to be a strength, with the possible shadow that urgent work can crowd out the work that creates future options.",
+    "The resulting tension may sit between maintaining today's service and protecting enough attention for the stated priority.",
+    "A respectful challenge is to compare the current capacity hypothesis with demand and pricing rather than assuming one explanation is settled.",
+    "Use one short seven-day test to observe where the chosen step actually slows, then record the result without forcing it to confirm the hypothesis.",
+    "Clear priorities and steadier demand may help you operate with more consistency and less reactive switching.",
+    "Demand, profitability, and the team's available capacity remain unknown, so they should stay visible as competing explanations.",
+    "Continuing will reveal whether this pattern repeats in real choices and outcomes, allowing the model to become more useful through evidence.",
+  ];
   return {
-    profileSections: evidencePackage.requiredOutputSections.map((section) => ({
-      id: section.id, title: section.title, body: "A provisional current-session model.",
+    profileSections: evidencePackage.requiredOutputSections.map((section, index) => ({
+      id: section.id, title: section.title, body: bodies[index],
       evidenceReferences: ["q04", "q08"],
     })),
     centralHypothesis: "Execution capacity may affect the current priority.",
@@ -76,7 +87,7 @@ function validAIOutput(evidencePackage) {
       tentativeHypotheses: [{ statement: "Demand may matter more.", evidenceReferences: ["q04", "q11"] }],
       unknowns: ["Demand remains unknown."],
     },
-    importantDirectQuotes: [{ questionId: "q04", quote: answer("q04") }],
+    importantDirectQuotes: [],
     sevenDayExperiment: {
       action: "Run one reversible business-process test.", hypothesis: "The result may reveal the constraint.",
       minimumDeliverable: "One completed step.", owner: "Owner", likelyObstacle: "Urgent work",
