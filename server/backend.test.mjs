@@ -190,6 +190,34 @@ test("secure endpoint invokes the provider server-side and returns validated AI 
   assert.equal(body.provenance.provider, "approved_server_test");
 });
 
+test("server diagnostics retain safe validation codes for both attempts without participant content", async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  const responses = domain.canonical.onboarding_questions.map((question) => ({
+    questionId: question.id, response: answerValues[question.id], answeredAt: "2026-07-17T12:00:00.000Z",
+  }));
+  const evidencePackage = domain.pipeline.buildCalibrationEvidencePackage(domain.canonical, responses);
+  const diagnostics = [];
+  const service = new CalibrationGenerationService({
+    canonical: domain.canonical,
+    pipeline: domain.pipeline,
+    generator: domain.generator,
+    provider: new domain.pipeline.LocalMockCalibrationModelProvider(() => ({ invalid: true })),
+    diagnostics: (metadata) => diagnostics.push(metadata),
+  });
+  const api = createApi({ database: f.database, auth: f.auth, generationService: service, canonical: domain.canonical });
+
+  const response = await api(authenticatedRequest(f.auth, "user-a", "/api/calibrations/generate", {
+    method: "POST", body: JSON.stringify({ evidencePackage }),
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(diagnostics.length, 1);
+  assert.deepEqual(diagnostics[0].validationAttempts.map((attempt) => attempt.attempt), [1, 2]);
+  assert.equal(diagnostics[0].validationAttempts.every((attempt) => attempt.codes.length > 0), true);
+  const serialized = JSON.stringify(diagnostics);
+  for (const answer of Object.values(answerValues)) assert.doesNotMatch(serialized, new RegExp(answer));
+  assert.doesNotMatch(serialized, /profileSections|participantAnswers|generatedProfile/);
+});
+
 test("migration is deduplicated and preserves timestamps and provenance", async (t) => {
   const f = fixture(); t.after(() => f.close());
   const request = () => authenticatedRequest(f.auth, "user-a", "/api/calibration-sessions/import", {

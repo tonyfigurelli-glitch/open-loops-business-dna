@@ -156,7 +156,7 @@ function packageFor(sessionResponses = responses()) {
 test("accepts valid AI-generated structured output", () => {
   const evidencePackage = packageFor();
   const validation = pipeline.validateAIModelOutput(validOutput(evidencePackage), evidencePackage);
-  assert.deepEqual(validation, { valid: true, errors: [] });
+  assert.deepEqual(validation, { valid: true, errors: [], codes: [] });
 });
 
 test("accepts a clean Rapid Connection Narrator participant-facing result", () => {
@@ -164,7 +164,7 @@ test("accepts a clean Rapid Connection Narrator participant-facing result", () =
   const output = validOutput(evidencePackage);
   const validation = pipeline.validateAIModelOutput(output, evidencePackage);
 
-  assert.deepEqual(validation, { valid: true, errors: [] });
+  assert.deepEqual(validation, { valid: true, errors: [], codes: [] });
   assert.doesNotMatch(output.profileSections.map((section) => section.body).join(" "), /Rapid Connection Narrator|q04|Evidence:/i);
 });
 
@@ -216,6 +216,69 @@ test("requires declared direct quotes to appear naturally in participant-facing 
     pipeline.validateAIModelOutput(output, evidencePackage).errors.join(" "),
     /direct quotes must be used naturally/i,
   );
+});
+
+test("corrects the live section-4 and section-7 label mismatch and preserves both attempt diagnostics", async () => {
+  const sessionResponses = responses();
+  const evidencePackage = packageFor(sessionResponses);
+  const provider = new pipeline.LocalMockCalibrationModelProvider((request, attempt) => {
+    const output = validOutput(evidencePackage);
+    if (attempt === 0) {
+      output.profileSections[3].body = [
+        "Your strength: Staying close to customers.",
+        "How it helps the business: You notice practical needs quickly.",
+        "Its possible shadow: Urgent requests may consume planning time.",
+        "Where I see evidence: Two current patterns point in this direction.",
+        "Confidence: Moderate.",
+      ].join("\n");
+      return output;
+    }
+    assert.match(request.correctionErrors.join(" "), /evidence-source label/i);
+    output.profileSections[6].body = [
+      "Experiment: Protect one block for recurring revenue work.",
+      "Hypothesis being tested: Capacity may be limiting the priority.",
+      "Why this fits you and your business: It turns the working theory into observable evidence.",
+      "Minimum deliverable: Complete one step.",
+      "Who should own it: Owner.",
+      "Likely obstacle: Urgent customer work.",
+      "Support that may help: A scheduled block.",
+      "What result to record: The observed constraint.",
+      "What the result would teach us: Whether capacity is the tighter constraint.",
+      "Additional report detail ".repeat(70),
+    ].join("\n");
+    return output;
+  });
+
+  const result = await pipeline.runAIModelGenerationPipeline({
+    definition,
+    responses: sessionResponses,
+    provider,
+    deterministicFallback: fallbackResult,
+  });
+
+  assert.equal(result.provenance.generatorType, "deterministic_fallback");
+  assert.equal(result.provenance.failureReason, "validation_failure");
+  assert.deepEqual(result.provenance.validationAttempts.map((attempt) => ({
+    attempt: attempt.attempt,
+    outcome: attempt.outcome,
+    codes: attempt.codes,
+  })), [
+    {
+      attempt: 1,
+      outcome: "validation_rejected",
+      codes: ["NARRATIVE_EVIDENCE_LABEL"],
+    },
+    {
+      attempt: 2,
+      outcome: "validation_rejected",
+      codes: ["NARRATIVE_RAW_FIELD_LABEL", "NARRATIVE_TOO_LONG"],
+    },
+  ]);
+  assert.deepEqual(result.provenance.validationResult.codes, [
+    "NARRATIVE_RAW_FIELD_LABEL",
+    "NARRATIVE_TOO_LONG",
+  ]);
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.1");
 });
 
 test("rejects an unsupported evidence ID", () => {
@@ -356,6 +419,13 @@ test("retries once after validation failure and preserves provenance", async () 
     assert.match(request.systemInstructions, /participant-facing narrative quality contract/i);
     assert.match(request.systemInstructions, /identity → strength → possible hidden cost → business consequence/i);
     assert.match(request.systemInstructions, /Keep evidence references only in evidenceReferences/i);
+    assert.match(request.systemInstructions, /rewrite it as natural prose without labels/i);
+    assert.match(request.systemInstructions, /section 7, write only a two-to-four-sentence participant-facing summary/i);
+    assert.equal(
+      request.systemInstructions.lastIndexOf("RENDERING OVERRIDES FOR THE FROZEN SPECIFICATION") >
+        request.systemInstructions.lastIndexOf("# 12. REQUIRED PROFILE STRUCTURE"),
+      true,
+    );
     if (attempt === 0) return { invalid: true };
     assert.equal(request.correctionErrors.length > 0, true);
     return validOutput(evidencePackage);
@@ -368,7 +438,7 @@ test("retries once after validation failure and preserves provenance", async () 
   });
   assert.equal(result.provenance.generatorType, "ai_assisted");
   assert.equal(result.provenance.retryCount, 1);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.0");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.1");
   assert.equal(result.provenance.validationResult.valid, true);
   assert.equal(result.provenance.evidencePackageHash.length, 64);
   assert.equal(result.originalStructuredOutput.profileSections.length, 10);

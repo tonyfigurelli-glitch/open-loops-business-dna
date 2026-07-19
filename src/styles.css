@@ -751,6 +751,7 @@ h3 {
 }
 
 .generation-status.failed_with_fallback,
+.generation-status.validation_rejected_with_fallback,
 .generation-status.timed_out_with_fallback {
   border-color: rgba(180, 116, 31, 0.38);
   color: #795018;

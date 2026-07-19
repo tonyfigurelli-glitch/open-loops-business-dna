@@ -174,7 +174,14 @@ export type CalibrationGenerationProvenance = {
   validationResult: {
     valid: boolean;
     errors: string[];
+    codes?: string[];
   };
+  validationAttempts?: Array<{
+    attempt: number;
+    outcome: "accepted" | "validation_rejected" | "provider_timeout" | "provider_failure";
+    codes: string[];
+    errors: string[];
+  }>;
   retryCount: number;
   evidencePackageHash: string;
   usage?: Record<string, number>;

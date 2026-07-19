@@ -47,6 +47,16 @@ AI generation instruction version `small_business_owner_v1.3_ai_generation@1.1.0
 
 The validator rejects internal boilerplate, answer-dump density, undeclared verbatim answers, repeated narrative, generic praise, unsupported certainty, and consultant-report language. The existing retry, evidence discipline, safety validation, context isolation, provenance, immutable storage, and deterministic fallback behavior remain in force. This is a versioned generation-instruction and validation improvement; it does not modify either frozen Version 1.3 canonical artifact.
 
+### July 18 Live-Test Validation-Rejection Finding
+
+Session `calibration-9db67621-d7c6-42c5-9d6b-ba19ba43da72` reached the configured model and returned a deterministic fallback after two validation attempts. The stored second-attempt result retained three exact safe errors: section 4 contained an evidence-source label; section 7 contained a raw field label; and section 7 exceeded the participant-facing length limit. The original implementation retained only the final validation result, so the first-attempt errors cannot be recovered exactly from this historical session without another provider call.
+
+The root mismatch was between generation instruction `@1.1.0` and the appended frozen specification. The narrative contract prohibited field labels, while the frozen section guidance for the strength/shadow, central tension, and seven-day experiment explicitly demonstrated labeled structures. The full section-7 structure also encouraged a body longer than the narrative validator allowed.
+
+Instruction version `small_business_owner_v1.3_ai_generation@1.1.1` resolves the mismatch without changing Version 1.3. Labeled frozen structures remain required in meaning but are rendered as natural prose. Section 7 contains only a short participant-facing experiment summary, while its full deliverable, owner, obstacle, support, result, and learning fields remain in `sevenDayExperiment`. Narrative label matching is anchored to actual field headings instead of broad inline words.
+
+Every future provider pass now stores a safe validation diagnostic containing attempt number, outcome, stable failure codes, and fixed validator messages. Server operational diagnostics emit only those codes and non-sensitive generation metadata—never participant answers or generated prose. The interface distinguishes `validation rejected` from provider failure and timeout while preserving the deterministic result.
+
 ## Development Versus Production
 
 Production differs from development in these required ways:

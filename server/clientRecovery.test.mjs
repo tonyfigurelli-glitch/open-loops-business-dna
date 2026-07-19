@@ -72,6 +72,9 @@ test("retry status maps AI success and failed fallback without exposing generati
   assert.equal(client.generationStateForAttempt({
     outcome: "failed_with_fallback", provenance: { failureReason: "provider_timeout" },
   }), "timed_out_with_fallback");
+  assert.equal(client.generationStateForAttempt({
+    outcome: "failed_with_fallback", provenance: { failureReason: "validation_failure" },
+  }), "validation_rejected_with_fallback");
 });
 
 test("retry errors are redacted before reaching the participant interface", async () => {
@@ -93,7 +96,7 @@ test("completed results expose history, new-session, retry, and safe generation 
   for (const copy of [
     "Start New Calibration", "Retry with GPT-5.6", "Calibration history",
     "Connecting securely to GPT-5.6", "AI-assisted generation succeeded",
-    "AI-assisted generation failed", "GPT-5.6 timed out",
+    "AI-assisted generation failed", "GPT-5.6 timed out", "did not pass narrative and evidence validation",
   ]) assert.match(screen, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
 });
@@ -105,6 +108,9 @@ test("retry completion always exits connecting for success, fallback, timeout, a
     [() => Promise.resolve({
       outcome: "failed_with_fallback", provenance: { failureReason: "provider_timeout" },
     }), "timed_out_with_fallback"],
+    [() => Promise.resolve({
+      outcome: "failed_with_fallback", provenance: { failureReason: "validation_failure" },
+    }), "validation_rejected_with_fallback"],
     [() => Promise.reject(new DOMException("private timeout detail", "TimeoutError")), "timed_out_with_fallback"],
     [() => Promise.reject(new Error("network failed with private response body")), "failed_with_fallback"],
   ];

@@ -17,7 +17,7 @@ export { buildCalibrationEvidencePackage } from "./calibrationEvidencePackage";
 export type { CalibrationDefinition, CalibrationEvidenceAnswer, CalibrationEvidencePackage } from "./calibrationEvidencePackage";
 
 export const AI_GENERATION_INSTRUCTION_VERSION =
-  "small_business_owner_v1.3_ai_generation@1.1.0";
+  "small_business_owner_v1.3_ai_generation@1.1.1";
 
 export type AIModelOutput = {
   profileSections: Array<{
@@ -201,6 +201,8 @@ export async function runAIModelGenerationPipeline({
   const evidencePackageHash = await hashCalibrationEvidencePackage(evidencePackage);
   const systemInstructions = buildSystemInstructions(definition);
   let validationErrors: string[] = [];
+  let validationCodes: string[] = [];
+  const validationAttempts: NonNullable<CalibrationGenerationProvenance["validationAttempts"]> = [];
   let lastProvider = "unavailable";
   let lastModelIdentifier = "unavailable";
   let lastUsage: Record<string, number> | undefined;
@@ -219,6 +221,12 @@ export async function runAIModelGenerationPipeline({
       lastModelIdentifier = response.modelIdentifier;
       lastUsage = response.usage;
       const validation = validateAIModelOutput(response.structuredResult, evidencePackage);
+      validationAttempts.push({
+        attempt: attempt + 1,
+        outcome: validation.valid ? "accepted" : "validation_rejected",
+        codes: validation.codes,
+        errors: validation.errors,
+      });
 
       if (validation.valid) {
         const output = response.structuredResult as AIModelOutput;
@@ -233,6 +241,7 @@ export async function runAIModelGenerationPipeline({
             frozenCalibrationHash: definition.canonical_source.sha256,
             generationTimestamp: response.generationTimestamp,
             validationResult: validation,
+            validationAttempts,
             retryCount: attempt,
             evidencePackageHash,
             usage: response.usage,
@@ -242,12 +251,22 @@ export async function runAIModelGenerationPipeline({
       }
 
       validationErrors = validation.errors;
+      validationCodes = validation.codes;
       lastFailureReason = "validation_failure";
     } catch (error) {
       lastFailureReason = isProviderTimeout(error) ? "provider_timeout" : "provider_failure";
       validationErrors = [lastFailureReason === "provider_timeout"
         ? "Model provider timed out."
         : "Model provider generation failed."];
+      validationCodes = [lastFailureReason === "provider_timeout"
+        ? "PROVIDER_TIMEOUT"
+        : "PROVIDER_FAILURE"];
+      validationAttempts.push({
+        attempt: attempt + 1,
+        outcome: lastFailureReason,
+        codes: validationCodes,
+        errors: validationErrors,
+      });
     }
   }
 
@@ -262,7 +281,8 @@ export async function runAIModelGenerationPipeline({
       calibrationVersion: definition.version,
       frozenCalibrationHash: definition.canonical_source.sha256,
       generationTimestamp,
-      validationResult: { valid: false, errors: validationErrors },
+      validationResult: { valid: false, errors: validationErrors, codes: validationCodes },
+      validationAttempts,
       retryCount: 1,
       evidencePackageHash,
       usage: lastUsage,
@@ -280,7 +300,10 @@ export function validateAIModelOutput(
   evidencePackage: CalibrationEvidencePackage,
 ) {
   const errors: string[] = [];
-  if (!isRecord(candidate)) return { valid: false, errors: ["Output must be an object."] };
+  if (!isRecord(candidate)) {
+    const errors = ["Output must be an object."];
+    return { valid: false, errors, codes: errors.map(validationFailureCode) };
+  }
 
   const output = candidate as Partial<AIModelOutput>;
   const requiredArrays = [
@@ -396,7 +419,32 @@ export function validateAIModelOutput(
     errors.push("Contradictory evidence requires low confidence.");
   }
   validateExperiment(output.sevenDayExperiment, errors);
-  return { valid: errors.length === 0, errors };
+  return { valid: errors.length === 0, errors, codes: errors.map(validationFailureCode) };
+}
+
+function validationFailureCode(error: string) {
+  if (/evidence-source label/i.test(error)) return "NARRATIVE_EVIDENCE_LABEL";
+  if (/raw field label/i.test(error)) return "NARRATIVE_RAW_FIELD_LABEL";
+  if (/date or completion metadata/i.test(error)) return "NARRATIVE_DATE_METADATA";
+  if (/participant metadata/i.test(error)) return "NARRATIVE_PARTICIPANT_METADATA";
+  if (/question identifier/i.test(error)) return "NARRATIVE_QUESTION_IDENTIFIER";
+  if (/calibration boilerplate|internal narrator label|internal instruction or prompt text/i.test(error)) return "NARRATIVE_INTERNAL_BOILERPLATE";
+  if (/consultant-report language/i.test(error)) return "NARRATIVE_REPORT_LANGUAGE";
+  if (/generic praise/i.test(error)) return "NARRATIVE_GENERIC_PRAISE";
+  if (/unsupported certainty/i.test(error)) return "NARRATIVE_UNSUPPORTED_CERTAINTY";
+  if (/must be concise/i.test(error)) return "NARRATIVE_TOO_LONG";
+  if (/same insight|same narrative sentence/i.test(error)) return "NARRATIVE_REPETITION";
+  if (/raw-answer dump|complete dump/i.test(error)) return "NARRATIVE_ANSWER_DUMP";
+  if (/verbatim without declaring|direct quotes must be used naturally/i.test(error)) return "NARRATIVE_QUOTE_USE";
+  if (/repeat canonical section titles/i.test(error)) return "NARRATIVE_CANONICAL_TITLE";
+  if (/clinical or medical advice/i.test(error)) return "SAFETY_CLINICAL_ADVICE";
+  if (/prohibited prior information/i.test(error)) return "CONTEXT_ISOLATION_VIOLATION";
+  if (/evidence ID|evidence references|independent evidence|participant evidence/i.test(error)) return "EVIDENCE_DISCIPLINE_REJECTED";
+  if (/confidence/i.test(error)) return "CONFIDENCE_DISCIPLINE_REJECTED";
+  if (/seven-day experiment|sevenDayExperiment/i.test(error)) return "EXPERIMENT_INVALID";
+  if (/profile section|ten required profile sections/i.test(error)) return "CANONICAL_SECTION_INVALID";
+  if (/must exactly match participant wording|Direct statements/i.test(error)) return "DIRECT_EVIDENCE_INVALID";
+  return "OUTPUT_VALIDATION_REJECTED";
 }
 
 function mapAIOutputToGeneration(
@@ -461,6 +509,13 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "Write with perceptive, grounded, concise, nonclinical, participant-specific language. Avoid generic praise, repeated insights, unsupported certainty, diagnostic claims, and consultant-report language.",
     "Treat section titles as presentation chrome: do not repeat any canonical section title inside its body.",
     canonicalInstructions,
+    "RENDERING OVERRIDES FOR THE FROZEN SPECIFICATION:",
+    "The frozen specification's required header and internal summary are represented by structured fields outside profileSections.body. Never render that header, metadata, answer summary, or internal summary inside a section body.",
+    "Where the frozen specification says ‘Use this structure’ or shows bold field labels, preserve the requested meaning but rewrite it as natural prose without labels.",
+    "For profile section 4, synthesize the strength, benefit, possible shadow, evidence-supported basis, and calibrated confidence into one or two short paragraphs. Put evidence IDs only in evidenceReferences.",
+    "For profile section 5, express both legitimate sides, their consequence, and the current tension as connected prose without field headings.",
+    "For profile section 7, write only a two-to-four-sentence participant-facing summary of the action, hypothesis, fit, and learning value. Put the full deliverable, owner, obstacle, support, result, and learning details only in sevenDayExperiment.",
+    "For profile sections 8 and 9, concise bullets are allowed, but do not prefix them with raw source, evidence, question, or answer labels.",
   ].join("\n\n");
 }
 
@@ -543,9 +598,9 @@ function participantFacingProhibitedPattern(body: string) {
     ["participant metadata", /\bparticipant\s+(?:code|id)\b\s*[:#-]?/i],
     ["date or completion metadata", /(?:^|\n)\s*(?:date|completed on|generated on|estimated completion(?: time)?)\s*:|\b(?:estimated completion|takes? approximately)\s+\d+\s*(?:minutes?|mins?)\b|\b(?:jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|nov(?:ember)?|dec(?:ember)?)\s+\d{1,2},\s+\d{4}\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\/\d{2,4}\b/i],
     ["context-isolation confirmation", /\b(?:context isolation|current-session evidence only|using only (?:the )?(?:current|supplied) (?:session|answers)|no prior (?:chat|memory|profile))\b/i],
-    ["evidence-source label", /\b(?:evidence|evidence source|supporting evidence|source answers?|source)\s*:/i],
+    ["evidence-source label", /(?:^|\n)\s*(?:evidence|evidence source|supporting evidence|where i see evidence|source answers?)\s*:/i],
     ["question identifier", /\bq(?:0[1-9]|1[0-2])\b|\bquestion\s*(?:number\s*)?(?:[1-9]|1[0-2])\b/i],
-    ["raw field label", /\b(?:business(?: description)?|team size|role|priority|growth orientation|decision style|energy source|avoided task|best operating conditions|essential belief|answer)\s*:/i],
+    ["raw field label", /(?:^|\n)\s*(?:business(?: description)?|team size|role|priority|growth orientation|decision style|energy source|avoided task|best operating conditions|essential belief|answer|your strength|how it helps the business|its possible shadow|confidence|on one side|on the other side|why both matter|what happens if the tension remains unresolved|where it may be appearing today|experiment|hypothesis being tested|why this fits you and your business|minimum deliverable|who should own it|likely obstacle|support that may help|what result to record|what the result would teach us)\s*:/i],
     ["internal instruction or prompt text", /\b(?:internal instructions?|system instructions?|prompt text|do not (?:use|include|claim)|return structured json|matching the supplied schema)\b/i],
     ["consultant-report language", /\b(?:executive summary|strategic recommendation|key takeaway|best-in-class|actionable insights?|optimi[sz]e synergies|stakeholder alignment)\b/i],
     ["generic praise", /\b(?:you are (?:an? )?(?:exceptional|remarkable|visionary|outstanding|incredible)|natural-born leader)\b/i],

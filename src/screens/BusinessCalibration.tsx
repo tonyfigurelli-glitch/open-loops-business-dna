@@ -422,7 +422,9 @@ function GenerationStatus({ state, error }: {
       ? "AI-assisted generation succeeded. Your original saved result is still preserved."
       : state === "timed_out_with_fallback"
         ? "GPT-5.6 timed out before completing the full model. Your saved deterministic result remains available."
-        : "AI-assisted generation failed. Your saved deterministic result remains available.";
+        : state === "validation_rejected_with_fallback"
+          ? "The AI-assisted model was generated but did not pass narrative and evidence validation. Your saved deterministic result remains available."
+          : "AI-assisted generation failed. Your saved deterministic result remains available.";
 
   return (
     <div className={`generation-status ${state}`} role="status">

@@ -7,6 +7,7 @@ export type GenerationDisplayState =
   | "connecting"
   | "successful_ai_assisted"
   | "failed_with_fallback"
+  | "validation_rejected_with_fallback"
   | "timed_out_with_fallback";
 
 const CALIBRATION_RETRY_CLIENT_TIMEOUT_MS = 1_230_000;
@@ -101,6 +102,9 @@ export function safeGenerationError(error: unknown) {
 
 export function generationStateForAttempt(attempt: CalibrationGenerationAttempt): GenerationDisplayState {
   if (attempt.outcome === "ai_assisted") return "successful_ai_assisted";
+  if (attempt.provenance?.failureReason === "validation_failure") {
+    return "validation_rejected_with_fallback";
+  }
   return attempt.provenance?.failureReason === "provider_timeout"
     ? "timed_out_with_fallback"
     : "failed_with_fallback";

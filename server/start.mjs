@@ -11,6 +11,7 @@ import { createSafeLogger, normalizedRequestPath } from "./logger.mjs";
 
 const config = readServerConfig();
 const { port } = config;
+const logger = createSafeLogger();
 if (config.production) {
   throw new Error("A production identity adapter must be selected and installed before launch.");
 }
@@ -39,10 +40,9 @@ const generationService = new CalibrationGenerationService({
   pipeline: domain.pipeline,
   generator: domain.generator,
   provider,
+  diagnostics: (metadata) => logger.event("calibration_generation", metadata),
 });
 const api = createApi({ database, auth, generationService, canonical: domain.canonical, allowDevelopmentAuth: config.allowDevelopmentAuth });
-const logger = createSafeLogger();
-
 createServer(async (incoming, outgoing) => {
   const started = Date.now();
   const chunks = [];

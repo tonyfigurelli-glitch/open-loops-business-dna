@@ -36,6 +36,32 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-18: Align Narrative Rendering And Preserve Safe Validation Diagnostics
+
+**Decision:** Advance the AI generation instruction layer from `small_business_owner_v1.3_ai_generation@1.1.0` to `@1.1.1`. Preserve every frozen Version 1.3 requirement, but interpret the labeled structures shown for participant-facing sections 4, 5, and 7 as semantic content to render in natural prose rather than literal field headings. Keep the complete seven-day experiment in its structured field and use only a concise participant-facing summary in section 7. Narrow label validation to actual headings. Persist a safe diagnostic for each provider attempt using attempt number, outcome, stable validation codes, and fixed error messages; emit only codes and non-sensitive metadata to server diagnostics. Display validation rejection separately from provider failure and timeout.
+
+**Rationale:** The latest live retry reached `gpt-5.6-terra` and returned HTTP 200 after 60,161 milliseconds, but both generated candidates were rejected and deterministic fallback was preserved. The retained second-attempt errors identified an evidence label in section 4 plus a raw field label and excessive length in section 7. The first-attempt errors were not historically persisted. Review found that `@1.1.0` prohibited labels while appending frozen instructions that explicitly demonstrated labeled section structures, creating an avoidable prompt/validator conflict. The correction preserves evidence discipline and canonical meaning while removing contradictory rendering instructions and closing the diagnostic gap.
+
+**Affected Files:**
+
+- [src/domain/calibrations/aiModelGenerationPipeline.ts](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [src/domain/calibrations/aiModelGenerationPipeline.test.mjs](src/domain/calibrations/aiModelGenerationPipeline.test.mjs)
+- [src/domain/models.ts](src/domain/models.ts)
+- [src/storage/calibrationApi.ts](src/storage/calibrationApi.ts)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [src/styles.css](src/styles.css)
+- [server/generationService.mjs](server/generationService.mjs)
+- [server/start.mjs](server/start.mjs)
+- [server/backend.test.mjs](server/backend.test.mjs)
+- [server/clientRecovery.test.mjs](server/clientRecovery.test.mjs)
+- [Business DNA/README.md](Business%20DNA/README.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DATA_MODEL.md](DATA_MODEL.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Future live failures can be diagnosed from persisted safe attempt codes without provider re-calls or exposure of rejected content. Continue reviewing whether fixed validator messages reveal enough operational detail while keeping participant material excluded. Both frozen Version 1.3 canonical files remain unchanged.
+
 ### 2026-07-18: Strengthen GPT-5.6 Participant-Facing Narrative Quality
 
 **Decision:** Advance the Small Business Owner AI generation instruction layer from `small_business_owner_v1.3_ai_generation@1.0.0` to `@1.1.0` without changing either frozen Version 1.3 canonical file. Preserve all ten canonical section IDs, titles, and order. Require each section body to contain only polished participant-facing narrative, follow the approved identity-to-continuation sequence, and keep evidence references in structured evidence fields. Prohibit calibration and narrator labels, participant metadata, dates and completion estimates, context-isolation confirmations, evidence labels, question IDs, raw field labels, internal instructions, prompt text, and participant-answer dumps. Reject undeclared or unnatural direct-quote use, repeated prose, generic praise, unsupported certainty, and consultant-report language.

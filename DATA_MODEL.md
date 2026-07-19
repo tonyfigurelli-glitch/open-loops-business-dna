@@ -76,6 +76,8 @@ A durable record of one participant's calibration. It preserves participant iden
 
 Generation provenance records whether the saved model came from validated AI-assisted generation or deterministic fallback, along with provider, model identifier, prompt-instruction version, calibration version and hash, generation time, validation result, retry count, evidence-package hash, and available usage metadata. A validated original structured AI output is preserved separately and is never silently overwritten.
 
+Generation provenance also retains one content-free validation diagnostic per provider attempt: attempt number, outcome, stable failure codes, and fixed validator error messages. These diagnostics support operational diagnosis without storing participant answers or rejected narrative in logs.
+
 The initial model remains historically distinguishable from later Business DNA evidence and revisions.
 
 The durable implementation also records participant code when present, last-update time, competing hypotheses, confidence rationale, direct statements, reasonable inferences, tentative hypotheses, original validated structured output, deterministic fallback output when used, and local-storage migration provenance. Session ownership is stored and enforced independently of client-supplied participant identifiers.
