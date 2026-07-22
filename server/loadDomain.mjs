@@ -4,10 +4,21 @@ import ts from "typescript";
 const root = new URL("../", import.meta.url);
 
 export async function loadCalibrationDomain() {
-  const canonical = JSON.parse(await readFile(new URL(
+  const version13 = JSON.parse(await readFile(new URL(
     "../Business DNA/calibrations/small-business-owner/v1.3.json",
     import.meta.url,
   ), "utf8"));
+  const version14 = JSON.parse(await readFile(new URL(
+    "../Business DNA/calibrations/small-business-owner/v1.4.json",
+    import.meta.url,
+  ), "utf8"));
+  if (version14.extends !== "v1.3.json") throw new Error("Unsupported calibration base.");
+  const canonical = {
+    ...version13,
+    ...version14,
+    canonical_source: { ...version13.canonical_source, ...version14.canonical_source },
+    participant_feedback: { ...version13.participant_feedback, ...version14.participant_feedback },
+  };
   const evidenceUrl = new URL("../src/domain/calibrations/calibrationEvidencePackage.ts", import.meta.url);
   const evidenceModuleUrl = await transpileToDataUrl(evidenceUrl);
   const pipelineUrl = new URL("../src/domain/calibrations/aiModelGenerationPipeline.ts", import.meta.url);

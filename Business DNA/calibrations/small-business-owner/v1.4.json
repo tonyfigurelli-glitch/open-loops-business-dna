@@ -1,0 +1,58 @@
+{
+  "schema_version": "1.0.0",
+  "extends": "v1.3.json",
+  "identifier": "small_business_owner_initial_calibration@1.4.0",
+  "version": "1.4.0",
+  "display_version": "1.4",
+  "lifecycle_status": "canonical_working_prototype",
+  "canonical_source": {
+    "path": "SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md",
+    "sha256": "623075975824c9cfc5b604453ed75879056d37fdfc57e6a1282db6d6bf043e55",
+    "frozen": true,
+    "substantive_changes_require_new_version": true
+  },
+  "participant_feedback": {
+    "preamble": "I’d like to test whether this first conversation created genuine understanding and practical value.",
+    "introduction": "I’d like to test whether this first conversation created genuine understanding and practical value.",
+    "ask_separately": true,
+    "question_count": 3,
+    "rating_scale": [
+      { "value": 1, "label": "Not at all" },
+      { "value": 2, "label": "Slightly" },
+      { "value": 3, "label": "Somewhat" },
+      { "value": 4, "label": "Very" },
+      { "value": 5, "label": "Extremely" }
+    ],
+    "rating_questions": [
+      {
+        "id": "understanding_accuracy",
+        "order": 1,
+        "statement": "How accurately did this reflect you and your business?",
+        "scale_labels": ["Not accurate", "Slightly accurate", "Partly accurate", "Mostly accurate", "Very accurate"]
+      },
+      {
+        "id": "practical_usefulness",
+        "order": 2,
+        "statement": "How useful was the main pattern, challenge, and seven-day experiment?",
+        "scale_labels": ["Not useful", "Slightly useful", "Somewhat useful", "Very useful", "Extremely useful"]
+      }
+    ],
+    "open_ended_questions": [
+      {
+        "id": "improve_model",
+        "order": 1,
+        "title": "Improve the Model",
+        "prompt": "What felt most accurate—and what should this model understand differently or better?"
+      }
+    ]
+  },
+  "version_notes": {
+    "changed": [
+      "Reduced participant feedback from twelve questions to three.",
+      "Made reliable completion and recovery an explicit requirement."
+    ],
+    "preserved": "Version 1.3 onboarding, evidence, profile, and experiment definitions.",
+    "older_sessions_comparable": "Onboarding and profile outputs remain comparable; feedback responses are not directly comparable.",
+    "migration_required": false
+  }
+}

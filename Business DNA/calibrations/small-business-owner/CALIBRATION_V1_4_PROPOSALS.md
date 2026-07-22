@@ -1,7 +1,7 @@
 # Small Business Owner Initial Calibration Version 1.4 Proposals
 
-Status: Draft
-Last Updated: 2026-07-17
+Status: Superseded by Approved Version 1.4
+Last Updated: 2026-07-21
 Owner: Tony
 
 ## Purpose
@@ -27,9 +27,15 @@ Observations, pilot findings, implementation lessons, and suggested wording chan
 - Migration impact: TBD
 - Founder decision: Pending
 
-## Current Proposals
+## Approved Changes
 
-- None.
+- Status: Approved July 21, 2026
+- Source or evidence: Founder pilot experience found the twelve-question feedback sequence too long and established a limit of no more than three questions. The final-profile generation also failed in the live flow and required clearer recovery.
+- Current Version 1.3 behavior: Seven rating questions followed by five open-ended questions.
+- Approved change: Two ratings and one open-ended feedback question; explicit reliable-completion and immutable-retry requirements.
+- Comparability impact: Onboarding and profile outputs remain comparable. Feedback responses are not directly comparable.
+- Migration impact: None. Version 1.3 sessions remain unchanged.
+- Founder decision: Approved.
 
 ## Decision References
 
@@ -39,6 +45,8 @@ Observations, pilot findings, implementation lessons, and suggested wording chan
 
 - [Version 1.3 specification](SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md)
 - [Version 1.3 JSON](v1.3.json)
+- [Version 1.4 specification](SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md)
+- [Version 1.4 JSON](v1.4.json)
 - [Calibration workspace](README.md)
 - [Business DNA Instructions](../../AGENTS.md)
 
@@ -49,5 +57,5 @@ Observations, pilot findings, implementation lessons, and suggested wording chan
 
 ## Version 1 Boundaries
 
-- This file is an intake area for proposals, not an approved Version 1.4 specification.
-- Nothing recorded here changes Version 1.3 unless Tony explicitly approves a new version.
+- This file preserves the proposal history that led to Version 1.4.
+- Future changes require a new version and must not alter frozen Versions 1.3 or 1.4.

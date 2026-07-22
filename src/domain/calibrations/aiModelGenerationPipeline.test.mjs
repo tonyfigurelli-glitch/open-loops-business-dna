@@ -312,7 +312,7 @@ test("corrects the live section-4 and section-7 label mismatch and preserves bot
     "NARRATIVE_RAW_FIELD_LABEL",
     "NARRATIVE_TOO_LONG",
   ]);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.2");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@1.0.0");
 });
 
 test("rejects an unsupported evidence ID", () => {
@@ -473,7 +473,7 @@ test("retries once after validation failure and preserves provenance", async () 
   });
   assert.equal(result.provenance.generatorType, "ai_assisted");
   assert.equal(result.provenance.retryCount, 1);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.3_ai_generation@1.1.2");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@1.0.0");
   assert.equal(result.provenance.validationResult.valid, true);
   assert.equal(result.provenance.evidencePackageHash.length, 64);
   assert.equal(result.originalStructuredOutput.profileSections.length, 10);

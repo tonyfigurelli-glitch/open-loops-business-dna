@@ -168,7 +168,12 @@ test("enforces context isolation and evidence discipline", () => {
 });
 
 test("rejects unlabelled competing calibration prompts", () => {
-  const canonicalPaths = new Set([resolve(markdownPath), resolve(jsonPath)]);
+  const canonicalPaths = new Set([
+    resolve(markdownPath),
+    resolve(jsonPath),
+    resolve(calibrationDirectory, "SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md"),
+    resolve(calibrationDirectory, "v1.4.json"),
+  ]);
   const candidates = walkFiles(repositoryRoot).filter((path) =>
     [".md", ".txt", ".json"].includes(extname(path)),
   );

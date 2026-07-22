@@ -17,7 +17,7 @@ export { buildCalibrationEvidencePackage } from "./calibrationEvidencePackage";
 export type { CalibrationDefinition, CalibrationEvidenceAnswer, CalibrationEvidencePackage } from "./calibrationEvidencePackage";
 
 export const AI_GENERATION_INSTRUCTION_VERSION =
-  "small_business_owner_v1.3_ai_generation@1.1.2";
+  "small_business_owner_v1.4_ai_generation@1.0.0";
 
 export type AIModelOutput = {
   profileSections: Array<{

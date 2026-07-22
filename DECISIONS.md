@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 15048)
+Total output lines: 729
+
 # Decisions
 
 Status: Approved
@@ -314,9 +317,7 @@ Every entry should include:
 
 ### 2026-07-17: Audit And Harden The Version 1.3 Prototype Model Generator
 
-**Decision:** Keep the Initial Business Owner Model generator deterministic and current-session-only for the prototype, while tightening its evidence and safety discipline. Empty answers no longer count as evidence, fewer than two meaningful supporting answers produces low confidence, sustainability and owner energy remain visible alternative constraints, avoided work is not selected as the root constraint, and healthcare-related answers cannot become clinical or medical action recommendations. The canonical Version 1.3 specification and JSON remain unchanged.
-
-**Rationale:** The vertical slice needs reproducible prototype behavior without pretending that templates perform semantic business diagnosis. Narrow safeguards make limitations explicit, preserve evidence, and prevent sparse or healthcare-related inputs from producing misleading confidence or consequential advice.
+**Decision:** Keep the Initial Business Owner Model generator deterministic and current-session-only for the prototype, while tightening its evidence and safety discipline. Empty answers no longer count as evidence, fewer than two meaningful supporting answers produces low confidence, sustainability and owner energy remain visible alternative constraints, avoided work is not selected as the root constraint, and health…48 tokens truncated…ducible prototype behavior without pretending that templates perform semantic business diagnosis. Narrow safeguards make limitations explicit, preserve evidence, and prevent sparse or healthcare-related inputs from producing misleading confidence or consequential advice.
 
 **Affected Files:**
 
@@ -692,6 +693,22 @@ Every entry should include:
 - [DECISIONS.md](DECISIONS.md)
 
 **Follow-Up:** When a document is approved, update its `Status` to `Approved` only when explicitly requested.
+
+### 2026-07-21: Approve Small Business Owner Calibration Version 1.4
+
+**Decision:** Version 1.4 preserves the twelve Version 1.3 onboarding questions, evidence rules, ten-section profile, and seven-day experiment while reducing participant feedback to exactly three questions: two ratings and one open-ended response. Reliable completion and immutable AI-generation recovery are explicit requirements. Version 1.3 remains frozen and historical.
+
+**Rationale:** Live pilot use showed that the twelve-question feedback sequence was too long and that final-profile generation failure created an unacceptable completion experience. The shorter sequence captures accuracy, usefulness, and corrective evidence without exhausting the participant. A provider failure must never cost the participant's answers or useful saved result.
+
+**Affected Files:**
+
+- [Version 1.4 specification](Business%20DNA/calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md)
+- [Version 1.4 JSON](Business%20DNA/calibrations/small-business-owner/v1.4.json)
+- [Version 1.4 proposal history](Business%20DNA/calibrations/small-business-owner/CALIBRATION_V1_4_PROPOSALS.md)
+- [Business DNA instructions](Business%20DNA/AGENTS.md)
+- Application and server calibration adapters, feedback interface, and regression tests
+
+**Follow-Up:** Pilot the full Version 1.4 path from the first onboarding question through saved completion and later return. Treat onboarding or profile changes as a future version.
 
 ## Related Documents
 

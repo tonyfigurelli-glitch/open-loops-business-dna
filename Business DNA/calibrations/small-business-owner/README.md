@@ -1,7 +1,7 @@
 # Small Business Owner Initial Calibration
 
 Status: Approved Working Direction
-Last Updated: 2026-07-17
+Last Updated: 2026-07-21
 Owner: Tony
 
 ## Purpose
@@ -16,6 +16,8 @@ Required frozen artifacts:
 
 - `SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md` — authoritative human-readable specification
 - `v1.3.json` — authoritative machine-readable definition derived from that specification
+- `SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md` — current authoritative Version 1.4 specification
+- `v1.4.json` — current machine-readable override, resolved against frozen Version 1.3
 
 ## Current State
 

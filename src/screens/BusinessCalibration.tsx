@@ -1,5 +1,8 @@
 import { useState } from "react";
-import { smallBusinessOwnerCalibration } from "../domain/calibrations/smallBusinessOwnerCalibration";
+import {
+  calibrationDefinitionForVersion,
+  smallBusinessOwnerCalibration,
+} from "../domain/calibrations/smallBusinessOwnerCalibration";
 import type {
   CalibrationGenerationAttempt,
   CalibrationResponse,
@@ -63,7 +66,7 @@ export function BusinessCalibration({
     return (
       <section className="calibration-screen">
         <header className="surface-header">
-          <p className="eyebrow">Business DNA · Calibration 1.3</p>
+          <p className="eyebrow">Business DNA · Calibration {smallBusinessOwnerCalibration.display_version}</p>
           <h1>Let’s begin with your business.</h1>
           <p className="hero-copy">Question {currentQuestion.order} of {questions.length}</p>
           <CalibrationIdentity session={session} />
@@ -261,6 +264,7 @@ function CompletedCalibration({
   onSelectSession: (sessionId: string) => void;
   onStartNewCalibration: () => void | Promise<void>;
 }) {
+  const sessionDefinition = calibrationDefinitionForVersion(session.semanticVersion);
   const [generationState, setGenerationState] = useState<GenerationDisplayState>("idle");
   const [generationError, setGenerationError] = useState<string | null>(null);
   const latestAttempt = session.generationAttempts?.[0];
@@ -280,13 +284,13 @@ function CompletedCalibration({
   const canRetry = session.generationProvenance?.generatorType === "deterministic_fallback"
     && !successfulAttempt;
   const questionById = new Map(
-    smallBusinessOwnerCalibration.onboarding_questions.map((question) => [question.id, question]),
+    sessionDefinition.onboarding_questions.map((question) => [question.id, question]),
   );
   const ratingById = new Map(
-    smallBusinessOwnerCalibration.participant_feedback.rating_questions.map((question) => [question.id, question]),
+    sessionDefinition.participant_feedback.rating_questions.map((question) => [question.id, question]),
   );
   const openFeedbackById = new Map(
-    smallBusinessOwnerCalibration.participant_feedback.open_ended_questions.map((question) => [question.id, question]),
+    sessionDefinition.participant_feedback.open_ended_questions.map((question) => [question.id, question]),
   );
 
   return (

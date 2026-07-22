@@ -12,6 +12,7 @@ export type GenerationDisplayState =
   | "request_failed";
 
 const CALIBRATION_RETRY_CLIENT_TIMEOUT_MS = 1_230_000;
+const INITIAL_GENERATION_CLIENT_TIMEOUT_MS = 45_000;
 
 export async function establishCalibrationSession(userId: string) {
   const current = await fetch("/api/auth/session", { credentials: "include" });
@@ -34,8 +35,8 @@ export async function signOutCalibrationSession() {
 export async function migrateAndLoadCalibrationSessions(localSessions: CalibrationSession[]) {
   const canonicalSessions = localSessions.filter((session) =>
     session.calibrationId === smallBusinessOwnerCalibrationIdentity.calibrationId &&
-    session.semanticVersion === smallBusinessOwnerCalibrationIdentity.semanticVersion &&
-    session.frozenSourceHash === smallBusinessOwnerCalibrationIdentity.frozenSourceHash,
+      session.semanticVersion === smallBusinessOwnerCalibrationIdentity.semanticVersion &&
+      session.frozenSourceHash === smallBusinessOwnerCalibrationIdentity.frozenSourceHash,
   );
   if (canonicalSessions.length) {
     const migration = await request("/api/calibration-sessions/import", {
@@ -63,6 +64,7 @@ export async function requestServerGeneration(evidencePackage: CalibrationEviden
   const response = await request("/api/calibrations/generate", {
     method: "POST",
     body: JSON.stringify({ evidencePackage }),
+    signal: AbortSignal.timeout(INITIAL_GENERATION_CLIENT_TIMEOUT_MS),
   });
   if (!response.ok) throw new Error("Secure generation is temporarily unavailable.");
   return response.json() as Promise<ModelGenerationPipelineResult>;

@@ -1,7 +1,7 @@
 # Business DNA Instructions
 
 Status: Approved Working Direction
-Last Updated: 2026-07-17
+Last Updated: 2026-07-21
 Owner: Tony
 
 ## Purpose
@@ -74,15 +74,15 @@ The Small Business Owner Initial Calibration is an approved Business DNA capabil
 
 Its current canonical version is:
 
-`small_business_owner_initial_calibration@1.3.0`
+`small_business_owner_initial_calibration@1.4.0`
 
 The authoritative human-readable specification must be stored at:
 
-`calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md`
+`calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md`
 
 The authoritative machine-readable definition must be stored at:
 
-`calibrations/small-business-owner/v1.3.json`
+`calibrations/small-business-owner/v1.4.json`, resolved against frozen `v1.3.json`
 
 The application must not reconstruct the calibration from:
 
@@ -99,11 +99,11 @@ Every completed calibration session must record the exact calibration version us
 
 Version 1.3 must remain frozen after memorialization. Any substantive change must create a new version.
 
-Version 1.3 is the sole authoritative calibration definition. Do not search prior conversations, generated profiles, pilot transcripts, model memory, or later-discovered drafts for alternative wording.
+Version 1.4 is the current authoritative calibration definition. Version 1.3 remains a frozen historical definition. Do not search prior conversations, generated profiles, pilot transcripts, model memory, or later-discovered drafts for alternative wording.
 
-Any earlier or later-discovered draft is historical reference only unless Tony explicitly approves a new calibration version. Proposed improvements must be recorded in [Version 1.4 Proposals](calibrations/small-business-owner/CALIBRATION_V1_4_PROPOSALS.md), not applied to Version 1.3.
+Any earlier or later-discovered draft is historical reference only unless Tony explicitly approves a new calibration version. Future substantive improvements must create a new version and must not alter frozen Versions 1.3 or 1.4.
 
-Before calibration user-interface work begins, verify that application code imports `calibrations/small-business-owner/v1.3.json` through the shared application adapter. UI components, application prompts, and response generators must not duplicate canonical question wording or output-schema text.
+Before calibration user-interface work begins, verify that application code resolves `calibrations/small-business-owner/v1.4.json` and its frozen Version 1.3 base through the shared application adapter. UI components, application prompts, and response generators must not duplicate canonical question wording or output-schema text.
 
 ## Implementation Authorization
 
@@ -222,6 +222,8 @@ A generated response or participant profile is never itself a canonical product 
 - [Decisions Log](../DECISIONS.md)
 - [Small Business Owner Initial Calibration Version 1.3](calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md) — frozen canonical human-readable specification
 - [Small Business Owner Initial Calibration Version 1.3 JSON](calibrations/small-business-owner/v1.3.json) — derived canonical machine-readable definition
+- [Small Business Owner Initial Calibration Version 1.4](calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md) — current canonical specification
+- [Small Business Owner Initial Calibration Version 1.4 JSON](calibrations/small-business-owner/v1.4.json) — current machine-readable override
 
 ## Open Questions
 

@@ -1,7 +1,7 @@
 # Business DNA
 
 Status: Approved Working Direction
-Last Updated: 2026-07-18
+Last Updated: 2026-07-21
 Owner: Tony
 
 ## Purpose
@@ -54,7 +54,7 @@ Completed results provide a session-history selector and a Start New Calibration
 
 Retry attempts are persisted append-only by the authenticated server endpoint and are returned newest-first on every session read. Browser refresh and server restart therefore retain successful AI-assisted results, failed attempts, safe diagnostics, and provenance. The client preserves this server-owned attempt history during local recovery and does not send retry results through the completed-session update route.
 
-AI-assisted participant narrative uses the traceable instruction version `small_business_owner_v1.3_ai_generation@1.1.2`. It preserves the ten canonical Version 1.3 section IDs, titles, and order while requiring section bodies to read as polished reflection rather than expose calibration machinery, evidence labels, metadata, prompt text, raw answer summaries, confidence ratings, or internal evaluation rationale. Frozen labeled structures are treated as semantic requirements rendered into natural prose; uncertainty is expressed naturally while remaining explicit in structured records. Narrative validation remains part of the same retry, evidence, safety, provenance, immutability, and deterministic-fallback boundary.
+AI-assisted participant narrative uses the traceable instruction version `small_business_owner_v1.4_ai_generation@1.0.0`. It preserves the ten canonical Version 1.3 section IDs, titles, and order while requiring section bodies to read as polished reflection rather than expose calibration machinery, evidence labels, metadata, prompt text, raw answer summaries, confidence ratings, or internal evaluation rationale. Frozen labeled structures are treated as semantic requirements rendered into natural prose; uncertainty is expressed naturally while remaining explicit in structured records. Narrative validation remains part of the same retry, evidence, safety, provenance, immutability, and deterministic-fallback boundary.
 
 Completed results present the ten narrative sections first. Repeated unknowns and possible disconfirming explanations are conservatively deduplicated and shown as readable lists. Stored Interpretation, Original Answers, the complete Seven-Day Experiment, Participant Feedback, and generation/source diagnostics remain complete and accessible in collapsed `Review details` disclosures so audit material does not dominate the participant reflection.
 
@@ -74,6 +74,8 @@ Completed results present the ten narrative sections first. Repeated unknowns an
 - [Calibration workspace](calibrations/small-business-owner/README.md): canonical location, source rules, legacy audit, and validation requirements
 - [Version 1.3 specification](calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md): frozen authoritative human-readable specification
 - [Version 1.3 JSON](calibrations/small-business-owner/v1.3.json): derived authoritative machine-readable definition
+- [Version 1.4 specification](calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md): current calibration specification with three-question feedback and reliable completion requirements
+- [Version 1.4 JSON](calibrations/small-business-owner/v1.4.json): current machine-readable override resolved against frozen Version 1.3
 - [Version 1.3 validation tests](calibrations/small-business-owner/v1.3.test.mjs): source-correspondence, count, rule, and supersession checks
 - [Version 1.4 proposals](calibrations/small-business-owner/CALIBRATION_V1_4_PROPOSALS.md): separate intake for unapproved improvements
 - [Pilot readiness](calibrations/small-business-owner/PILOT_READINESS.md): blockers, authentication/provider options, configuration, retention, and failure modes

@@ -11,7 +11,7 @@
     "start:production": "npm run build && NODE_ENV=production node server/start.mjs",
     "build": "tsc -b && vite build",
     "lint": "tsc -b --noEmit",
-    "test:calibration": "node --test \"Business DNA/calibrations/small-business-owner/v1.3.test.mjs\" \"src/domain/calibrations/calibrationSession.test.mjs\" \"src/domain/calibrations/generateInitialBusinessModel.test.mjs\" \"src/domain/calibrations/aiModelGenerationPipeline.test.mjs\" \"server/backend.test.mjs\" \"server/clientRecovery.test.mjs\" \"server/productionReadiness.test.mjs\"",
+    "test:calibration": "node --test \"Business DNA/calibrations/small-business-owner/v1.3.test.mjs\" \"Business DNA/calibrations/small-business-owner/v1.4.test.mjs\" \"src/domain/calibrations/calibrationSession.test.mjs\" \"src/domain/calibrations/generateInitialBusinessModel.test.mjs\" \"src/domain/calibrations/aiModelGenerationPipeline.test.mjs\" \"server/backend.test.mjs\" \"server/clientRecovery.test.mjs\" \"server/productionReadiness.test.mjs\"",
     "pilot:backup": "node server/pilotOperations.mjs backup",
     "pilot:export": "node server/pilotOperations.mjs export-participant",
     "pilot:delete": "node server/pilotOperations.mjs delete-participant",
