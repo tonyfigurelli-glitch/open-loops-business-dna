@@ -554,6 +554,7 @@ function App() {
       <section className="phone-frame" aria-label="Open Loops app shell">
         {activeSurface === "Home" ? (
           <HomeScreen
+            calibrationSessions={calibrationSessions}
             connectionPreview={loopConnections[0] ?? loopConnectionsSeed[0]}
             entryPaths={entryPathSeed}
             insight={insights[0] ?? insightsSeed[0]}
@@ -561,6 +562,7 @@ function App() {
             onAddThoughtToLoop={() => showLoopsSurface(spotlightLoop?.id)}
             onEntryPathSelect={handleEntryPathSelect}
             onNewLoop={() => showLoopsSurface()}
+            onStartNewCalibration={handleStartNewCalibration}
             onViewThoughtLibrary={() => setActiveSurface("ThoughtLibrary")}
             recentThought={recentThought}
             spotlightLoop={spotlightLoop}

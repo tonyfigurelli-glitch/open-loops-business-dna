@@ -1,10 +1,7 @@
-Warning: truncated output (original token count: 15048)
-Total output lines: 729
-
 # Decisions
 
 Status: Approved
-Last Updated: 2026-07-20
+Last Updated: 2026-07-22
 Owner: TBD
 
 ## Purpose
@@ -38,6 +35,24 @@ Every entry should include:
 **Follow-Up:** TBD
 
 ## Log
+
+### 2026-07-22: Make Saved Business DNA Work Visible From Home
+
+**Decision:** Replace the one-time Business DNA start tile with a state-driven continuity card after a calibration exists. The card prioritizes unfinished sessions, shows onboarding or three-question feedback progress, reopens completed profiles, reports saved-session count, and offers a new calibration only after the active session is complete. Present completed profiles immediately as the calibration payoff, with a saved summary and numbered ten-section narrative before detailed evidence and provenance disclosures.
+
+**Rationale:** A usable app must make durable Business DNA visible when the participant returns. Continuing to say “Start Business DNA” after a session was saved hid continuity and made the product feel like a one-time questionnaire. The revised presentation uses the existing session record as its sole source of truth and improves retrieval without adding a parallel dashboard data model.
+
+**Affected Files:**
+
+- [src/screens/Home.tsx](src/screens/Home.tsx)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [src/domain/calibrations/calibrationDashboard.ts](src/domain/calibrations/calibrationDashboard.ts)
+- [src/styles.css](src/styles.css)
+- [UX.md](UX.md)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Run the full return-user path with incomplete, feedback-stage, and completed Version 1.4 sessions. Consider export or comparison only after pilot evidence shows it improves understanding.
 
 ### 2026-07-20: Recover Persisted Retry Results After A Lost Browser Response
 

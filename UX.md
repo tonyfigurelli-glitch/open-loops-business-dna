@@ -1,7 +1,7 @@
 # Open Loops UX
 
 Status: Draft v1.0
-Last Updated: 2026-07-03
+Last Updated: 2026-07-22
 Owner: Founder / Design
 
 ## Purpose
@@ -101,6 +101,12 @@ Implementations should not casually remove or reinterpret:
 - The calm, luminous, spacious tone
 - The bottom navigation model
 - The distinction between Home, Loops, Lumi, Universe, and Me
+
+### Business DNA Continuity Card
+
+When no calibration exists, Home presents Business DNA as a clear starting action. After the first session begins, that entry becomes a compact continuity card driven by saved session state. It shows whether the calibration is in progress, ready for feedback, or complete; gives the relevant continuation action; and exposes saved-session count without turning Home into a dense administrative dashboard.
+
+The completed profile is the payoff of calibration. It should open without artificial vertical delay, lead with a saved-state summary, and present the ten canonical sections as a readable narrative before the collapsed evidence and provenance record.
 
 ## Decision References
 

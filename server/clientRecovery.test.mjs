@@ -225,7 +225,12 @@ test("completed results keep narrative primary and place complete records in col
     "Stored Interpretation", "Original Answers", "Full Seven-Day Experiment",
     "Participant Feedback", "Generation and Source",
   ]) assert.match(screen, new RegExp(`<summary>${summary}</summary>`));
-  assert.equal(screen.indexOf('className="model-sections"') < screen.indexOf('className="review-details"'), true);
+  assert.equal(
+    screen.indexOf("<ProfileSections sections={displayedProfile?.sections ?? []} />") <
+      screen.indexOf('className="review-details"'),
+    true,
+  );
+  assert.match(screen, /function ProfileSections[\s\S]*className="model-sections"/);
   assert.match(screen, /<UncertaintyList items=\{displayedUnknowns\}/);
   assert.match(screen, /<UncertaintyList items=\{displayedDisconfirmingEvidence\}/);
   assert.doesNotMatch(screen, /join\(" · "\)/);

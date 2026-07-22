@@ -1,7 +1,7 @@
 # Technical Architecture
 
 Status: Draft
-Last Updated: 2026-07-20
+Last Updated: 2026-07-22
 Owner: TBD
 
 ## Purpose
@@ -88,6 +88,8 @@ The calibration vertical slice uses a co-located Node HTTP API and SQLite throug
 Calibration Sessions live in that same state and are saved after every answer, generated model, feedback response, and completion event. Each session records the exact calibration identifier, semantic version, and frozen source hash used.
 
 Pure domain lifecycle functions enforce ordered answers, explicit status transitions, ordered feedback, completion, and deterministic selection of an incomplete or completed session when the user returns. Storage normalization keeps earlier prototype records readable without changing canonical calibration content.
+
+The Home surface derives its Business DNA continuity card from the same reconciled `CalibrationSession[]` state. A pure dashboard selector prioritizes unfinished work, calculates onboarding or Version 1.4 feedback progress, and otherwise reopens the newest saved profile. It does not create a second session index, summary record, or source of truth.
 
 ### Calibration Source Of Truth
 

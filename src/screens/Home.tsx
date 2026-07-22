@@ -1,5 +1,7 @@
 import { BubbleWorkspace } from "../components/BubbleWorkspace";
-import type { Insight, LoopConnection, OpenLoop, Thought } from "../domain/models";
+import { buildCalibrationDashboardSummary } from "../domain/calibrations/calibrationDashboard";
+import { smallBusinessOwnerCalibration } from "../domain/calibrations/smallBusinessOwnerCalibration";
+import type { CalibrationSession, Insight, LoopConnection, OpenLoop, Thought } from "../domain/models";
 
 type EntryPath = {
   id: string;
@@ -10,6 +12,7 @@ type EntryPath = {
 };
 
 type HomeScreenProps = {
+  calibrationSessions: CalibrationSession[];
   connectionPreview: LoopConnection;
   entryPaths: readonly EntryPath[];
   insight: Insight;
@@ -23,10 +26,12 @@ type HomeScreenProps = {
   onAddThoughtToLoop: () => void;
   onEntryPathSelect: (entryPathId: string) => void;
   onNewLoop: () => void;
+  onStartNewCalibration: () => void;
   onViewThoughtLibrary: () => void;
 };
 
 export function HomeScreen({
+  calibrationSessions,
   connectionPreview,
   entryPaths,
   insight,
@@ -37,8 +42,18 @@ export function HomeScreen({
   onAddThoughtToLoop,
   onEntryPathSelect,
   onNewLoop,
+  onStartNewCalibration,
   onViewThoughtLibrary,
 }: HomeScreenProps) {
+  const dashboard = buildCalibrationDashboardSummary(
+    calibrationSessions,
+    smallBusinessOwnerCalibration.onboarding_questions.length,
+    smallBusinessOwnerCalibration.participant_feedback.rating_questions.length +
+      smallBusinessOwnerCalibration.participant_feedback.open_ended_questions.length,
+  );
+  const standardEntryPaths = entryPaths.filter((path) => path.id !== "business-dna-calibration");
+  const businessEntryPath = entryPaths.find((path) => path.id === "business-dna-calibration");
+
   return (
     <div className="home-screen">
       <header className="hero">
@@ -56,7 +71,7 @@ export function HomeScreen({
       </header>
 
       <section className="entry-paths" aria-label="Primary entry paths">
-        {entryPaths.map((path) => (
+        {standardEntryPaths.map((path) => (
           <button
             className={`entry-path ${path.tone}-path`}
             key={path.id}
@@ -72,6 +87,25 @@ export function HomeScreen({
             </span>
           </button>
         ))}
+        {dashboard ? (
+          <BusinessDnaDashboard
+            onOpen={() => onEntryPathSelect("business-dna-calibration")}
+            onStartNew={onStartNewCalibration}
+            summary={dashboard}
+          />
+        ) : businessEntryPath ? (
+          <button
+            className={`entry-path ${businessEntryPath.tone}-path`}
+            onClick={() => onEntryPathSelect(businessEntryPath.id)}
+            type="button"
+          >
+            <span className="entry-path-icon" aria-hidden="true">{businessEntryPath.icon}</span>
+            <span className="entry-path-copy">
+              <strong>{businessEntryPath.title}</strong>
+              <span>{businessEntryPath.subtitle}</span>
+            </span>
+          </button>
+        ) : null}
       </section>
 
       <section className="loop-section" aria-labelledby="loops-title">
@@ -98,6 +132,43 @@ export function HomeScreen({
         <SpotlightLoopCard loop={spotlightLoop} />
       </section>
     </div>
+  );
+}
+
+function BusinessDnaDashboard({ summary, onOpen, onStartNew }: {
+  summary: NonNullable<ReturnType<typeof buildCalibrationDashboardSummary>>;
+  onOpen: () => void;
+  onStartNew: () => void;
+}) {
+  return (
+    <article className="business-dashboard">
+      <div className="business-dashboard-heading">
+        <span className="business-mark" aria-hidden="true">DNA</span>
+        <div>
+          <p className="section-label">Business DNA</p>
+          <h2>Your business-owner model</h2>
+        </div>
+        <span className={`business-status ${summary.activeSession.status}`}>{summary.statusLabel}</span>
+      </div>
+      <p className="business-progress-copy">{summary.progressLabel}</p>
+      <div className="business-progress" aria-label={summary.progressLabel}>
+        <span style={{ width: `${summary.progressPercent}%` }} />
+      </div>
+      <div className="business-dashboard-meta">
+        <span>Version {summary.activeSession.semanticVersion}</span>
+        <span>{summary.sessionCount} saved {summary.sessionCount === 1 ? "session" : "sessions"}</span>
+      </div>
+      <div className="business-dashboard-actions">
+        <button className="business-primary-action" onClick={onOpen} type="button">
+          {summary.actionLabel}
+        </button>
+        {summary.activeSession.status === "completed" ? (
+          <button className="business-secondary-action" onClick={onStartNew} type="button">
+            Start another
+          </button>
+        ) : null}
+      </div>
+    </article>
   );
 }
 

@@ -172,14 +172,7 @@ function ModelView({ session, onBeginFeedback, onBackHome }: {
         <p className="hero-copy">Confidence: {session.confidenceLevel ?? "unknown"}</p>
         <CalibrationIdentity session={session} />
       </header>
-      <div className="model-sections">
-        {session.generatedProfile?.sections.map((section) => (
-          <article className="model-section" key={section.id}>
-            <p className="section-label">{section.title}</p>
-            <p>{section.body}</p>
-          </article>
-        ))}
-      </div>
+      <ProfileSections sections={session.generatedProfile?.sections ?? []} />
       <button className="primary-button" onClick={onBeginFeedback} type="button">
         Share feedback
       </button>
@@ -296,9 +289,19 @@ function CompletedCalibration({
   return (
     <section className="calibration-screen">
       <article className="calibration-card completion-card">
-        <p className="eyebrow">Calibration preserved</p>
-        <h1>Your complete session is saved.</h1>
-        <p>Version {session.semanticVersion} · {session.participantResponses.length} answers · {displayedGeneration?.confidenceLevel ?? session.confidenceLevel} confidence</p>
+        <div className="completion-heading">
+          <div>
+            <p className="eyebrow">Your initial Business DNA</p>
+            <h1>Your business-owner model</h1>
+          </div>
+          <span className="completion-badge">Saved</span>
+        </div>
+        <p className="completion-intro">A living starting point for understanding how you lead, decide, and move your business forward.</p>
+        <div className="completion-stats" aria-label="Calibration summary">
+          <div><strong>{session.participantResponses.length}</strong><span>answers</span></div>
+          <div><strong>{displayedGeneration?.confidenceLevel ?? session.confidenceLevel}</strong><span>confidence</span></div>
+          <div><strong>v{session.semanticVersion}</strong><span>calibration</span></div>
+        </div>
         <SessionHistory onSelectSession={onSelectSession} session={session} sessions={sessions} />
       </article>
       <GenerationStatus
@@ -307,14 +310,7 @@ function CompletedCalibration({
           ? generationStateForAttempt(latestAttempt)
           : generationState}
       />
-      <div className="model-sections">
-        {displayedProfile?.sections.map((section) => (
-          <article className="model-section" key={section.id}>
-            <p className="section-label">{section.title}</p>
-            <p>{section.body}</p>
-          </article>
-        ))}
-      </div>
+      <ProfileSections sections={displayedProfile?.sections ?? []} />
       <section className="review-details" aria-labelledby="review-details-title">
         <div className="review-details-heading">
           <p className="eyebrow">Complete session record</p>
@@ -428,6 +424,24 @@ function CompletedCalibration({
         <button className="ghost-button" onClick={onBackHome} type="button">Return home</button>
       </div>
     </section>
+  );
+}
+
+function ProfileSections({ sections }: {
+  sections: Array<{ id: string; title: string; body: string }>;
+}) {
+  return (
+    <div className="model-sections">
+      {sections.map((section, index) => (
+        <article className="model-section" key={section.id}>
+          <div className="model-section-heading">
+            <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+            <p className="section-label">{section.title}</p>
+          </div>
+          <p>{section.body}</p>
+        </article>
+      ))}
+    </div>
   );
 }
 
