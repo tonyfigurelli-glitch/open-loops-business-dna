@@ -252,7 +252,7 @@ function FeedbackFlow({ session, onBackHome, onNumericalFeedback, onOpenEndedFee
 }
 
 function CalibrationIdentity({ session }: { session: CalibrationSession }) {
-  return <p className="source-hash">Version {session.semanticVersion} · Source {session.frozenSourceHash}</p>;
+  return <p className="calibration-version">Calibration version {session.semanticVersion}</p>;
 }
 
 function CompletedCalibration({
@@ -451,9 +451,30 @@ function ProfileSections({ sections }: {
             <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
             <p className="section-label">{section.title}</p>
           </div>
-          <p>{section.body}</p>
+          <ProfileSectionBody body={section.body} />
         </article>
       ))}
+    </div>
+  );
+}
+
+function ProfileSectionBody({ body }: { body: string }) {
+  const blocks = body.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+
+  return (
+    <div className="model-section-body">
+      {blocks.map((block, index) => {
+        const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+        const isList = lines.length > 0 && lines.every((line) => /^[•*-]\s+/.test(line));
+
+        return isList ? (
+          <ul key={`${index}-${block.slice(0, 24)}`}>
+            {lines.map((line) => <li key={line}>{line.replace(/^[•*-]\s+/, "")}</li>)}
+          </ul>
+        ) : (
+          <p key={`${index}-${block.slice(0, 24)}`}>{block}</p>
+        );
+      })}
     </div>
   );
 }

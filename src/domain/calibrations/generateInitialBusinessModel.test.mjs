@@ -159,3 +159,11 @@ test("important direct quotes preserve the participant’s exact wording", () =>
     exactPrinciple,
   ]);
 });
+
+test("fallback profile integrates role answers without awkward grammar", () => {
+  const result = generateInitialBusinessModel(responses({ q03: "Does a little of everything" }));
+  const narrative = result.generatedProfile.participantFacingProfile;
+
+  assert.match(narrative, /role as “Does a little of everything”/);
+  assert.doesNotMatch(narrative, /role as does a little of everything/i);
+});

@@ -21,7 +21,6 @@ export function generateInitialBusinessModel(
     ["q04", "q08", "q10"].includes(reference.questionId),
   );
   const confidenceLevel = supportingEvidence.length >= 2 ? "medium" : "low";
-  const confidenceLabel = confidenceLevel === "medium" ? "Moderate" : "Low";
   const unknowns = [
     "Whether demand, pricing, cash flow, capacity, positioning, sustainability, or owner energy is the primary constraint.",
     "How the team experiences the owner’s current role and priorities.",
@@ -46,17 +45,25 @@ export function generateInitialBusinessModel(
     resultToRecord: "What was attempted, what changed, what resisted the change, and whether the 90-day priority moved forward.",
     whatResultWouldTeach: "The result will strengthen, weaken, or redirect the working constraint hypothesis.",
   };
+  const inlineAnswer = (questionId: string) => answer(questionId).replace(/[.!?]+$/, "").trim();
+  const businessDescription = answer("q01");
+  const businessSentence = /[.!?]$/.test(businessDescription)
+    ? businessDescription
+    : `${businessDescription}.`;
+  const teamDescription = /^just me$/i.test(inlineAnswer("q02"))
+    ? "You currently operate on your own."
+    : `Your team has ${inlineAnswer("q02").toLowerCase()}.`;
   const bodies = [
-    `${answer("q01")} The business currently includes ${answer("q02").toLowerCase()}. The owner describes their role as ${answer("q03").toLowerCase()} and names “${answer("q04")}” as the primary 90-day outcome. Strong operating conditions were described this way: ${answer("q11")}`,
-    `Here is the story I’m beginning to tell myself about you: you draw energy from ${answer("q09").toLowerCase()} and tend to orient first toward ${answer("q05").toLowerCase()}. That may be a useful source of momentum. A possible hidden cost is that opportunity and attention may compete when execution capacity is limited. This is a working story, not a conclusion.`,
-    `One leverage point worth testing is whether a small, protected action on the 90-day priority can move forward while observing whether the friction around “${answer("q10")}” actually constrains it. This does not assume the avoided activity is the root constraint. The hypothesis would weaken if demand, pricing, profitability, staffing, capacity, sustainability, or another unmeasured factor proves more limiting.`,
-    `Your strength: energy around ${answer("q09").toLowerCase()}. How it helps the business: it indicates work that may sustain attention and commitment. Its possible shadow: a strength can attract attention away from less energizing but necessary work. Where I see evidence: the stated source of energy and the principle “${answer("q12")}.” Confidence: ${confidenceLabel}.`,
-    `On one side: ${answer("q05")}. On the other side: the competing need implied by that tradeoff. Why both matter: the business needs direction without losing resilience. A second tension appears between ${answer("q06").toLowerCase()} and its valid counterpart. If these tensions remain implicit, priorities may shift without a clear reason.`,
-    `You appear clear about the outcome you want. The respectful challenge is to test whether present behavior is creating evidence for that priority or merely preserving familiar activity. What is the smallest completed action this week that would tell you something new about the real constraint?`,
-    `Experiment: ${proposedExperiment.action} Hypothesis being tested: ${proposedExperiment.hypothesis} Minimum deliverable: ${proposedExperiment.minimumDeliverable} Who should own it: ${proposedExperiment.owner}. What result to record: ${proposedExperiment.resultToRecord}`,
-    `Likely supportive conditions include work connected to ${answer("q09").toLowerCase()}, the operating conditions described in the strongest period, a visible link to the 90-day priority, and continued attention to the principle “${answer("q12")}.”`,
+    `${businessSentence} ${teamDescription} You describe your role as “${inlineAnswer("q03")}”. Over the next 90 days, the outcome you most want is “${inlineAnswer("q04")}”.`,
+    `You seem to draw energy from “${inlineAnswer("q09")}”. When priorities compete, your instinct is to protect ${inlineAnswer("q05").toLowerCase()}. Together, those answers suggest a leader who gains momentum by staying close to meaningful work and visible opportunity. The possible cost is that necessary work with less immediate energy may struggle to hold your attention.`,
+    `A useful leverage point may be one small, protected action tied directly to “${inlineAnswer("q04")}”. The purpose is not to assume that “${inlineAnswer("q10")}” is the root problem. It is to learn whether that friction—or demand, pricing, staffing, capacity, sustainability, or something else—actually limits progress.`,
+    `Your energy around “${inlineAnswer("q09")}” may be a real strength because it can sustain attention and commitment. The shadow of that strength is selective attention: less engaging but necessary work can be postponed even when it supports the outcome you want. Your principle that “${inlineAnswer("q12")}” offers a useful standard for deciding which work deserves protection.`,
+    `Your answers point to a healthy tension between ${inlineAnswer("q05").toLowerCase()} and the legitimate needs on the other side of that choice. A similar tension surrounds ${inlineAnswer("q06").toLowerCase()}. Neither side is automatically right; the risk is allowing the tradeoff to remain unspoken, so priorities change without a clear reason.`,
+    `You appear clear about the outcome you want. The respectful challenge is to test whether this week’s behavior creates evidence for that priority or simply preserves familiar activity. What is the smallest completed action that would teach you something new about the real constraint?`,
+    `${proposedExperiment.action}\n\n${proposedExperiment.hypothesis} ${proposedExperiment.minimumDeliverable}`,
+    `You may work best when the task connects to “${inlineAnswer("q09")}”, has a visible relationship to the 90-day priority, and reflects the conditions present when the business was operating well. Your belief that “${inlineAnswer("q12")}” can serve as a practical filter when urgent work competes with important work.`,
     unknowns.map((unknown) => `• ${unknown}`).join("\n"),
-    "This model is provisional. Future actions, outcomes, disagreements, and contradictions are useful evidence. The seven-day experiment can strengthen, weaken, or redirect the current hypothesis. The purpose is to become more useful and accurate over time, not to make a final judgment after twelve answers.",
+    "This is a starting point, not a final judgment. Future actions, outcomes, disagreements, and contradictions are all useful evidence. The seven-day experiment can strengthen, weaken, or redirect this first hypothesis so the model becomes more accurate and useful over time.",
   ];
   const sections = smallBusinessOwnerCalibration.profile_output.sections.map((section, index) => ({
     id: section.id,

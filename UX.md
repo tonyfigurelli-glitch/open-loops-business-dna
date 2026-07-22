@@ -108,6 +108,8 @@ When no calibration exists, Home presents Business DNA as a clear starting actio
 
 The completed profile is the payoff of calibration. It should open without artificial vertical delay, lead with a saved-state summary, and present the ten canonical sections as a readable narrative before the collapsed evidence and provenance record.
 
+Participant-facing calibration screens show a readable semantic version, not internal source hashes. Profile sections favor short paragraphs and true lists, and the fixed bottom navigation must leave enough clearance for every final action and line of content to remain readable.
+
 ## Decision References
 
 - See [DECISIONS.md](DECISIONS.md) for approved UX decisions, including the July 2, 2026 canonical Home Screen reference decision.

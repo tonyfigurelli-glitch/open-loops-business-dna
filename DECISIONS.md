@@ -741,6 +741,22 @@ Every entry should include:
 
 **Follow-Up:** Run the full Version 1.4 participant path in the target browser and record the dated acceptance result before enrolling a pilot participant.
 
+### 2026-07-22: Apply Findings From The Version 1.4 Participant Walkthrough
+
+**Decision:** Remove internal source hashes from ordinary participant-facing calibration screens while preserving them in the collapsed technical record. Improve the deterministic recovery profile so its prose remains natural and concise, render profile paragraphs and lists with readable spacing, and reserve enough space that fixed bottom navigation cannot cover profile content or actions.
+
+**Rationale:** The completed target-browser walkthrough proved that all twelve questions, profile creation, three feedback questions, saved completion, and return to Home work. It also exposed participant-facing implementation details, awkward fallback grammar, dense profile sections, and bottom-navigation overlap. Reliability and inspectability remain intact, but neither should make the primary experience feel technical or unfinished.
+
+**Affected Files:**
+
+- [Business Calibration screen](src/screens/BusinessCalibration.tsx)
+- [Calibration profile generation](src/domain/calibrations/generateInitialBusinessModel.ts)
+- [AI narrative quality contract](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [Open Loops styles](src/styles.css)
+- [Open Loops UX](UX.md)
+
+**Follow-Up:** Verify the revised deterministic profile and participant-facing layout in the target browser before pilot enrollment.
+
 ## Related Documents
 
 - [Open Loops Vision](OPEN_LOOPS_VISION.md)

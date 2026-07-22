@@ -37,7 +37,8 @@ button {
   width: min(100%, 430px);
   min-height: calc(100vh - 20px);
   margin: 0 auto;
-  padding: 20px 16px 96px;
+  padding: 20px 16px 132px;
+  scroll-padding-bottom: 132px;
   overflow: hidden;
 }
 
@@ -773,11 +774,23 @@ h3 {
   font-weight: 900;
 }
 
-.model-section p:last-child {
-  margin-bottom: 0;
+.model-section-body {
+  display: grid;
+  gap: 10px;
+}
+
+.model-section-body p,
+.model-section-body ul {
+  margin: 0;
   color: #373d66;
   line-height: 1.55;
   white-space: pre-line;
+}
+
+.model-section-body ul {
+  display: grid;
+  gap: 8px;
+  padding-left: 20px;
 }
 
 .model-section-heading {
@@ -887,6 +900,13 @@ h3 {
   color: #6b708b;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.72rem;
+}
+
+.calibration-version {
+  margin-bottom: 0;
+  color: #6b708b;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .session-history {

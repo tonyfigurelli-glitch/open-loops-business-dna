@@ -239,6 +239,11 @@ test("completed results keep narrative primary and place complete records in col
     true,
   );
   assert.match(screen, /function ProfileSections[\s\S]*className="model-sections"/);
+  assert.match(screen, /function ProfileSectionBody[\s\S]*className="model-section-body"/);
+  assert.match(
+    screen,
+    /function CalibrationIdentity[\s\S]*Calibration version \{session\.semanticVersion\}[\s\S]*?\n\}/,
+  );
   assert.match(screen, /<UncertaintyList items=\{displayedUnknowns\}/);
   assert.match(screen, /<UncertaintyList items=\{displayedDisconfirmingEvidence\}/);
   assert.doesNotMatch(screen, /join\(" · "\)/);
