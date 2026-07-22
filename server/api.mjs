@@ -3,10 +3,14 @@ import { validateCanonicalSession } from "./database.mjs";
 
 const MAX_BODY_BYTES = 256 * 1024;
 
-export function createApi({ database, auth, generationService, canonical, allowDevelopmentAuth = false }) {
+export function createApi({
+  database, auth, generationService, canonical, allowDevelopmentAuth = false, diagnostics,
+}) {
   return async function handle(request) {
+    let pathname = "unknown";
     try {
       const url = new URL(request.url);
+      pathname = url.pathname;
       if (request.method === "GET" && url.pathname === "/api/health") {
         return json({ status: "ok" });
       }
@@ -80,9 +84,36 @@ export function createApi({ database, auth, generationService, canonical, allowD
       return json({ error: "Not found." }, 404);
     } catch (error) {
       const status = Number(error?.status) || 500;
-      return json({ error: status >= 500 ? "The server could not complete the request." : error.message }, status);
+      const code = safeApiErrorCode(pathname, status);
+      diagnostics?.({ route: safeApiRoute(pathname), status, code });
+      return json({
+        error: status >= 500 ? "The server could not complete the request." : error.message,
+        code,
+      }, status);
     }
   };
+}
+
+function safeApiErrorCode(pathname, status) {
+  if (/^\/api\/calibration-sessions\/[^/]+\/retry-generation$/.test(pathname)) {
+    if (status === 404) return "retry_session_not_found";
+    if (status === 409) return "retry_not_eligible";
+    if (status === 429) return "retry_rate_limited";
+    return status >= 500 ? "retry_internal_failure" : "retry_request_rejected";
+  }
+  if (status === 404) return "resource_not_found";
+  if (status === 409) return "immutable_state_conflict";
+  return status >= 500 ? "internal_failure" : "request_rejected";
+}
+
+function safeApiRoute(pathname) {
+  if (/^\/api\/calibration-sessions\/[^/]+\/retry-generation$/.test(pathname)) {
+    return "calibration_retry";
+  }
+  if (/^\/api\/calibration-sessions\/[^/]+$/.test(pathname)) return "calibration_session";
+  if (pathname === "/api/calibration-sessions") return "calibration_sessions";
+  if (pathname === "/api/calibrations/generate") return "calibration_generate";
+  return "other";
 }
 
 async function readJson(request) {

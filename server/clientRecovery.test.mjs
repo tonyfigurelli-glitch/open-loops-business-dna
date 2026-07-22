@@ -137,9 +137,71 @@ test("retry errors are redacted before reaching the participant interface", asyn
     let captured;
     await client.retryCalibrationGeneration("saved-session").catch((error) => { captured = error; });
     const safe = client.safeGenerationError(captured);
-    assert.match(safe, /GPT-5.6/);
+    assert.match(safe, /secure generation service/);
     assert.doesNotMatch(safe, /provider-credential-private|provider prompt|participant answer/);
     assert.doesNotMatch(JSON.stringify(captured), /provider-credential-private|provider prompt|participant answer/);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("a lost retry response recovers the newly persisted server attempt", async () => {
+  const originalFetch = globalThis.fetch;
+  const recoveredAttempt = {
+    id: "new-ai-attempt", sourceSessionId: "saved-session", outcome: "ai_assisted",
+    createdAt: "2026-07-20T12:00:00.000Z", generation: {}, provenance: { generatorType: "ai_assisted" },
+  };
+  const calls = [];
+  globalThis.fetch = async (path, init = {}) => {
+    calls.push({ path, method: init.method ?? "GET" });
+    if (path.endsWith("/retry-generation")) {
+      return new Response(JSON.stringify({
+        error: "private provider and participant content",
+        code: "retry_internal_failure",
+      }), { status: 500 });
+    }
+    return new Response(JSON.stringify({
+      session: { id: "saved-session", generationAttempts: [recoveredAttempt, { id: "known-attempt" }] },
+    }));
+  };
+  try {
+    const result = await client.retryCalibrationGeneration("saved-session", ["known-attempt"]);
+    assert.deepEqual(result, recoveredAttempt);
+    assert.deepEqual(calls.map((call) => call.method), ["POST", "GET"]);
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("an unreadable successful retry response recovers from the durable session", async () => {
+  const originalFetch = globalThis.fetch;
+  const recoveredAttempt = {
+    id: "recovered-after-body-loss", sourceSessionId: "saved-session", outcome: "ai_assisted",
+    createdAt: "2026-07-20T12:01:00.000Z", generation: {}, provenance: { generatorType: "ai_assisted" },
+  };
+  let call = 0;
+  globalThis.fetch = async () => {
+    call += 1;
+    return call === 1
+      ? new Response("truncated", { status: 200 })
+      : new Response(JSON.stringify({ session: { generationAttempts: [recoveredAttempt] } }));
+  };
+  try {
+    assert.deepEqual(
+      await client.retryCalibrationGeneration("saved-session", []),
+      recoveredAttempt,
+    );
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("request failure is not mislabeled as provider fallback or reachability", async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => new Response(JSON.stringify({
+    error: "private internal detail", code: "retry_internal_failure",
+  }), { status: 500 });
+  try {
+    const result = await client.completeCalibrationGenerationRetry(
+      () => client.retryCalibrationGeneration("saved-session", []),
+    );
+    assert.equal(result.state, "request_failed");
+    assert.match(result.error, /secure generation service/);
+    assert.doesNotMatch(result.error, /GPT-5.6 could not be reached|private internal detail/);
   } finally { globalThis.fetch = originalFetch; }
 });
 
@@ -149,6 +211,7 @@ test("completed results expose history, new-session, retry, and safe generation 
     "Start New Calibration", "Retry with GPT-5.6", "Calibration history",
     "Connecting securely to GPT-5.6", "AI-assisted generation succeeded",
     "AI-assisted generation failed", "GPT-5.6 timed out", "did not pass narrative and evidence validation",
+    "retry request did not complete in this browser",
   ]) assert.match(screen, new RegExp(copy.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(screen, /session\.generationAttempts\?\.find\(\s*\(attempt\) => attempt\.outcome === "ai_assisted"/);
   assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
@@ -183,7 +246,7 @@ test("retry completion always exits connecting for success, fallback, timeout, a
       outcome: "failed_with_fallback", provenance: { failureReason: "validation_failure" },
     }), "validation_rejected_with_fallback"],
     [() => Promise.reject(new DOMException("private timeout detail", "TimeoutError")), "timed_out_with_fallback"],
-    [() => Promise.reject(new Error("network failed with private response body")), "failed_with_fallback"],
+    [() => Promise.reject(new Error("network failed with private response body")), "request_failed"],
   ];
   for (const [operation, expected] of outcomes) {
     const result = await client.completeCalibrationGenerationRetry(operation);

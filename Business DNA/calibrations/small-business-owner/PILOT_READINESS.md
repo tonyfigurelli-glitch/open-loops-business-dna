@@ -1,7 +1,7 @@
 # Small Business Owner Calibration Pilot Readiness
 
 Status: Working Readiness Review
-Last Updated: 2026-07-18
+Last Updated: 2026-07-20
 Owner: Tony
 
 ## Purpose
@@ -78,6 +78,12 @@ The result presentation now keeps the ten canonical narrative sections primary. 
 Live testing produced a successful AI-assisted retry and an HTTP 200 response, but browser refresh returned to the original deterministic result and removed the retry's success state and provenance. A completed-session `PUT` had also returned HTTP 409. The retry endpoint and SQLite attempt table were present, but the client dropped attempts during local normalization, could prefer a later local completed-session copy during merge, and treated an appended server attempt as a writable session change.
 
 Retry attempts are now explicitly server-owned append-only records. The retry endpoint persists each AI-assisted or failed-with-fallback attempt directly, and session reads return all attempts newest-first after refresh, authentication-service recreation, or database restart. Failed attempts retain only safe validation diagnostics. Local recovery preserves and unions attempt records by ID, the immutable server completed session remains authoritative, and retry-only changes are excluded from client write synchronization. The original answers, timestamps, feedback, deterministic model, completed session, and Initial Business DNA Record remain unchanged.
+
+### July 20 Retry Completion-Handshake Finding
+
+The completed Northstar Studio session retained a deterministic fallback after its original provider output failed validation. Later manual behavior appeared inconsistent: some retries showed a generic reachability message, and one persisted result became visible only after leaving and returning. Safe database inspection confirmed complete provider configuration and a 180-second timeout. It also confirmed that a later retry reached `gpt-5.6-terra`, rejected its first candidate under the existing quote/evidence rules, accepted its second candidate, and durably stored the AI-assisted result.
+
+The client now recovers a newly persisted attempt through an authenticated session read when the initiating POST response is lost, unsuccessful, or unreadable. It never substitutes an older attempt because recovery compares immutable attempt IDs captured before the retry. Request failures are shown separately from provider fallback, timeout, and validation rejection. The API records only stable redacted failure codes. No evidence, safety, context-isolation, immutable-history, or fallback rule was weakened.
 
 ## Development Versus Production
 

@@ -305,12 +305,22 @@ function App() {
   }
 
   async function handleRetryCalibrationGeneration(sessionId: string) {
-    const attempt = await retryCalibrationGeneration(sessionId);
+    const sourceSession = calibrationSessions.find((session) => session.id === sessionId);
+    const attempt = await retryCalibrationGeneration(
+      sessionId,
+      sourceSession?.generationAttempts?.map((candidate) => candidate.id) ?? [],
+    );
     updatePrototypeState((currentState) => ({
       ...currentState,
       calibrationSessions: currentState.calibrationSessions.map((session) =>
         session.id === sessionId
-          ? { ...session, generationAttempts: [attempt, ...(session.generationAttempts ?? [])] }
+          ? {
+              ...session,
+              generationAttempts: [
+                attempt,
+                ...(session.generationAttempts ?? []).filter((candidate) => candidate.id !== attempt.id),
+              ],
+            }
           : session,
       ),
     }));

@@ -1,7 +1,7 @@
 # Decisions
 
 Status: Approved
-Last Updated: 2026-07-18
+Last Updated: 2026-07-20
 Owner: TBD
 
 ## Purpose
@@ -35,6 +35,27 @@ Every entry should include:
 **Follow-Up:** TBD
 
 ## Log
+
+### 2026-07-20: Recover Persisted Retry Results After A Lost Browser Response
+
+**Decision:** Preserve the existing GPT-5.6 evidence, narrative, safety, retry, timeout, deterministic-fallback, and append-only persistence boundaries. When a retry POST fails at the browser or returns an unsuccessful response, immediately read the authenticated server session and adopt only a newly persisted generation-attempt ID that was not present when the retry began. Treat an unreadable successful response the same way. Keep the completed fallback and all attempt history immutable. Distinguish browser/request failure from a provider-generated fallback in participant-facing state, and emit only stable route/status/error codes for unexpected API failures.
+
+**Rationale:** Durable Northstar Studio records showed that the server was correctly configured for the OpenAI Responses API, `gpt-5.6-terra`, and a 180-second per-attempt timeout. The original retry was validation-rejected. A later retry reached the same model, rejected its first candidate for quote/evidence-reference discipline, accepted its corrected second candidate, and persisted an AI-assisted attempt. The generic “GPT-5.6 could not be reached” message therefore did not accurately identify the failure. It could also hide a server result until the participant left and re-entered, because reload reconciled the attempt even when the initiating browser did not receive a usable response. Read-after-failure recovery closes that handshake gap without weakening validation.
+
+**Affected Files:**
+
+- [src/storage/calibrationApi.ts](src/storage/calibrationApi.ts)
+- [src/App.tsx](src/App.tsx)
+- [src/screens/BusinessCalibration.tsx](src/screens/BusinessCalibration.tsx)
+- [server/api.mjs](server/api.mjs)
+- [server/start.mjs](server/start.mjs)
+- [server/clientRecovery.test.mjs](server/clientRecovery.test.mjs)
+- [server/backend.test.mjs](server/backend.test.mjs)
+- [TECHNICAL_ARCHITECTURE.md](TECHNICAL_ARCHITECTURE.md)
+- [Business DNA/calibrations/small-business-owner/PILOT_READINESS.md](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+- [DECISIONS.md](DECISIONS.md)
+
+**Follow-Up:** Keep provider and API diagnostics content-free. Monitor whether a future background operation/status endpoint is warranted for retries that outlive the initiating page, but do not add that complexity for Build Week while persisted read-back and reload recovery remain reliable. Both frozen Version 1.3 canonical files remain unchanged.
 
 ### 2026-07-18: Approve MIT License And Repository-First Build Week Judging
 

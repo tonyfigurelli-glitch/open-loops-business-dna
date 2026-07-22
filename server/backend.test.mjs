@@ -218,6 +218,31 @@ test("server diagnostics retain safe validation codes for both attempts without 
   assert.doesNotMatch(serialized, /profileSections|participantAnswers|generatedProfile/);
 });
 
+test("retry endpoint failures expose only a stable safe diagnostic code", async () => {
+  const diagnostics = [];
+  const sensitive = "private provider response, prompt, answer, and credential";
+  const api = createApi({
+    database: { getSession: () => ({ id: "saved-session" }) },
+    auth: { restore: () => "user-a" },
+    generationService: { retryStoredSession: async () => { throw new Error(sensitive); } },
+    canonical: domain.canonical,
+    diagnostics: (metadata) => diagnostics.push(metadata),
+  });
+  const response = await api(new Request(
+    "http://local/api/calibration-sessions/saved-session/retry-generation",
+    { method: "POST", body: "{}" },
+  ));
+  assert.equal(response.status, 500);
+  assert.deepEqual(await response.json(), {
+    error: "The server could not complete the request.",
+    code: "retry_internal_failure",
+  });
+  assert.deepEqual(diagnostics, [{
+    route: "calibration_retry", status: 500, code: "retry_internal_failure",
+  }]);
+  assert.doesNotMatch(JSON.stringify(diagnostics), /private provider|prompt|answer|credential/);
+});
+
 test("migration is deduplicated and preserves timestamps and provenance", async (t) => {
   const f = fixture(); t.after(() => f.close());
   const request = () => authenticatedRequest(f.auth, "user-a", "/api/calibration-sessions/import", {

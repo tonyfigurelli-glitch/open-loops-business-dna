@@ -45,7 +45,14 @@ const generationService = new CalibrationGenerationService({
   provider,
   diagnostics: (metadata) => logger.event("calibration_generation", metadata),
 });
-const api = createApi({ database, auth, generationService, canonical: domain.canonical, allowDevelopmentAuth: config.allowDevelopmentAuth });
+const api = createApi({
+  database,
+  auth,
+  generationService,
+  canonical: domain.canonical,
+  allowDevelopmentAuth: config.allowDevelopmentAuth,
+  diagnostics: (metadata) => logger.event("api_error", metadata),
+});
 const application = createApplicationHandler({ api, staticRoot: config.staticRoot });
 createServer(async (incoming, outgoing) => {
   const started = Date.now();

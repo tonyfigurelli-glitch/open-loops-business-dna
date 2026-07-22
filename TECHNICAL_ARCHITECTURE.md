@@ -1,7 +1,7 @@
 # Technical Architecture
 
 Status: Draft
-Last Updated: 2026-07-18
+Last Updated: 2026-07-20
 Owner: TBD
 
 ## Purpose
@@ -108,6 +108,8 @@ For a completed deterministic-fallback session, `/api/calibration-sessions/:id/r
 Generation attempts are append-only server-owned records, not mutable fields in the completed session row. The retry endpoint persists its successful or failed result directly; it does not depend on a later browser `PUT`. Session reads join every attempt in descending creation order, with insertion order as the deterministic tie-breaker, so browser refresh, authentication-service recreation, and database-process restart preserve the complete retry history. The result screen selects the newest successful AI-assisted attempt while retaining later or earlier failed attempts and their safe diagnostics.
 
 `generationAttempts` is a session read model on the client. Local-storage normalization preserves it, and local/server reconciliation unions attempts by immutable attempt ID while treating the server's completed-session base as authoritative. Session write fingerprints exclude attempts. The synchronization effect sends only base sessions whose writable data changed, preventing retry responses—or changes to unrelated sessions—from issuing invalid overwrites against immutable completed sessions.
+
+If the browser loses, rejects, or cannot parse the retry POST response, the client performs an authenticated read-back of that session and accepts only an attempt ID that did not exist when the retry began. This recovers a result already committed by the append-only server endpoint without replaying generation or mutating the completed source session. If no new attempt exists, the UI exits connecting into a request-failed state rather than incorrectly claiming that GPT-5.6 was unreachable. Unexpected API errors emit and return only stable route/status/error codes; exception text, prompts, answers, provider bodies, and credentials remain excluded.
 
 July 18, 2026 live testing identified that a fixed forty-five-second provider timeout, repeated across the pipeline's two protected attempts, caused a consistent ninety-second fallback even though direct Responses API tests completed with the configured GPT-5.6 models. Provider adapters now receive the validated `MODEL_PROVIDER_TIMEOUT_MS` setting, defaulting to 180,000 milliseconds per attempt for the full ten-section strict structured result. The accepted range is 30,000–600,000 milliseconds. Model selection remains exclusively configurable through `MODEL_IDENTIFIER`.
 
