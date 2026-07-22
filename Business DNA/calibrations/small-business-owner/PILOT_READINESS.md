@@ -1,12 +1,16 @@
 # Small Business Owner Calibration Pilot Readiness
 
 Status: Working Readiness Review
-Last Updated: 2026-07-20
+Last Updated: 2026-07-22
 Owner: Tony
 
 ## Purpose
 
-Define the remaining decisions, production controls, and acceptable limitations for a small controlled Version 1.3 pilot. This document does not approve a public launch, identity vendor, hosting platform, or paid model use.
+Define the remaining decisions, production controls, and acceptable limitations for a small controlled Version 1.4 pilot. This document does not approve a public launch, identity vendor, hosting platform, or paid model use. Earlier Version 1.3 findings remain below as historical engineering evidence because Version 1.4 inherits its onboarding, profile, evidence, and generation foundation.
+
+## Version 1.4 Participant Flow
+
+The current pilot runs `small_business_owner_initial_calibration@1.4.0`. It preserves the twelve-question onboarding and ten-section profile from frozen Version 1.3 while reducing feedback to exactly three questions: two ratings and one open-ended response. The interface displays progress through those three questions, allows the participant to finish later, and returns them to the next unanswered feedback item from the Home continuity card. Version 1.3 remains frozen and available for historical session display.
 
 ## Readiness Classification
 
@@ -159,7 +163,8 @@ Before enrollment, approve: calibration retention duration, backup retention dur
 
 - [Pilot acceptance test](PILOT_ACCEPTANCE_TEST.md)
 - [Pilot operations](PILOT_OPERATIONS.md)
-- [Version 1.3 specification](SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md)
+- [Version 1.4 specification](SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md)
+- [Frozen Version 1.3 specification](SMALL_BUSINESS_OWNER_CALIBRATION_V1_3.md)
 - [Technical architecture](../../../TECHNICAL_ARCHITECTURE.md)
 - [Decisions log](../../../DECISIONS.md)
 
@@ -169,4 +174,4 @@ Before enrollment, approve: calibration retention duration, backup retention dur
 
 ## Version 1 Boundaries
 
-- This readiness work does not deploy publicly, enable paid usage, modify Version 1.3, or add unrelated product features.
+- This readiness work does not deploy publicly, enable paid usage, modify frozen Version 1.3 or Version 1.4 definitions, or add unrelated product features.

@@ -725,6 +725,22 @@ Every entry should include:
 
 **Follow-Up:** Pilot the full Version 1.4 path from the first onboarding question through saved completion and later return. Treat onboarding or profile changes as a future version.
 
+### 2026-07-22: Align The Pilot Experience And Acceptance Contract With Version 1.4
+
+**Decision:** Display explicit progress through the three Version 1.4 feedback questions, allow a participant to leave feedback and resume later, and use human-readable labels for saved-session status. Update the participant README, pilot-readiness review, and repeatable acceptance checklist to identify Version 1.4 and its two-rating, one-open-response feedback contract. Preserve Version 1.3 as the frozen historical base.
+
+**Rationale:** A pilot cannot be tested reliably when the running application asks three feedback questions but its operating documents instruct testers to expect twelve. Explicit progress and a safe return path also answer the participant's practical concern about how much feedback remains without changing canonical wording or evidence rules.
+
+**Affected Files:**
+
+- [Business Calibration screen](src/screens/BusinessCalibration.tsx)
+- [Client recovery and interface regression tests](server/clientRecovery.test.mjs)
+- [Project README](README.md)
+- [Pilot acceptance test](Business%20DNA/calibrations/small-business-owner/PILOT_ACCEPTANCE_TEST.md)
+- [Pilot readiness review](Business%20DNA/calibrations/small-business-owner/PILOT_READINESS.md)
+
+**Follow-Up:** Run the full Version 1.4 participant path in the target browser and record the dated acceptance result before enrolling a pilot participant.
+
 ## Related Documents
 
 - [Open Loops Vision](OPEN_LOOPS_VISION.md)

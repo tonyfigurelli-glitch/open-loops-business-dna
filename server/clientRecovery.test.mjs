@@ -217,6 +217,14 @@ test("completed results expose history, new-session, retry, and safe generation 
   assert.doesNotMatch(screen, /response\.json\(\).*error|dangerouslySetInnerHTML/);
 });
 
+test("Version 1.4 feedback shows three-question progress and a safe return path", () => {
+  const screen = readFileSync(new URL("../src/screens/BusinessCalibration.tsx", import.meta.url), "utf8");
+  assert.match(screen, /Feedback question \{currentQuestionNumber\} of \{totalQuestions\}/);
+  assert.match(screen, /aria-label=\{`Feedback question \$\{currentQuestionNumber\} of \$\{totalQuestions\}`\}/);
+  assert.match(screen, />Finish later<\/button>/);
+  assert.match(screen, /collecting_feedback: "Feedback in progress"/);
+});
+
 test("completed results keep narrative primary and place complete records in collapsed review details", () => {
   const screen = readFileSync(new URL("../src/screens/BusinessCalibration.tsx", import.meta.url), "utf8");
   assert.equal((screen.match(/<details>/g) ?? []).length, 5);

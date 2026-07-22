@@ -1,8 +1,8 @@
-# Version 1.3 Pilot Acceptance Test
+# Version 1.4 Pilot Acceptance Test
 
 Status: Repeatable Pilot Checklist
-Last Updated: 2026-07-17
-Owner: TBD
+Last Updated: 2026-07-22
+Owner: Tony
 
 ## Purpose
 
@@ -11,7 +11,7 @@ Provide repeatable participant-facing and technical checks before every controll
 ## Tester Checklist
 
 - [ ] Open the approved HTTPS pilot URL and sign in with the invited identity.
-- [ ] Confirm the screen displays calibration Version `1.3.0` and frozen source hash `419b3231ccf597ed27e9f489cff534c08d5700d65901ee9c028239a1fd0840e7`.
+- [ ] Confirm the screen displays calibration Version `1.4.0` and frozen source hash `623075975824c9cfc5b604453ed75879056d37fdfc57e6a1282db6d6bf043e55`.
 - [ ] Start a new calibration and answer questions 1–3.
 - [ ] Refresh; confirm the next unanswered question returns with prior answers preserved.
 - [ ] Sign out; confirm protected calibration data is no longer retrievable.
@@ -23,7 +23,9 @@ Provide repeatable participant-facing and technical checks before every controll
 - [ ] Confirm generation provenance says either AI-assisted or deterministic fallback.
 - [ ] In the fallback test run, disable provider configuration and confirm completion still succeeds.
 - [ ] In the separately authorized AI test run, confirm the configured model and usage provenance are stored.
-- [ ] Complete exactly seven numerical and five open-ended feedback questions.
+- [ ] Confirm feedback clearly reports Questions 1, 2, and 3 of 3.
+- [ ] Complete exactly two numerical and one open-ended feedback questions.
+- [ ] Use `Finish later` during feedback; confirm Home offers `Continue feedback` and resumes at the next unanswered item.
 - [ ] Leave and return; confirm the completed session reopens unchanged.
 - [ ] Report any unsafe, clinical, unsupported, overly certain, repetitive, or ungrounded conclusion immediately.
 
@@ -55,7 +57,8 @@ Keep the dated checklist, build/test output, backup filename and checksum, resto
 
 - [Pilot readiness](PILOT_READINESS.md)
 - [Pilot operations](PILOT_OPERATIONS.md)
-- [Version 1.3 JSON](v1.3.json)
+- [Version 1.4 JSON](v1.4.json)
+- [Frozen Version 1.3 base](v1.3.json)
 
 ## Open Questions
 
@@ -63,4 +66,4 @@ Keep the dated checklist, build/test output, backup filename and checksum, resto
 
 ## Version 1 Boundaries
 
-- This checklist verifies only the approved Version 1.3 calibration pilot.
+- This checklist verifies only the approved Version 1.4 calibration pilot. Version 1.3 remains frozen historical behavior.

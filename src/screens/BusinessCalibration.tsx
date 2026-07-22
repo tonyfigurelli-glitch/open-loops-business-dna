@@ -152,6 +152,7 @@ export function BusinessCalibration({
 
   return (
     <FeedbackFlow
+      onBackHome={onBackHome}
       onNumericalFeedback={onNumericalFeedback}
       onOpenEndedFeedback={onOpenEndedFeedback}
       session={session}
@@ -181,8 +182,9 @@ function ModelView({ session, onBeginFeedback, onBackHome }: {
   );
 }
 
-function FeedbackFlow({ session, onNumericalFeedback, onOpenEndedFeedback }: {
+function FeedbackFlow({ session, onBackHome, onNumericalFeedback, onOpenEndedFeedback }: {
   session: CalibrationSession;
+  onBackHome: () => void;
   onNumericalFeedback: (feedbackId: string, value: 1 | 2 | 3 | 4 | 5) => void;
   onOpenEndedFeedback: (feedbackId: string, value: string) => void;
 }) {
@@ -193,14 +195,24 @@ function FeedbackFlow({ session, onNumericalFeedback, onOpenEndedFeedback }: {
   const [draft, setDraft] = useState("");
   const rating = ratings[ratingIndex];
   const openQuestion = rating ? undefined : openQuestions[openIndex];
+  const totalQuestions = ratings.length + openQuestions.length;
+  const completedQuestions = ratingIndex + openIndex;
+  const currentQuestionNumber = Math.min(completedQuestions + 1, totalQuestions);
 
   return (
     <section className="calibration-screen">
       <header className="surface-header">
         <p className="eyebrow">Help this understanding improve</p>
         <h1>{rating ? rating.statement : openQuestion?.prompt}</h1>
+        <p className="hero-copy">Feedback question {currentQuestionNumber} of {totalQuestions}</p>
         <CalibrationIdentity session={session} />
       </header>
+      <div
+        className="calibration-progress"
+        aria-label={`Feedback question ${currentQuestionNumber} of ${totalQuestions}`}
+      >
+        <span style={{ width: `${(currentQuestionNumber / totalQuestions) * 100}%` }} />
+      </div>
       <article className="calibration-card">
         {rating ? (
           <div className="rating-options">
@@ -234,6 +246,7 @@ function FeedbackFlow({ session, onNumericalFeedback, onOpenEndedFeedback }: {
           </>
         ) : null}
       </article>
+      <button className="ghost-button" onClick={onBackHome} type="button">Finish later</button>
     </section>
   );
 }
@@ -495,7 +508,16 @@ function SessionHistory({ session, sessions, onSelectSession }: {
 function formatSessionLabel(session: CalibrationSession, index: number) {
   const date = new Date(session.startedAt);
   const dateLabel = Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleDateString();
-  return `${index === 0 ? "Latest" : dateLabel} · Version ${session.semanticVersion} · ${session.status}`;
+  return `${index === 0 ? "Latest" : dateLabel} · Version ${session.semanticVersion} · ${formatSessionStatus(session.status)}`;
+}
+
+function formatSessionStatus(status: CalibrationSession["status"]) {
+  return {
+    collecting_answers: "In progress",
+    model_ready: "Profile ready",
+    collecting_feedback: "Feedback in progress",
+    completed: "Complete",
+  }[status];
 }
 
 function GenerationStatus({ state, error }: {

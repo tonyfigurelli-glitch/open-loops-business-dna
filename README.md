@@ -1,7 +1,7 @@
 # Open Loops — Business DNA
 
 Status: Build Week Candidate
-Last Updated: 2026-07-18
+Last Updated: 2026-07-22
 Owner: Tony
 
 ## Purpose
@@ -10,7 +10,7 @@ Give judges, contributors, and deployment operators one concise entry point for 
 
 ## What Business DNA Does
 
-Business DNA helps a small-business owner turn twelve structured reflections into an evidence-linked Initial Business Owner Model. The result contains ten participant-facing sections, a central hypothesis, supporting and potentially disconfirming evidence, calibrated confidence, unknowns, direct quotes, and a seven-day experiment. The participant then records seven numerical ratings and five open-ended responses.
+Business DNA helps a small-business owner turn twelve structured reflections into an evidence-linked Initial Business Owner Model. The result contains ten participant-facing sections, a central hypothesis, supporting and potentially disconfirming evidence, calibrated confidence, unknowns, direct quotes, and a seven-day experiment. The participant then answers three short feedback questions: two ratings and one open-ended response.
 
 Business DNA is an Open Loops subproject, not a separate product or technical universe. It inherits the main application's governance, durable memory, data-model principles, and Lumi-oriented interaction philosophy.
 
@@ -18,11 +18,11 @@ Business DNA is an Open Loops subproject, not a separate product or technical un
 
 The target user is a small-business owner whose most important constraints are difficult to see from inside day-to-day work. Generic advice often mistakes a visible avoided task for the root problem, assumes every business needs the same systemization prescription, or presents uncertain interpretations as facts.
 
-Version 1.3 instead creates a provisional, inspectable starting model. It separates direct statements, reasonable inferences, tentative hypotheses, and unknowns; requires independent evidence for major conclusions; preserves competing explanations; and proposes a small experiment that can generate better evidence.
+Version 1.4 creates a provisional, inspectable starting model. It preserves Version 1.3's twelve onboarding questions, evidence rules, ten-section profile, and seven-day experiment while shortening feedback to three questions. It separates direct statements, reasonable inferences, tentative hypotheses, and unknowns; requires independent evidence for major conclusions; preserves competing explanations; and proposes a small experiment that can generate better evidence.
 
 ## How GPT-5.6 Is Used
 
-The server builds an evidence package from only the current calibration's twelve stored answers. A configured GPT-5.6 model receives the frozen Version 1.3 output contract and returns strict structured output. The application validates canonical section structure, evidence references, confidence discipline, safety, context isolation, and participant-facing narrative quality. It retries one rejected or failed provider attempt, then safely uses deterministic fallback.
+The server builds an evidence package from only the current calibration's twelve stored answers. A configured GPT-5.6 model receives the frozen Version 1.4 output contract, resolved from its frozen Version 1.3 base, and returns strict structured output. The application validates canonical section structure, evidence references, confidence discipline, safety, context isolation, and participant-facing narrative quality. It retries one rejected or failed provider attempt, then safely uses deterministic fallback.
 
 The provider key, model request, prompt instructions, answers, and raw provider response remain server-side. `MODEL_IDENTIFIER` selects the approved model; no GPT-5.6 variant is hardcoded. Successful and failed retries are stored as immutable append-only generation attempts with redacted diagnostics.
 
@@ -35,7 +35,7 @@ Codex was used as an implementation partner to inspect the existing Open Loops a
 - React 19 and Vite provide the existing Open Loops interface.
 - One Node 22 HTTP service serves the built Vite `dist`, SPA fallback routes, and `/api` from the same origin.
 - SQLite provides durable single-instance storage at `OPEN_LOOPS_DATABASE_PATH`; production must mount that path on a persistent volume.
-- The canonical calibration is loaded from `Business DNA/calibrations/small-business-owner/v1.3.json` rather than duplicated in UI components.
+- The canonical calibration is resolved from `Business DNA/calibrations/small-business-owner/v1.4.json` and its frozen `v1.3.json` base rather than duplicated in UI components.
 - Provider access is isolated behind a server adapter. Deterministic generation remains the safe fallback.
 - Completed sessions, original answers, original generated models, feedback, and Initial Business DNA Records are immutable. Retry attempts are append-only child records.
 - Production identity is supplied by an authenticated reverse proxy. The application verifies a server-only proxy secret and a trusted user-ID header on every protected API request.
@@ -113,7 +113,7 @@ These fictional answers describe Northstar Studio, not Tony or any real particip
 11. `We had a narrow project mix, weekly planning, clear ownership, and enough space to improve work before delivery.`
 12. `Trust grows when we make the work understandable and keep the promises we make.`
 
-Demo sequence: complete the twelve questions, review the ten-section model, inspect evidence and uncertainty under Review details, complete the twelve feedback questions, return to session history, and—when the original used fallback—show that an AI retry remains selected after refresh.
+Demo sequence: complete the twelve questions, review the ten-section model, inspect evidence and uncertainty under Review details, complete the three feedback questions, return to session history, and—when the original used fallback—show that an AI retry remains selected after refresh.
 
 ## Data Privacy And Immutability Guarantees
 
@@ -131,7 +131,7 @@ Demo sequence: complete the twelve questions, review the ten-section model, insp
 - The approved submission testing path is the public runnable repository, this README's local two-terminal setup, the fictional sample workflow above, and the local demo recording published as the submission video.
 - A hosted application is intentionally deferred until after Build Week submission.
 - `/api/health` returns only `{"status":"ok"}` and requires no participant context.
-- The frozen Version 1.3 Markdown and JSON are protected by exact SHA-256 regression tests.
+- The frozen Version 1.3 and Version 1.4 definitions are protected by exact SHA-256 regression tests.
 - The project demonstrates GPT-5.6 structured reasoning with deterministic resilience, not a generic chat wrapper.
 - Codex contribution and the required submission assets are tracked in [BUILD_WEEK_SUBMISSION_CHECKLIST.md](BUILD_WEEK_SUBMISSION_CHECKLIST.md).
 

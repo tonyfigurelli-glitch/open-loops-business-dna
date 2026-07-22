@@ -83,7 +83,7 @@ Chat Sessions should later be able to connect to one or more Open Loops without 
 
 The calibration vertical slice uses a co-located Node HTTP API and SQLite through the built-in `node:sqlite` driver. Every query is scoped by authenticated user ID. SQLite is the minimum durable single-instance Version 1 store; a multi-instance or serverless deployment requires hosted PostgreSQL behind the same storage contract.
 
-`localStorage` remains a recoverable client cache. After authentication, canonical local Version 1.3 sessions are validated, uploaded transactionally, deduplicated by a stable import fingerprint, marked with migration provenance, and retained locally. Backend state becomes authoritative after confirmed persistence.
+`localStorage` remains a recoverable client cache. After authentication, canonical local sessions for the current Version 1.4 definition are validated, uploaded transactionally, deduplicated by a stable import fingerprint, marked with migration provenance, and retained locally. Frozen Version 1.3 sessions remain readable as historical records. Backend state becomes authoritative after confirmed persistence.
 
 Calibration Sessions live in that same state and are saved after every answer, generated model, feedback response, and completion event. Each session records the exact calibration identifier, semantic version, and frozen source hash used.
 
@@ -93,13 +93,13 @@ The Home surface derives its Business DNA continuity card from the same reconcil
 
 ### Calibration Source Of Truth
 
-The application imports `Business DNA/calibrations/small-business-owner/v1.3.json` through `src/domain/calibrations/smallBusinessOwnerCalibration.ts`.
+The application resolves `Business DNA/calibrations/small-business-owner/v1.4.json` against its frozen `v1.3.json` base through `src/domain/calibrations/smallBusinessOwnerCalibration.ts`.
 
-UI components and generation code must read canonical questions and output-section titles from that adapter. They must not duplicate Version 1.3 wording. Automated tests compare the JSON to the frozen Markdown source and reject duplicated UI wording or unlabelled competing prompts.
+UI components and generation code must read canonical questions, feedback, and output-section titles from that adapter. They must not duplicate frozen calibration wording. Automated tests compare both versioned definitions to their frozen Markdown sources and reject duplicated UI wording or unlabelled competing prompts.
 
 ### AI-Assisted Calibration Generation Boundary
 
-The calibration domain constructs a current-session-only evidence package, combines it with canonical Version 1.3 generation instructions, requests provider-neutral structured output, validates that output, retries once with validation errors, and falls back deterministically after a second failure.
+The calibration domain constructs a current-session-only evidence package, combines it with the resolved Version 1.4 contract and inherited generation instructions, requests provider-neutral structured output, validates that output, retries once with validation errors, and falls back deterministically after a second failure.
 
 The React client contains no provider secret and makes no direct vendor call. `CalibrationModelProvider` is the vendor-neutral boundary. The server provides a configurable HTTP adapter for an approved structured-output model endpoint. When it is unavailable or unconfigured, the deterministic generator remains the functioning runtime path.
 
