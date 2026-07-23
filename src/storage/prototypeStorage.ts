@@ -12,6 +12,7 @@ import { participantScopedStorageKey } from "./participantIdentity";
 export const prototypeStorageKey = "open-loops.prototype-state.v1";
 
 export type PrototypeAppState = {
+  displayName?: string;
   calibrationSessions: CalibrationSession[];
   thoughts: Thought[];
   openLoops: OpenLoop[];

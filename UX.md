@@ -86,6 +86,12 @@ The bubble workspace is a defining UX direction for Open Loops.
 
 It should resemble constellations or molecules rather than folders, dashboards, databases, or productivity boards.
 
+## Workspace Reset
+
+A fresh participant begins with a genuinely empty workspace rather than seeded demonstration content. Empty bubbles, connections, recent thoughts, and spotlight panels should retain the home-screen structure while clearly explaining that content will appear through use.
+
+Reset Entire Workspace is a destructive participant-controlled action in Me. It requires explicit confirmation and clears the current participant's complete visible workspace, Business DNA material, saved name, local recovery state, and durable server records without affecting another participant. Restore Demo Workspace is a separate testing action and must never be the automatic result of reset.
+
 ## Implementation Guidance
 
 Implementations may adjust spacing, layout, responsiveness, copy, and visual polish as needed.

@@ -568,6 +568,26 @@ h3 {
   padding: 12px;
 }
 
+.workspace-empty-state {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 6px;
+  padding: 30px;
+  color: #5f6483;
+  text-align: center;
+}
+
+.workspace-empty-state strong {
+  color: #202765;
+}
+
+.workspace-empty-state span,
+.empty-home-card p:last-child {
+  font-size: 0.88rem;
+}
+
 .card-meta {
   display: flex;
   align-items: center;
@@ -1542,6 +1562,28 @@ h3 {
   background: rgba(255, 255, 255, 0.68);
   color: #b7304b;
   font-weight: 950;
+}
+
+.danger-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.reset-error {
+  color: #b7304b !important;
+  font-weight: 800;
+}
+
+.developer-settings {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(32, 39, 101, 0.12);
+}
+
+.developer-settings p {
+  margin: 0;
 }
 
 .placeholder-note {

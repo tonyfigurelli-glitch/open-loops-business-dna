@@ -37,6 +37,13 @@ export function createApi({
       if (request.method === "GET" && url.pathname === "/api/auth/session") {
         return json({ authenticated: true, userId });
       }
+      if (request.method === "DELETE" && url.pathname === "/api/participant-data") {
+        const body = await readJson(request);
+        if (body.confirmation !== "RESET_ENTIRE_WORKSPACE") {
+          return json({ error: "Reset confirmation is required." }, 400);
+        }
+        return json(database.deleteParticipant(userId));
+      }
       if (url.pathname === "/api/calibration-sessions" && request.method === "GET") {
         return json({ sessions: database.listSessions(userId) });
       }

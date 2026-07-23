@@ -128,6 +128,26 @@ test("requires authentication and enforces session ownership", async (t) => {
   assert.equal(denied.status, 404);
 });
 
+test("confirmed workspace reset deletes only the authenticated participant", async (t) => {
+  const f = fixture(); t.after(() => f.close());
+  f.database.createSession("user-a", session("session-a"));
+  f.database.createSession("user-b", session("session-b"));
+
+  const unconfirmed = await f.api(authenticatedRequest(f.auth, "user-a", "/api/participant-data", {
+    method: "DELETE", body: JSON.stringify({ confirmation: "no" }),
+  }));
+  assert.equal(unconfirmed.status, 400);
+  assert.equal(f.database.listSessions("user-a").length, 1);
+
+  const reset = await f.api(authenticatedRequest(f.auth, "user-a", "/api/participant-data", {
+    method: "DELETE", body: JSON.stringify({ confirmation: "RESET_ENTIRE_WORKSPACE" }),
+  }));
+  assert.equal(reset.status, 200);
+  assert.equal((await reset.json()).deleted.sessions, 1);
+  assert.equal(f.database.listSessions("user-a").length, 0);
+  assert.equal(f.database.listSessions("user-b").length, 1);
+});
+
 test("encrypted authentication survives refresh and auth-service recreation", () => {
   const secret = "persistent-test-secret-value";
   const token = new TokenAuthService(secret).issue("user-a");

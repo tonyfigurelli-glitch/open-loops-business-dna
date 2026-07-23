@@ -52,12 +52,13 @@ import {
 import {
   establishCalibrationSession,
   calibrationSessionWriteFingerprint,
+  deleteCurrentParticipantData,
   migrateAndLoadCalibrationSessions,
   requestGenerationWithNetworkFallback,
   retryCalibrationGeneration,
   syncCalibrationSession,
 } from "./storage/calibrationApi";
-import { getOrCreateParticipantIdentity } from "./storage/participantIdentity";
+import { clearParticipantIdentity, getOrCreateParticipantIdentity } from "./storage/participantIdentity";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
 type ActiveSurface = Surface | "ThoughtCapture" | "ThoughtLibrary" | "Calibration";
@@ -80,7 +81,17 @@ const bubblePositions = [
   { x: "22%", y: "40%" },
   { x: "74%", y: "74%" },
 ];
-const seedPrototypeState: PrototypeAppState = {
+const emptyPrototypeState: PrototypeAppState = {
+  calibrationSessions: [],
+  thoughts: [],
+  openLoops: [],
+  loopConnections: [],
+  insights: [],
+  chatSessions: [],
+  chatMessages: [],
+};
+const demoPrototypeState: PrototypeAppState = {
+  displayName: userSeed.firstName,
   calibrationSessions: [],
   thoughts: thoughtsSeed,
   openLoops: openLoopsSeed,
@@ -96,15 +107,17 @@ const participantUserId = `prototype-${participantIdentity}`;
 function App() {
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("Home");
   const [prototypeState, setPrototypeState] = useState<PrototypeAppState>(() =>
-    loadPrototypeState(seedPrototypeState, participantIdentity),
+    loadPrototypeState(emptyPrototypeState, participantIdentity),
   );
+  const [resetInProgress, setResetInProgress] = useState(false);
+  const [resetError, setResetError] = useState("");
   const [selectedLoopId, setSelectedLoopId] = useState(openLoopsSeed[0]?.id ?? "");
   const [activeChatSessionId, setActiveChatSessionId] = useState(() =>
-    getNewestChatSessionId(loadPrototypeState(seedPrototypeState, participantIdentity).chatSessions),
+    getNewestChatSessionId(loadPrototypeState(emptyPrototypeState, participantIdentity).chatSessions),
   );
   const [activeCalibrationSessionId, setActiveCalibrationSessionId] = useState(() =>
     selectCalibrationToOpen(
-      loadPrototypeState(seedPrototypeState, participantIdentity).calibrationSessions,
+      loadPrototypeState(emptyPrototypeState, participantIdentity).calibrationSessions,
     )?.id ?? "",
   );
   const durableStorageReady = useRef(false);
@@ -119,8 +132,11 @@ function App() {
     openLoops: loops,
     thoughts,
   } = prototypeState;
-  const recentThought = thoughts[0] ?? thoughtsSeed[0];
+  const recentThought = thoughts[0];
   const spotlightLoop = loops.find((loop) => loop.status !== "archived") ?? loops[0];
+  const workspaceUser = prototypeState.displayName
+    ? { ...userSeed, greeting: `Good morning, ${prototypeState.displayName}` }
+    : { firstName: "", greeting: "Welcome", lumiPrompt: "What shall we explore?" };
 
   useEffect(() => {
     let active = true;
@@ -531,12 +547,26 @@ function App() {
     setActiveChatSessionId(chatSessionId);
   }
 
-  function handleResetPrototypeData() {
-    clearPrototypeState(participantIdentity);
-    setPrototypeState(seedPrototypeState);
-    savePrototypeState(seedPrototypeState, participantIdentity);
+  async function handleResetEntireWorkspace() {
+    setResetInProgress(true);
+    setResetError("");
+    try {
+      await deleteCurrentParticipantData();
+      clearPrototypeState(participantIdentity);
+      clearParticipantIdentity();
+      window.location.reload();
+    } catch {
+      setResetError("The reset did not complete. Your workspace has not been changed.");
+      setResetInProgress(false);
+    }
+  }
+
+  function handleRestoreDemoWorkspace() {
+    setPrototypeState(demoPrototypeState);
+    savePrototypeState(demoPrototypeState, participantIdentity);
     setSelectedLoopId(openLoopsSeed[0]?.id ?? "");
     setActiveChatSessionId(getNewestChatSessionId(chatSessionsSeed));
+    setResetError("");
     setActiveSurface("Home");
   }
 
@@ -561,9 +591,9 @@ function App() {
         {activeSurface === "Home" ? (
           <HomeScreen
             calibrationSessions={calibrationSessions}
-            connectionPreview={loopConnections[0] ?? loopConnectionsSeed[0]}
+            connectionPreview={loopConnections[0]}
             entryPaths={entryPathSeed}
-            insight={insights[0] ?? insightsSeed[0]}
+            insight={insights[0]}
             loops={loops}
             onAddThoughtToLoop={() => showLoopsSurface(spotlightLoop?.id)}
             onEntryPathSelect={handleEntryPathSelect}
@@ -572,7 +602,7 @@ function App() {
             onViewThoughtLibrary={() => setActiveSurface("ThoughtLibrary")}
             recentThought={recentThought}
             spotlightLoop={spotlightLoop}
-            user={userSeed}
+            user={workspaceUser}
           />
         ) : null}
 
@@ -630,7 +660,14 @@ function App() {
           />
         ) : null}
 
-        {activeSurface === "Me" ? <MeScreen onResetPrototypeData={handleResetPrototypeData} /> : null}
+        {activeSurface === "Me" ? (
+          <MeScreen
+            onResetEntireWorkspace={handleResetEntireWorkspace}
+            onRestoreDemoWorkspace={handleRestoreDemoWorkspace}
+            resetError={resetError}
+            resetInProgress={resetInProgress}
+          />
+        ) : null}
 
         {activeSurface === "Universe" ? (
           <SurfacePlaceholder surface={activeSurface} />

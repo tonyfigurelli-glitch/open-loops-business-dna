@@ -13,12 +13,12 @@ type EntryPath = {
 
 type HomeScreenProps = {
   calibrationSessions: CalibrationSession[];
-  connectionPreview: LoopConnection;
+  connectionPreview?: LoopConnection;
   entryPaths: readonly EntryPath[];
-  insight: Insight;
+  insight?: Insight;
   loops: OpenLoop[];
-  recentThought: Thought;
-  spotlightLoop: OpenLoop;
+  recentThought?: Thought;
+  spotlightLoop?: OpenLoop;
   user: {
     greeting: string;
     lumiPrompt: string;
@@ -121,17 +121,39 @@ export function HomeScreen({
         <BubbleWorkspace loops={loops} />
       </section>
 
-      <InsightCard connection={connectionPreview} insight={insight} loops={loops} />
+      {connectionPreview && insight ? (
+        <InsightCard connection={connectionPreview} insight={insight} loops={loops} />
+      ) : (
+        <EmptyHomeCard label="Connections" message="New connections will appear as your workspace learns." />
+      )}
 
       <section className="preview-grid" aria-label="Home previews">
-        <RecentThoughtCard
-          onAddThoughtToLoop={onAddThoughtToLoop}
-          onViewThoughtLibrary={onViewThoughtLibrary}
-          thought={recentThought}
-        />
-        <SpotlightLoopCard loop={spotlightLoop} />
+        {recentThought ? (
+          <RecentThoughtCard
+            onAddThoughtToLoop={onAddThoughtToLoop}
+            onViewThoughtLibrary={onViewThoughtLibrary}
+            thought={recentThought}
+          />
+        ) : (
+          <EmptyHomeCard label="Recent Thought" message="Your captured thoughts will appear here." />
+        )}
+        {spotlightLoop ? (
+          <SpotlightLoopCard loop={spotlightLoop} />
+        ) : (
+          <EmptyHomeCard label="Spotlight" message="A returning Open Loop will appear here." />
+        )}
       </section>
     </div>
+  );
+}
+
+function EmptyHomeCard({ label, message }: { label: string; message: string }) {
+  return (
+    <article className="small-card empty-home-card">
+      <p className="section-label">{label}</p>
+      <h3>Nothing here yet</h3>
+      <p>{message}</p>
+    </article>
   );
 }
 

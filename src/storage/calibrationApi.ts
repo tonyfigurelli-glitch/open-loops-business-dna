@@ -37,6 +37,15 @@ export async function signOutCalibrationSession() {
   return response.ok;
 }
 
+export async function deleteCurrentParticipantData() {
+  const response = await request("/api/participant-data", {
+    method: "DELETE",
+    body: JSON.stringify({ confirmation: "RESET_ENTIRE_WORKSPACE" }),
+  });
+  if (!response.ok) throw new Error("The workspace could not be reset.");
+  return response.json() as Promise<{ deleted: Record<string, number> }>;
+}
+
 export async function migrateAndLoadCalibrationSessions(localSessions: CalibrationSession[]) {
   const canonicalSessions = localSessions.filter((session) =>
     session.calibrationId === smallBusinessOwnerCalibrationIdentity.calibrationId &&

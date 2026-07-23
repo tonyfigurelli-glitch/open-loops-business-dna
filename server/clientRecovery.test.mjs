@@ -107,6 +107,22 @@ test("development participants use isolated browser identities and scoped local 
   assert.match(source, /await signOutCalibrationSession\(\)/);
 });
 
+test("entire-workspace reset starts empty and clears local plus durable participant data", () => {
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const api = readFileSync(new URL("../src/storage/calibrationApi.ts", import.meta.url), "utf8");
+  const identity = readFileSync(new URL("../src/storage/participantIdentity.ts", import.meta.url), "utf8");
+  const home = readFileSync(new URL("../src/screens/Home.tsx", import.meta.url), "utf8");
+
+  assert.match(app, /const emptyPrototypeState: PrototypeAppState = \{[\s\S]*?openLoops: \[\]/);
+  assert.match(app, /await deleteCurrentParticipantData\(\)/);
+  assert.match(app, /clearPrototypeState\(participantIdentity\)/);
+  assert.match(app, /clearParticipantIdentity\(\)/);
+  assert.match(api, /method: "DELETE"/);
+  assert.match(api, /RESET_ENTIRE_WORKSPACE/);
+  assert.match(identity, /removeItem\(participantIdentityStorageKey\)/);
+  assert.match(home, /Nothing here yet/);
+});
+
 test("local migration filter uses the exact canonical identity", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;

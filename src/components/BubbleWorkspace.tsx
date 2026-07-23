@@ -18,12 +18,19 @@ type BubbleWorkspaceProps = {
 export function BubbleWorkspace({ loops, selectedLoopId, onSelectLoop }: BubbleWorkspaceProps) {
   return (
     <div className="bubble-workspace" aria-label="Open Loops bubble workspace preview">
-      <svg className="connection-lines" aria-hidden="true" viewBox="0 0 360 270">
-        <path d="M73 88 C125 132, 148 133, 201 119" />
-        <path d="M214 122 C258 105, 279 84, 309 68" />
-        <path d="M210 146 C162 175, 118 199, 74 213" />
-        <path d="M231 166 C267 187, 287 205, 320 224" />
-      </svg>
+      {loops.length ? (
+        <svg className="connection-lines" aria-hidden="true" viewBox="0 0 360 270">
+          <path d="M73 88 C125 132, 148 133, 201 119" />
+          <path d="M214 122 C258 105, 279 84, 309 68" />
+          <path d="M210 146 C162 175, 118 199, 74 213" />
+          <path d="M231 166 C267 187, 287 205, 320 224" />
+        </svg>
+      ) : (
+        <div className="workspace-empty-state">
+          <strong>No Open Loops yet</strong>
+          <span>Your bubbles will appear here as you create them.</span>
+        </div>
+      )}
       {loops.map((loop) => {
         const bubblePosition = homeBubblePositions[loop.id] ?? loop.bubble;
         const bubbleClassName = [

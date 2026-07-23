@@ -58,6 +58,8 @@ AI-assisted participant narrative uses the traceable instruction version `small_
 
 The intelligence layer uses the approved `business_dna_foundational_management_library@1.0.0`. Accepted outputs must connect at least two independent answers, apply one to three canonical management practices, state a business consequence and caution, and identify what would disprove the inference. Obvious answer echoes, invented practices, and fortune-teller-style paraphrase are rejected. Pilot browsers use separate durable participant identities instead of a shared hard-coded prototype user.
 
+Fresh pilot participants begin with an empty Open Loops workspace. The participant-facing Reset Entire Workspace action permanently removes only the authenticated participant's Business DNA sessions and records, browser recovery data, bubbles, thoughts, Lumi conversations, displayed name, and all three home-panel previews after explicit confirmation. Demonstration content is separate and returns only through Restore Demo Workspace.
+
 Completed results present the ten narrative sections first. Repeated unknowns and possible disconfirming explanations are conservatively deduplicated and shown as readable lists. Stored Interpretation, Original Answers, the complete Seven-Day Experiment, Participant Feedback, and generation/source diagnostics remain complete and accessible in collapsed `Review details` disclosures so audit material does not dominate the participant reflection.
 
 ## Evidence And Memory Principles

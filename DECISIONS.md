@@ -779,6 +779,21 @@ Every entry should include:
 
 **Follow-Up:** Verify the revised deterministic profile and participant-facing layout in the target browser before pilot enrollment.
 
+### 2026-07-22: Separate A True Workspace Reset From Demonstration Data
+
+**Decision:** Fresh participants begin with an empty Open Loops workspace. Reset Entire Workspace permanently clears the authenticated participant's bubbles, all three home-panel contents, Business DNA answers, profiles and feedback, thoughts, Lumi conversations, displayed name, browser recovery data, and durable server records after explicit confirmation. It affects no other participant. Restore Demo Workspace is a separate testing action and is never the result of reset.
+
+**Rationale:** The earlier prototype reset restored the original sample desktop, making it appear that bubbles and lower panels had not reset and risking contaminated pilot experiences. A participant reset must create a genuinely blank first-use state while preserving a deliberate way to restore samples for demonstrations.
+
+**Affected Files:**
+
+- [Open Loops UX](UX.md)
+- [Business DNA overview](Business%20DNA/README.md)
+- Application home, settings, storage, participant-identity, and calibration API code
+- Authenticated server API and reset regression tests
+
+**Follow-Up:** Verify the reset in the target browser, confirm all three home panels are empty, and then restart Tony's calibration as a new participant.
+
 ## Related Documents
 
 - [Open Loops Vision](OPEN_LOOPS_VISION.md)

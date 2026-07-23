@@ -15,6 +15,11 @@ export function participantScopedStorageKey(baseKey: string, participantIdentity
   return `${baseKey}.${participantIdentity}`;
 }
 
+export function clearParticipantIdentity() {
+  if (!canUseLocalStorage()) return;
+  window.localStorage.removeItem(participantIdentityStorageKey);
+}
+
 function canUseLocalStorage() {
   return typeof window !== "undefined" && "localStorage" in window;
 }
