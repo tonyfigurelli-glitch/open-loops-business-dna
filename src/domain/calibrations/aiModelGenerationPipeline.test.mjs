@@ -70,7 +70,7 @@ function validOutput(evidencePackage, overrides = {}) {
   const narrativeBodies = [
     "You are building a neighborhood business around practical care for customers, while trying to make growth durable rather than merely fast.",
     "Your strongest pattern is commercial curiosity paired with a willingness to adjust once you have enough information. That keeps decisions moving without pretending every uncertainty is resolved.",
-    `Your stated aim—“${answer("q04")}”—points toward one useful focus: test whether execution capacity is limiting progress before changing the offer itself.`,
+    "The strongest leverage point is to test whether execution capacity is limiting the recurring-revenue goal before changing the offer itself.",
     "Customer attentiveness appears to be a real strength. Its possible hidden cost is that daily responsiveness can consume the space needed to develop recurring work.",
     "The business consequence may be a tension between serving today's customers well and creating enough protected capacity for tomorrow's revenue.",
     "A respectful challenge is to avoid treating the task you dislike most as the explanation for everything. Demand, pricing, and capacity still deserve comparison.",
@@ -104,7 +104,7 @@ function validOutput(evidencePackage, overrides = {}) {
       ],
       unknowns: ["Pricing and profitability remain unknown."],
     },
-    importantDirectQuotes: [{ questionId: "q04", quote: answer("q04") }],
+    importantDirectQuotes: [],
     sevenDayExperiment: {
       action: "Run one reversible business-process test within seven days.",
       hypothesis: "The test will show whether execution capacity affects the priority.",
@@ -279,14 +279,15 @@ test("requires an applied practice to connect two independent answers", () => {
   assert.match(validation.errors.join(" "), /two independent evidence references/i);
 });
 
-test("requires declared direct quotes to appear naturally in participant-facing prose", () => {
+test("rejects direct quotes from participant answers in participant-facing prose", () => {
   const evidencePackage = packageFor();
   const output = validOutput(evidencePackage);
-  output.profileSections[2].body = "The stated growth priority deserves a focused capacity test before it becomes a broad theory.";
+  output.importantDirectQuotes = [{ questionId: "q04", quote: answerValues.q04 }];
+  output.profileSections[2].body = `The stated aim “${answerValues.q04}” deserves a focused capacity test.`;
 
   assert.match(
     pipeline.validateAIModelOutput(output, evidencePackage).errors.join(" "),
-    /direct quotes must be used naturally/i,
+    /must not put participant language in quotation marks|must remain empty|reproduces a participant answer/i,
   );
 });
 
@@ -350,7 +351,7 @@ test("corrects the live section-4 and section-7 label mismatch and preserves bot
     "NARRATIVE_RAW_FIELD_LABEL",
     "NARRATIVE_TOO_LONG",
   ]);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@2.0.0");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@2.1.0");
 });
 
 test("rejects an unsupported evidence ID", () => {
@@ -495,6 +496,7 @@ test("retries once after validation failure and preserves provenance", async () 
     assert.match(request.systemInstructions, /section 7, write only a two-to-four-sentence participant-facing summary/i);
     assert.match(request.systemInstructions, /Never explain an internal confidence rating/i);
     assert.match(request.systemInstructions, /fortune-teller language are invalid/i);
+    assert.match(request.systemInstructions, /Do not reproduce participant answers verbatim/i);
     assert.match(request.systemInstructions, /business_dna_foundational_management_library@1\.0\.0/i);
     assert.match(request.systemInstructions, /measurable-priority/i);
     assert.equal(
@@ -514,7 +516,7 @@ test("retries once after validation failure and preserves provenance", async () 
   });
   assert.equal(result.provenance.generatorType, "ai_assisted");
   assert.equal(result.provenance.retryCount, 1);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@2.0.0");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@2.1.0");
   assert.equal(result.provenance.validationResult.valid, true);
   assert.equal(result.provenance.evidencePackageHash.length, 64);
   assert.equal(result.originalStructuredOutput.profileSections.length, 10);

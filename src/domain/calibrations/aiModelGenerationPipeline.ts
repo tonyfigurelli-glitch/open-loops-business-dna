@@ -22,7 +22,7 @@ export { buildCalibrationEvidencePackage } from "./calibrationEvidencePackage";
 export type { CalibrationDefinition, CalibrationEvidenceAnswer, CalibrationEvidencePackage } from "./calibrationEvidencePackage";
 
 export const AI_GENERATION_INSTRUCTION_VERSION =
-  "small_business_owner_v1.4_ai_generation@2.0.0";
+  "small_business_owner_v1.4_ai_generation@2.1.0";
 
 export type AIModelOutput = {
   profileSections: Array<{
@@ -389,6 +389,12 @@ export function validateAIModelOutput(
     }
   };
   sections.forEach((section, index) => validateReferences(section?.evidenceReferences, `Section ${index + 1}`));
+  sections.slice(0, 8).forEach((section, index) => {
+    const independent = independentEvidenceCount(section?.evidenceReferences, validAnswers);
+    if (independent < 2) {
+      errors.push(`Profile section ${index + 1} requires two independent evidence references for synthesis.`);
+    }
+  });
   validateReferences(output.supportingEvidenceReferences, "Supporting evidence");
   for (const conclusion of Array.isArray(output.majorConclusions) ? output.majorConclusions : []) {
     validateReferences(conclusion?.evidenceReferences, "Major conclusion");
@@ -490,7 +496,7 @@ function validationFailureCode(error: string) {
   if (/must be concise/i.test(error)) return "NARRATIVE_TOO_LONG";
   if (/same insight|same narrative sentence/i.test(error)) return "NARRATIVE_REPETITION";
   if (/raw-answer dump|complete dump/i.test(error)) return "NARRATIVE_ANSWER_DUMP";
-  if (/verbatim without declaring|direct quotes must be used naturally/i.test(error)) return "NARRATIVE_QUOTE_USE";
+  if (/quotation marks|reproduces a participant answer|lightly rewords|important direct quotes must remain empty/i.test(error)) return "NARRATIVE_ANSWER_ECHO";
   if (/repeat canonical section titles/i.test(error)) return "NARRATIVE_CANONICAL_TITLE";
   if (/clinical or medical advice/i.test(error)) return "SAFETY_CLINICAL_ADVICE";
   if (/prohibited prior information/i.test(error)) return "CONTEXT_ISOLATION_VIOLATION";
@@ -562,7 +568,8 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "The ten profileSections must retain the exact supplied canonical IDs, titles, and order.",
     "Each profileSections.body must contain only polished narrative written directly for the participant. Do not expose calibration titles, the phrase Rapid Connection Narrator, participant code, dates, estimated completion time, context-isolation confirmations, evidence-source labels, question IDs, raw field labels, internal instructions, prompt text, or a list/dump of participant answers.",
     "Keep evidence references only in evidenceReferences and the other structured evidence fields. Never write question IDs or evidence labels inside participant-facing prose.",
-    "Use an exact direct quote only when it materially sharpens the reflection, list it in importantDirectQuotes, and integrate it naturally rather than presenting it as source data.",
+    "Do not reproduce participant answers verbatim in profileSections, even as declared quotes. Do not put quotation marks around participant language. Original answers remain available in the inspectable record; participant-facing prose must synthesize them.",
+    "Keep importantDirectQuotes empty for this participant-facing generation version. Preserve exact statements only in classifications.directStatements and the stored original-answer record.",
     "Across the complete narrative, follow this sequence: identity → strength → possible hidden cost → business consequence → leverage point → respectful challenge → seven-day experiment → reason to continue.",
     "Write with perceptive, grounded, concise, nonclinical, participant-specific language. Avoid generic praise, repeated insights, unsupported certainty, diagnostic claims, and consultant-report language.",
     "INSIGHT AND MANAGEMENT-PRACTICE CONTRACT:",
@@ -570,7 +577,7 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "A major insight must connect at least two independent answers and state a business consequence. It must add an inference that the participant did not already state; paraphrasing, flattering restatement, personality labeling, and fortune-teller language are invalid.",
     "Select one to three practices only when the evidence fits their use conditions. Explain the fit, retain a caution against misapplication, state what would disprove the inference, and connect the practice to the seven-day experiment.",
     "Do not recommend a book or present an author's framework as doctrine. Adapt the principle to this business, this owner, and this moment.",
-    "Prefer two to four short sentences per section and no more than two short paragraphs. Use plain language and check that participant answers fit grammatically into every sentence; when they do not, quote the answer naturally instead of forcing it into the sentence.",
+    "Prefer two to four short sentences per section and no more than two short paragraphs. Use plain language, synthesize concepts across answers, and never solve a grammar problem by pasting or quoting participant wording.",
     "Keep uncertainty natural and participant-facing. Use phrases such as ‘may,’ ‘appears,’ ‘one possibility,’ or ‘we do not know yet’ where warranted.",
     "Never explain an internal confidence rating, evidence count, classification, validation decision, or evaluation rationale inside a profileSections.body. Do not write phrases such as ‘moderate-confidence interpretation,’ ‘this is rated medium confidence because,’ or ‘the evidence supports this assessment.’ Put explicit confidence and its rationale only in confidenceLevel and confidenceRationale.",
     "Treat section titles as presentation chrome: do not repeat any canonical section title inside its body.",
@@ -612,7 +619,7 @@ function validateParticipantFacingNarrative(
   errors: string[],
 ) {
   const bodies = sections.map((section) => typeof section?.body === "string" ? section.body : "");
-  const allowedQuotes = new Set(
+  const declaredQuotes = new Set(
     importantDirectQuotes
       .map((item) => typeof item?.quote === "string" ? normalizeNarrative(item.quote) : "")
       .filter(Boolean),
@@ -631,6 +638,7 @@ function validateParticipantFacingNarrative(
     const prohibited = participantFacingProhibitedPattern(body);
     if (prohibited) errors.push(`${label} contains internal or non-narrative material (${prohibited}).`);
     if (body.length > 1_400) errors.push(`${label} must be concise participant-facing narrative.`);
+    if (/[“”"]/.test(body)) errors.push(`${label} must not put participant language in quotation marks.`);
     if (seenBodies.has(normalizedBody)) errors.push("Participant-facing sections must not repeat the same insight.");
     seenBodies.add(normalizedBody);
 
@@ -649,14 +657,20 @@ function validateParticipantFacingNarrative(
       errors.push(`${label} contains a raw-answer dump instead of participant-facing narrative.`);
     }
     for (const answer of matchedAnswers) {
-      if (!allowedQuotes.has(normalizeNarrative(answer.exactWording))) {
-        errors.push(`${label} reproduces an answer verbatim without declaring a material direct quote.`);
-        break;
-      }
+      errors.push(`${label} reproduces a participant answer instead of synthesizing it.`);
+      break;
     }
 
     for (const sentence of body.split(/(?<=[.!?])\s+/)) {
       const normalizedSentence = normalizeNarrative(sentence);
+      if (isAnswerEcho(sentence, new Map(
+        evidencePackage.participantAnswers
+          .filter((answer) => answer.meaningful)
+          .map((answer) => [answer.questionId, answer]),
+      ))) {
+        errors.push(`${label} lightly rewords a participant answer instead of adding a cross-answer inference.`);
+        break;
+      }
       if (normalizedSentence.length < 45) continue;
       if (seenSentences.has(normalizedSentence)) {
         errors.push("Participant-facing sections must not repeat the same narrative sentence.");
@@ -669,11 +683,8 @@ function validateParticipantFacingNarrative(
   if (exactAnswerAppearances >= Math.max(5, Math.ceil(longAnswers.length / 2))) {
     errors.push("Participant-facing sections must not contain a complete dump of participant answers.");
   }
-  for (const quote of allowedQuotes) {
-    const containingBody = bodies.find((body) => normalizeNarrative(body).includes(quote));
-    if (!containingBody || normalizeNarrative(containingBody) === quote) {
-      errors.push("Important direct quotes must be used naturally inside participant-facing narrative.");
-    }
+  if (declaredQuotes.size) {
+    errors.push("Important direct quotes must remain empty; original answers belong only in the inspectable record.");
   }
 }
 

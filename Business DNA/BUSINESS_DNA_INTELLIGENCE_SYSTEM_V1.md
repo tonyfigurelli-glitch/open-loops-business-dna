@@ -104,7 +104,11 @@ This isolation is appropriate for temporary controlled pilots. Production deploy
 
 ## Output And Provenance
 
-AI-assisted generation instruction version: `small_business_owner_v1.4_ai_generation@2.0.0`
+AI-assisted generation instruction version: `small_business_owner_v1.4_ai_generation@2.1.0`
+
+Participant-facing narrative must not reproduce an answer verbatim, place participant wording in quotation marks, or use a lightly reworded answer as analysis. Exact answers remain available in the collapsed inspectable record. Sections 1 through 8 must each be backed by at least two independent evidence references and must express a connection, consequence, tension, or test that is not present in either answer alone.
+
+The deterministic fallback follows the same presentation rule. It uses cross-answer signals such as role breadth, team scale, decision threshold, opportunity/execution balance, sources of energy, and the relationship between commercial and team goals. It must prefer an honest statement of insufficient evidence over filling a section with an answer summary.
 
 The generated result stores the management-library version and applied-practice records alongside the existing evidence, confidence, uncertainty, experiment, original structured output, validation attempts, and generation provenance.
 
@@ -119,6 +123,8 @@ External pilot testing may resume only when:
 - each accepted AI profile applies one to three canonical practices
 - every applied practice uses at least two independent answers
 - obvious answer echoes and unknown practice IDs are rejected
+- no participant-facing section uses quotation marks to replay participant language
+- deterministic fallback synthesizes cross-answer signals instead of inserting answer text into templates
 - the participant sees a specific business consequence and useful experiment
 - deterministic fallback remains safe and clearly provisional
 - all calibration, server, recovery, and production-readiness tests pass

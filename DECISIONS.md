@@ -794,6 +794,20 @@ Every entry should include:
 
 **Follow-Up:** Verify the reset in the target browser, confirm all three home panels are empty, and then restart Tony's calibration as a new participant.
 
+### 2026-07-22: Prohibit Answer Replay In Participant-Facing Business DNA
+
+**Decision:** Participant-facing Business DNA sections must not reproduce participant answers verbatim, place answer wording in quotation marks, or present a lightly reworded answer as insight. Exact answers remain available in the collapsed inspectable record. Sections 1 through 8 require at least two independent evidence references. The deterministic fallback must synthesize cross-answer operating signals and must state when evidence is insufficient instead of filling a section with a transcript summary.
+
+**Rationale:** Tony's live restaurant calibration showed that the prior deterministic fallback satisfied storage and structural requirements while still replaying his own language. The quotation marks made the lack of interpretation especially visible. A profile is useful only when it adds a defensible connection, business consequence, or experiment that the participant did not already state.
+
+**Affected Files:**
+
+- [Business DNA intelligence specification](Business%20DNA/BUSINESS_DNA_INTELLIGENCE_SYSTEM_V1.md)
+- [Business DNA overview](Business%20DNA/README.md)
+- Deterministic profile generation, AI instructions, validators, and regression tests
+
+**Follow-Up:** Regenerate Tony's restaurant profile and judge whether the new synthesis adds useful understanding before any external pilot resumes.
+
 ## Related Documents
 
 - [Open Loops Vision](OPEN_LOOPS_VISION.md)
