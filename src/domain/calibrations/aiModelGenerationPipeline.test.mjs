@@ -23,9 +23,14 @@ const evidenceCompiled = ts.transpileModule(evidenceSource, {
   compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 const evidenceModuleUrl = `data:text/javascript;base64,${Buffer.from(evidenceCompiled).toString("base64")}`;
+const practiceLibrarySource = readFileSync(new URL("../businessPracticeLibrary.ts", import.meta.url), "utf8");
+const practiceLibraryCompiled = ts.transpileModule(practiceLibrarySource, {
+  compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 },
+}).outputText;
+const practiceLibraryModuleUrl = `data:text/javascript;base64,${Buffer.from(practiceLibraryCompiled).toString("base64")}`;
 const compiled = ts.transpileModule(source.replaceAll(
   '"./calibrationEvidencePackage"', JSON.stringify(evidenceModuleUrl),
-), {
+).replaceAll('"../businessPracticeLibrary"', JSON.stringify(practiceLibraryModuleUrl)), {
   compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 },
 }).outputText;
 const pipeline = await import(
@@ -113,6 +118,16 @@ function validOutput(evidencePackage, overrides = {}) {
     majorConclusions: [
       { claim: "Execution capacity may affect the priority.", evidenceReferences: ["q04", "q08"] },
     ],
+    appliedPractices: [{
+      practiceId: "measurable-priority",
+      evidenceReferences: ["q04", "q08"],
+      inferredConnection: "The desired revenue outcome and excess idea flow may be competing for a shared definition of progress.",
+      businessConsequence: "Work can stay active while the recurring-revenue priority receives too little completed attention.",
+      fitExplanation: "A single observable result can distinguish productive execution from activity.",
+      caution: "The measure should not reward volume while hiding profitability or team strain.",
+      whatWouldDisproveIt: "A clear measure already governs weekly choices and the priority still does not move.",
+      experimentConnection: "The seven-day test records movement against the chosen result.",
+    }],
     safetyFlags: [],
   };
   return deepMerge(base, overrides);
@@ -241,6 +256,29 @@ test("rejects generic praise, repeated insights, unsupported certainty, and repo
   assert.match(errors, /must not repeat/i);
 });
 
+test("rejects fortune-teller paraphrase and unknown management practices", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  output.appliedPractices[0].practiceId = "invented-best-practice";
+  output.appliedPractices[0].inferredConnection = answerValues.q08;
+
+  const validation = pipeline.validateAIModelOutput(output, evidencePackage);
+  assert.equal(validation.valid, false);
+  assert.match(validation.errors.join(" "), /unknown practice ID/i);
+  assert.match(validation.errors.join(" "), /merely echoes a participant answer/i);
+  assert.ok(validation.codes.includes("PRACTICE_GROUNDING_REJECTED"));
+});
+
+test("requires an applied practice to connect two independent answers", () => {
+  const evidencePackage = packageFor();
+  const output = validOutput(evidencePackage);
+  output.appliedPractices[0].evidenceReferences = ["q04", "q04"];
+
+  const validation = pipeline.validateAIModelOutput(output, evidencePackage);
+  assert.equal(validation.valid, false);
+  assert.match(validation.errors.join(" "), /two independent evidence references/i);
+});
+
 test("requires declared direct quotes to appear naturally in participant-facing prose", () => {
   const evidencePackage = packageFor();
   const output = validOutput(evidencePackage);
@@ -312,7 +350,7 @@ test("corrects the live section-4 and section-7 label mismatch and preserves bot
     "NARRATIVE_RAW_FIELD_LABEL",
     "NARRATIVE_TOO_LONG",
   ]);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@1.0.0");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@2.0.0");
 });
 
 test("rejects an unsupported evidence ID", () => {
@@ -456,6 +494,9 @@ test("retries once after validation failure and preserves provenance", async () 
     assert.match(request.systemInstructions, /rewrite it as natural prose without labels/i);
     assert.match(request.systemInstructions, /section 7, write only a two-to-four-sentence participant-facing summary/i);
     assert.match(request.systemInstructions, /Never explain an internal confidence rating/i);
+    assert.match(request.systemInstructions, /fortune-teller language are invalid/i);
+    assert.match(request.systemInstructions, /business_dna_foundational_management_library@1\.0\.0/i);
+    assert.match(request.systemInstructions, /measurable-priority/i);
     assert.equal(
       request.systemInstructions.lastIndexOf("RENDERING OVERRIDES FOR THE FROZEN SPECIFICATION") >
         request.systemInstructions.lastIndexOf("# 12. REQUIRED PROFILE STRUCTURE"),
@@ -473,7 +514,7 @@ test("retries once after validation failure and preserves provenance", async () 
   });
   assert.equal(result.provenance.generatorType, "ai_assisted");
   assert.equal(result.provenance.retryCount, 1);
-  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@1.0.0");
+  assert.equal(result.provenance.promptInstructionVersion, "small_business_owner_v1.4_ai_generation@2.0.0");
   assert.equal(result.provenance.validationResult.valid, true);
   assert.equal(result.provenance.evidencePackageHash.length, 64);
   assert.equal(result.originalStructuredOutput.profileSections.length, 10);

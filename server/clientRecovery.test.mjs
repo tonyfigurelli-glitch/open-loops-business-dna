@@ -94,6 +94,19 @@ test("local-storage recovery retains generation attempts", () => {
   assert.match(storage, /generationAttempts: session\.generationAttempts \?\? \[\]/);
 });
 
+test("development participants use isolated browser identities and scoped local storage", () => {
+  const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
+  const storage = readFileSync(new URL("../src/storage/prototypeStorage.ts", import.meta.url), "utf8");
+  const identity = readFileSync(new URL("../src/storage/participantIdentity.ts", import.meta.url), "utf8");
+
+  assert.match(app, /participantUserId = `prototype-\$\{participantIdentity\}`/);
+  assert.doesNotMatch(app, /establishCalibrationSession\("local-prototype-user"\)/);
+  assert.match(storage, /participantScopedStorageKey\(prototypeStorageKey, participantIdentity\)/);
+  assert.match(identity, /crypto\?\.randomUUID/);
+  assert.match(source, /session\.userId === userId/);
+  assert.match(source, /await signOutCalibrationSession\(\)/);
+});
+
 test("local migration filter uses the exact canonical identity", async () => {
   const calls = [];
   const originalFetch = globalThis.fetch;

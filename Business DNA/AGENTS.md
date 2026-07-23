@@ -1,7 +1,7 @@
 # Business DNA Instructions
 
 Status: Approved Working Direction
-Last Updated: 2026-07-21
+Last Updated: 2026-07-22
 Owner: Tony
 
 ## Purpose
@@ -154,6 +154,14 @@ Competing explanations must be considered when evidence is incomplete.
 
 Confidence must be explicit and revisable.
 
+## Foundational Management Practice Requirements
+
+The approved Business DNA Foundational Management Library Version 1.0 and its governing intelligence contract are defined in [Business DNA Intelligence System Version 1](BUSINESS_DNA_INTELLIGENCE_SYSTEM_V1.md).
+
+Business DNA must move beyond paraphrasing participant answers. An accepted major insight must connect at least two independent answers, identify a likely business consequence, match only an applicable canonical management practice, retain a caution and disconfirming condition, and produce a measurable experiment.
+
+The eleven approved books are authoritative foundations, not automatic prescriptions. The application must use normalized practice records rather than copyrighted book text or indiscriminate generic business advice.
+
 ## Memory and Data Requirements
 
 Business DNA must never depend on an AI model's conversational memory as the sole location of business knowledge.
@@ -224,6 +232,7 @@ A generated response or participant profile is never itself a canonical product 
 - [Small Business Owner Initial Calibration Version 1.3 JSON](calibrations/small-business-owner/v1.3.json) — derived canonical machine-readable definition
 - [Small Business Owner Initial Calibration Version 1.4](calibrations/small-business-owner/SMALL_BUSINESS_OWNER_CALIBRATION_V1_4.md) — current canonical specification
 - [Small Business Owner Initial Calibration Version 1.4 JSON](calibrations/small-business-owner/v1.4.json) — current machine-readable override
+- [Business DNA Intelligence System Version 1](BUSINESS_DNA_INTELLIGENCE_SYSTEM_V1.md) — approved intelligence, management-practice, anti-paraphrase, and participant-isolation contract
 
 ## Open Questions
 

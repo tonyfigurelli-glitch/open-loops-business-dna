@@ -14,6 +14,7 @@ import {
   type GenerationDisplayState,
 } from "../storage/calibrationApi";
 import { deduplicateUncertaintyItems } from "../domain/calibrations/aiModelGenerationPipeline";
+import { businessPracticeById } from "../domain/businessPracticeLibrary";
 
 type BusinessCalibrationProps = {
   session: CalibrationSession;
@@ -287,6 +288,9 @@ function CompletedCalibration({
     displayedGeneration?.possibleDisconfirmingEvidence ?? session.possibleDisconfirmingEvidence,
   );
   const displayedExperiment = displayedGeneration?.proposedExperiment ?? session.proposedExperiment;
+  const displayedPractices = displayedGeneration?.appliedPractices ?? session.appliedPractices ?? [];
+  const displayedLibraryVersion = displayedGeneration?.managementLibraryVersion ??
+    session.managementLibraryVersion;
   const canRetry = session.generationProvenance?.generatorType === "deterministic_fallback"
     && !successfulAttempt;
   const questionById = new Map(
@@ -339,6 +343,20 @@ function CompletedCalibration({
             <UncertaintyList items={displayedUnknowns} />
             <p><strong>Possible disconfirming evidence</strong></p>
             <UncertaintyList items={displayedDisconfirmingEvidence} />
+            {displayedPractices.length ? (
+              <>
+                <p><strong>Management practices applied</strong></p>
+                <ul className="interpretation-list">
+                  {displayedPractices.map((applied) => (
+                    <li key={applied.practiceId}>
+                      <strong>{businessPracticeById.get(applied.practiceId)?.name ?? applied.practiceId}:</strong>{" "}
+                      {applied.fitExplanation} {applied.businessConsequence}
+                    </li>
+                  ))}
+                </ul>
+                {displayedLibraryVersion ? <p className="source-hash">{displayedLibraryVersion}</p> : null}
+              </>
+            ) : null}
           </div>
         </details>
         <details>

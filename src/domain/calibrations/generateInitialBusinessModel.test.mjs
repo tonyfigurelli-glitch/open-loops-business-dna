@@ -18,6 +18,9 @@ const source = readFileSync(
 ).replace(
   'import { smallBusinessOwnerCalibration } from "./smallBusinessOwnerCalibration";',
   `const smallBusinessOwnerCalibration = ${JSON.stringify(definition)};`,
+).replace(
+  'import { BUSINESS_PRACTICE_LIBRARY_VERSION } from "../businessPracticeLibrary";',
+  'const BUSINESS_PRACTICE_LIBRARY_VERSION = "business_dna_foundational_management_library@1.0.0";',
 );
 const compiled = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ES2022, target: ts.ScriptTarget.ES2022 },

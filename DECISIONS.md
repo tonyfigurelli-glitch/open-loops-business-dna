@@ -36,6 +36,28 @@ Every entry should include:
 
 ## Log
 
+### 2026-07-22: Ground Business DNA Insight In Curated Management Practice
+
+**Decision:** Establish the eleven-title Business DNA Foundational Management Library Version 1.0 and require the calibration intelligence layer to connect at least two independent answers, state a new inference and business consequence, apply one to three fitting canonical management practices, retain a caution and disconfirming condition, and connect the result to a measurable seven-day experiment. Reject obvious answer echoes, invented practices, generic praise, and fortune-teller-style paraphrase. Replace the shared hard-coded development participant with a durable per-browser identity and participant-scoped local recovery state.
+
+**Rationale:** The first phone walkthrough proved the interface could complete a calibration but exposed two unacceptable failures: Tony's completed profile appeared in what was intended to be a fresh preview, and the generated profile often rephrased direct answers without producing new business understanding. Evidence discipline alone did not guarantee useful inference. A curated practice layer supplies an intellectual foundation, while structured fit, consequence, caution, and disconfirmation fields make shallow agreement harder to pass as insight.
+
+**Affected Files:**
+
+- [Business DNA Intelligence System Version 1](Business%20DNA/BUSINESS_DNA_INTELLIGENCE_SYSTEM_V1.md)
+- [Business DNA instructions](Business%20DNA/AGENTS.md)
+- [Business DNA overview](Business%20DNA/README.md)
+- [Business practice library](src/domain/businessPracticeLibrary.ts)
+- [AI generation pipeline](src/domain/calibrations/aiModelGenerationPipeline.ts)
+- [Deterministic fallback](src/domain/calibrations/generateInitialBusinessModel.ts)
+- [Participant identity](src/storage/participantIdentity.ts)
+- [Prototype storage](src/storage/prototypeStorage.ts)
+- [Calibration authentication client](src/storage/calibrationApi.ts)
+- [Application identity wiring](src/App.tsx)
+- Calibration, recovery, and server regression tests
+
+**Follow-Up:** Rebuild and run Tony's calibration against the Version 2.0 generation contract. External pilot enrollment remains paused until the clean-browser isolation check passes and Tony judges the resulting profile genuinely useful rather than merely agreeable.
+
 ### 2026-07-22: Make Saved Business DNA Work Visible From Home
 
 **Decision:** Replace the one-time Business DNA start tile with a state-driven continuity card after a calibration exists. The card prioritizes unfinished sessions, shows onboarding or three-question feedback progress, reopens completed profiles, reports saved-session count, and offers a new calibration only after the active session is complete. Present completed profiles immediately as the calibration payoff, with a saved summary and numbered ten-section narrative before detailed evidence and provenance disclosures.

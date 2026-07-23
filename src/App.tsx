@@ -57,6 +57,7 @@ import {
   retryCalibrationGeneration,
   syncCalibrationSession,
 } from "./storage/calibrationApi";
+import { getOrCreateParticipantIdentity } from "./storage/participantIdentity";
 
 type Surface = "Home" | "Loops" | "Lumi" | "Universe" | "Me";
 type ActiveSurface = Surface | "ThoughtCapture" | "ThoughtLibrary" | "Calibration";
@@ -89,17 +90,22 @@ const seedPrototypeState: PrototypeAppState = {
   chatMessages: chatMessagesSeed,
 };
 
+const participantIdentity = getOrCreateParticipantIdentity();
+const participantUserId = `prototype-${participantIdentity}`;
+
 function App() {
   const [activeSurface, setActiveSurface] = useState<ActiveSurface>("Home");
   const [prototypeState, setPrototypeState] = useState<PrototypeAppState>(() =>
-    loadPrototypeState(seedPrototypeState),
+    loadPrototypeState(seedPrototypeState, participantIdentity),
   );
   const [selectedLoopId, setSelectedLoopId] = useState(openLoopsSeed[0]?.id ?? "");
   const [activeChatSessionId, setActiveChatSessionId] = useState(() =>
-    getNewestChatSessionId(loadPrototypeState(seedPrototypeState).chatSessions),
+    getNewestChatSessionId(loadPrototypeState(seedPrototypeState, participantIdentity).chatSessions),
   );
   const [activeCalibrationSessionId, setActiveCalibrationSessionId] = useState(() =>
-    selectCalibrationToOpen(loadPrototypeState(seedPrototypeState).calibrationSessions)?.id ?? "",
+    selectCalibrationToOpen(
+      loadPrototypeState(seedPrototypeState, participantIdentity).calibrationSessions,
+    )?.id ?? "",
   );
   const durableStorageReady = useRef(false);
   const previousCalibrationWriteFingerprints = useRef(new Map<string, string>());
@@ -120,7 +126,7 @@ function App() {
     let active = true;
     void (async () => {
       try {
-        if (!await establishCalibrationSession("local-prototype-user")) return;
+        if (!await establishCalibrationSession(participantUserId)) return;
         const sessions = await migrateAndLoadCalibrationSessions(calibrationSessions);
         if (!active || !sessions) return;
         durableStorageReady.current = true;
@@ -134,7 +140,7 @@ function App() {
       }
     })();
     return () => { active = false; };
-    // This migration runs once for the local prototype identity.
+    // This migration runs once for this browser's isolated prototype identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -526,9 +532,9 @@ function App() {
   }
 
   function handleResetPrototypeData() {
-    clearPrototypeState();
+    clearPrototypeState(participantIdentity);
     setPrototypeState(seedPrototypeState);
-    savePrototypeState(seedPrototypeState);
+    savePrototypeState(seedPrototypeState, participantIdentity);
     setSelectedLoopId(openLoopsSeed[0]?.id ?? "");
     setActiveChatSessionId(getNewestChatSessionId(chatSessionsSeed));
     setActiveSurface("Home");
@@ -537,7 +543,7 @@ function App() {
   function updatePrototypeState(updater: (currentState: PrototypeAppState) => PrototypeAppState) {
     setPrototypeState((currentState) => {
       const nextState = updater(currentState);
-      savePrototypeState(nextState);
+      savePrototypeState(nextState, participantIdentity);
       return nextState;
     });
   }

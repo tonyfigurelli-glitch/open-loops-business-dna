@@ -95,6 +95,16 @@ function validAIOutput(evidencePackage) {
       whatResultWouldTeach: "Whether capacity affects the priority.",
     },
     majorConclusions: [{ claim: "Capacity may affect the priority.", evidenceReferences: ["q04", "q08"] }],
+    appliedPractices: [{
+      practiceId: "measurable-priority",
+      evidenceReferences: ["q04", "q08"],
+      inferredConnection: "The stated priority and the volume of active work may be competing for a shared definition of progress.",
+      businessConsequence: "Activity can continue without producing the outcome the owner intends.",
+      fitExplanation: "One observable result would make the tradeoff testable.",
+      caution: "The measure must not hide profitability or team strain.",
+      whatWouldDisproveIt: "A clear weekly measure already governs choices without improving the outcome.",
+      experimentConnection: "The seven-day test records movement against the chosen result.",
+    }],
     safetyFlags: [],
   };
 }

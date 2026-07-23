@@ -77,6 +77,8 @@ export function saveCalibrationAnswer(
     directStatements: result.directStatements,
     reasonableInferences: result.reasonableInferences,
     tentativeHypotheses: result.tentativeHypotheses,
+    appliedPractices: result.appliedPractices,
+    managementLibraryVersion: result.managementLibraryVersion,
   };
 }
 

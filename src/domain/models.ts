@@ -161,6 +161,17 @@ export type CalibrationGenerationResult = {
   directStatements?: Array<{ questionId: string; statement: string }>;
   reasonableInferences?: Array<{ statement: string; evidenceReferences: string[] }>;
   tentativeHypotheses?: Array<{ statement: string; evidenceReferences: string[] }>;
+  appliedPractices?: Array<{
+    practiceId: string;
+    evidenceReferences: string[];
+    inferredConnection: string;
+    businessConsequence: string;
+    fitExplanation: string;
+    caution: string;
+    whatWouldDisproveIt: string;
+    experimentConnection: string;
+  }>;
+  managementLibraryVersion?: string;
 };
 
 export type CalibrationGenerationProvenance = {
@@ -232,6 +243,8 @@ export type CalibrationSession = {
   directStatements?: CalibrationGenerationResult["directStatements"];
   reasonableInferences?: CalibrationGenerationResult["reasonableInferences"];
   tentativeHypotheses?: CalibrationGenerationResult["tentativeHypotheses"];
+  appliedPractices?: CalibrationGenerationResult["appliedPractices"];
+  managementLibraryVersion?: string;
   generationProvenance?: CalibrationGenerationProvenance;
   originalStructuredGenerationOutput?: Record<string, unknown>;
   deterministicFallbackOutput?: CalibrationGenerationResult;

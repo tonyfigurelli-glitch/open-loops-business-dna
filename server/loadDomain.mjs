@@ -21,11 +21,13 @@ export async function loadCalibrationDomain() {
   };
   const evidenceUrl = new URL("../src/domain/calibrations/calibrationEvidencePackage.ts", import.meta.url);
   const evidenceModuleUrl = await transpileToDataUrl(evidenceUrl);
+  const practiceLibraryUrl = new URL("../src/domain/businessPracticeLibrary.ts", import.meta.url);
+  const practiceLibraryModuleUrl = await transpileToDataUrl(practiceLibraryUrl);
   const pipelineUrl = new URL("../src/domain/calibrations/aiModelGenerationPipeline.ts", import.meta.url);
   const pipelineSource = (await readFile(pipelineUrl, "utf8")).replaceAll(
     '"./calibrationEvidencePackage"',
     JSON.stringify(evidenceModuleUrl),
-  );
+  ).replaceAll('"../businessPracticeLibrary"', JSON.stringify(practiceLibraryModuleUrl));
   const pipeline = await transpileAndImport(pipelineUrl, pipelineSource);
   const generatorUrl = new URL(
     "../src/domain/calibrations/generateInitialBusinessModel.ts",
@@ -35,6 +37,9 @@ export async function loadCalibrationDomain() {
   generatorSource = generatorSource.replace(
     /import \{ smallBusinessOwnerCalibration \} from "\.\/smallBusinessOwnerCalibration";/,
     `const smallBusinessOwnerCalibration = ${JSON.stringify(canonical)};`,
+  ).replace(
+    /import \{ BUSINESS_PRACTICE_LIBRARY_VERSION \} from "\.\.\/businessPracticeLibrary";/,
+    `const BUSINESS_PRACTICE_LIBRARY_VERSION = "business_dna_foundational_management_library@1.0.0";`,
   );
   const generator = await transpileAndImport(generatorUrl, generatorSource);
   return { canonical, pipeline, generator };

@@ -7,6 +7,7 @@ import type {
   OpenLoop,
   Thought,
 } from "../domain/models";
+import { participantScopedStorageKey } from "./participantIdentity";
 
 export const prototypeStorageKey = "open-loops.prototype-state.v1";
 
@@ -20,12 +21,17 @@ export type PrototypeAppState = {
   chatMessages: ChatMessage[];
 };
 
-export function loadPrototypeState(seedState: PrototypeAppState): PrototypeAppState {
+export function loadPrototypeState(
+  seedState: PrototypeAppState,
+  participantIdentity = "legacy",
+): PrototypeAppState {
   if (!canUseLocalStorage()) {
     return seedState;
   }
 
-  const storedState = window.localStorage.getItem(prototypeStorageKey);
+  const scopedKey = participantScopedStorageKey(prototypeStorageKey, participantIdentity);
+  const storedState = window.localStorage.getItem(scopedKey) ??
+    window.localStorage.getItem(prototypeStorageKey);
 
   if (!storedState) {
     return seedState;
@@ -96,6 +102,8 @@ function normalizeCalibrationSession(
     directStatements: session.directStatements,
     reasonableInferences: session.reasonableInferences,
     tentativeHypotheses: session.tentativeHypotheses,
+    appliedPractices: session.appliedPractices,
+    managementLibraryVersion: session.managementLibraryVersion,
     generationProvenance: session.generationProvenance,
     originalStructuredGenerationOutput: session.originalStructuredGenerationOutput,
     deterministicFallbackOutput: session.deterministicFallbackOutput,
@@ -106,20 +114,23 @@ function normalizeCalibrationSession(
   };
 }
 
-export function savePrototypeState(state: PrototypeAppState) {
+export function savePrototypeState(state: PrototypeAppState, participantIdentity = "legacy") {
   if (!canUseLocalStorage()) {
     return;
   }
 
-  window.localStorage.setItem(prototypeStorageKey, JSON.stringify(state));
+  window.localStorage.setItem(
+    participantScopedStorageKey(prototypeStorageKey, participantIdentity),
+    JSON.stringify(state),
+  );
 }
 
-export function clearPrototypeState() {
+export function clearPrototypeState(participantIdentity = "legacy") {
   if (!canUseLocalStorage()) {
     return;
   }
 
-  window.localStorage.removeItem(prototypeStorageKey);
+  window.localStorage.removeItem(participantScopedStorageKey(prototypeStorageKey, participantIdentity));
 }
 
 function canUseLocalStorage() {

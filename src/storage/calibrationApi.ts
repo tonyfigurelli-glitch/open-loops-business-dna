@@ -16,7 +16,12 @@ const INITIAL_GENERATION_CLIENT_TIMEOUT_MS = 45_000;
 
 export async function establishCalibrationSession(userId: string) {
   const current = await fetch("/api/auth/session", { credentials: "include" });
-  if (current.ok) return true;
+  if (current.ok) {
+    const session = await current.json() as { userId?: unknown };
+    if (session.userId === userId) return true;
+    if (!isDevelopmentBuild()) return false;
+    await signOutCalibrationSession();
+  }
   if (!isDevelopmentBuild()) return false;
   const development = await fetch("/api/auth/development", {
     method: "POST",

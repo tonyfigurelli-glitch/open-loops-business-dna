@@ -12,12 +12,17 @@ import {
   type CalibrationEvidenceAnswer,
   type CalibrationEvidencePackage,
 } from "./calibrationEvidencePackage";
+import {
+  BUSINESS_PRACTICE_LIBRARY_VERSION,
+  businessPracticeById,
+  serializeBusinessPracticeLibraryForPrompt,
+} from "../businessPracticeLibrary";
 
 export { buildCalibrationEvidencePackage } from "./calibrationEvidencePackage";
 export type { CalibrationDefinition, CalibrationEvidenceAnswer, CalibrationEvidencePackage } from "./calibrationEvidencePackage";
 
 export const AI_GENERATION_INSTRUCTION_VERSION =
-  "small_business_owner_v1.4_ai_generation@1.0.0";
+  "small_business_owner_v1.4_ai_generation@2.0.0";
 
 export type AIModelOutput = {
   profileSections: Array<{
@@ -54,6 +59,16 @@ export type AIModelOutput = {
     whatResultWouldTeach: string;
   };
   majorConclusions: Array<{ claim: string; evidenceReferences: string[] }>;
+  appliedPractices: Array<{
+    practiceId: string;
+    evidenceReferences: string[];
+    inferredConnection: string;
+    businessConsequence: string;
+    fitExplanation: string;
+    caution: string;
+    whatWouldDisproveIt: string;
+    experimentConnection: string;
+  }>;
   safetyFlags: string[];
 };
 
@@ -133,6 +148,7 @@ export const aiModelOutputSchema = {
     "importantDirectQuotes",
     "sevenDayExperiment",
     "majorConclusions",
+    "appliedPractices",
     "safetyFlags",
   ],
   properties: {
@@ -167,6 +183,20 @@ export const aiModelOutputSchema = {
       properties: Object.fromEntries(["action", "hypothesis", "minimumDeliverable", "owner", "likelyObstacle", "supportThatMayHelp", "resultToRecord", "whatResultWouldTeach"].map((key) => [key, { type: "string" }])) },
     majorConclusions: { type: "array", items: { type: "object", additionalProperties: false,
       required: ["claim", "evidenceReferences"], properties: { claim: { type: "string" }, evidenceReferences: { type: "array", items: { type: "string" } } } } },
+    appliedPractices: { type: "array", minItems: 1, maxItems: 3, items: {
+      type: "object", additionalProperties: false,
+      required: ["practiceId", "evidenceReferences", "inferredConnection", "businessConsequence", "fitExplanation", "caution", "whatWouldDisproveIt", "experimentConnection"],
+      properties: {
+        practiceId: { type: "string" },
+        evidenceReferences: { type: "array", minItems: 2, items: { type: "string" } },
+        inferredConnection: { type: "string" },
+        businessConsequence: { type: "string" },
+        fitExplanation: { type: "string" },
+        caution: { type: "string" },
+        whatWouldDisproveIt: { type: "string" },
+        experimentConnection: { type: "string" },
+      },
+    } },
     safetyFlags: { type: "array", items: { type: "string" } },
   },
 } as const;
@@ -313,6 +343,7 @@ export function validateAIModelOutput(
     "competingHypotheses",
     "importantDirectQuotes",
     "majorConclusions",
+    "appliedPractices",
     "safetyFlags",
   ] as const;
   for (const key of requiredArrays) if (!Array.isArray(output[key])) errors.push(`${key} must be an array.`);
@@ -365,6 +396,29 @@ export function validateAIModelOutput(
     if (output.confidenceLevel === "medium") {
       const independent = independentEvidenceCount(conclusion?.evidenceReferences, validAnswers);
       if (independent < 2) errors.push("Moderate-confidence major conclusions require two independent evidence references.");
+    }
+  }
+  const appliedPractices = Array.isArray(output.appliedPractices) ? output.appliedPractices : [];
+  if (appliedPractices.length < 1 || appliedPractices.length > 3) {
+    errors.push("One to three applicable management practices are required.");
+  }
+  for (const applied of appliedPractices) {
+    validateReferences(applied?.evidenceReferences, "Applied management practice");
+    const practice = businessPracticeById.get(applied?.practiceId);
+    if (!practice) errors.push(`Applied management practice uses unknown practice ID ${String(applied?.practiceId)}.`);
+    const independent = independentEvidenceCount(applied?.evidenceReferences, validAnswers);
+    if (independent < 2) errors.push("An applied management practice requires two independent evidence references.");
+    for (const field of ["inferredConnection", "businessConsequence", "fitExplanation", "caution", "whatWouldDisproveIt", "experimentConnection"] as const) {
+      if (!nonEmpty(applied?.[field])) errors.push(`Applied management practice requires ${field}.`);
+    }
+    if (nonEmpty(applied?.inferredConnection) && isAnswerEcho(applied.inferredConnection, validAnswers)) {
+      errors.push("The inferred connection merely echoes a participant answer instead of connecting evidence.");
+    }
+    if (practice && nonEmpty(applied?.caution)) {
+      const normalizedCaution = normalizeNarrative(applied.caution);
+      if (normalizedCaution === normalizeNarrative(practice.principle)) {
+        errors.push("The management-practice caution must address possible misapplication.");
+      }
     }
   }
   for (const hypothesis of Array.isArray(output.competingHypotheses) ? output.competingHypotheses : []) {
@@ -440,6 +494,7 @@ function validationFailureCode(error: string) {
   if (/repeat canonical section titles/i.test(error)) return "NARRATIVE_CANONICAL_TITLE";
   if (/clinical or medical advice/i.test(error)) return "SAFETY_CLINICAL_ADVICE";
   if (/prohibited prior information/i.test(error)) return "CONTEXT_ISOLATION_VIOLATION";
+  if (/management practice|practice ID|merely echoes/i.test(error)) return "PRACTICE_GROUNDING_REJECTED";
   if (/evidence ID|evidence references|independent evidence|participant evidence/i.test(error)) return "EVIDENCE_DISCIPLINE_REJECTED";
   if (/confidence/i.test(error)) return "CONFIDENCE_DISCIPLINE_REJECTED";
   if (/seven-day experiment|sevenDayExperiment/i.test(error)) return "EXPERIMENT_INVALID";
@@ -489,6 +544,8 @@ function mapAIOutputToGeneration(
     directStatements: output.classifications.directStatements,
     reasonableInferences: output.classifications.reasonableInferences,
     tentativeHypotheses: output.classifications.tentativeHypotheses,
+    appliedPractices: output.appliedPractices,
+    managementLibraryVersion: BUSINESS_PRACTICE_LIBRARY_VERSION,
   };
 }
 
@@ -508,6 +565,11 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "Use an exact direct quote only when it materially sharpens the reflection, list it in importantDirectQuotes, and integrate it naturally rather than presenting it as source data.",
     "Across the complete narrative, follow this sequence: identity → strength → possible hidden cost → business consequence → leverage point → respectful challenge → seven-day experiment → reason to continue.",
     "Write with perceptive, grounded, concise, nonclinical, participant-specific language. Avoid generic praise, repeated insights, unsupported certainty, diagnostic claims, and consultant-report language.",
+    "INSIGHT AND MANAGEMENT-PRACTICE CONTRACT:",
+    `Use only the curated Business Practice Knowledge Base ${BUSINESS_PRACTICE_LIBRARY_VERSION} supplied below. Do not invent a practice or cite a source outside it.`,
+    "A major insight must connect at least two independent answers and state a business consequence. It must add an inference that the participant did not already state; paraphrasing, flattering restatement, personality labeling, and fortune-teller language are invalid.",
+    "Select one to three practices only when the evidence fits their use conditions. Explain the fit, retain a caution against misapplication, state what would disprove the inference, and connect the practice to the seven-day experiment.",
+    "Do not recommend a book or present an author's framework as doctrine. Adapt the principle to this business, this owner, and this moment.",
     "Prefer two to four short sentences per section and no more than two short paragraphs. Use plain language and check that participant answers fit grammatically into every sentence; when they do not, quote the answer naturally instead of forcing it into the sentence.",
     "Keep uncertainty natural and participant-facing. Use phrases such as ‘may,’ ‘appears,’ ‘one possibility,’ or ‘we do not know yet’ where warranted.",
     "Never explain an internal confidence rating, evidence count, classification, validation decision, or evaluation rationale inside a profileSections.body. Do not write phrases such as ‘moderate-confidence interpretation,’ ‘this is rated medium confidence because,’ or ‘the evidence supports this assessment.’ Put explicit confidence and its rationale only in confidenceLevel and confidenceRationale.",
@@ -520,7 +582,27 @@ function buildSystemInstructions(definition: CalibrationDefinition) {
     "For profile section 5, express both legitimate sides, their consequence, and the current tension as connected prose without field headings.",
     "For profile section 7, write only a two-to-four-sentence participant-facing summary of the action, hypothesis, fit, and learning value. Put the full deliverable, owner, obstacle, support, result, and learning details only in sevenDayExperiment.",
     "For profile sections 8 and 9, concise bullets are allowed, but do not prefix them with raw source, evidence, question, or answer labels.",
+    "CURATED BUSINESS PRACTICE KNOWLEDGE BASE:",
+    serializeBusinessPracticeLibraryForPrompt(),
   ].join("\n\n");
+}
+
+function isAnswerEcho(statement: string, validAnswers: Map<string, CalibrationEvidenceAnswer>) {
+  const statementTokens = meaningfulTokens(statement);
+  if (statementTokens.size < 3) return false;
+  for (const answer of validAnswers.values()) {
+    const answerTokens = meaningfulTokens(answer.exactWording);
+    if (answerTokens.size < 3) continue;
+    const shared = [...statementTokens].filter((token) => answerTokens.has(token)).length;
+    const containment = shared / Math.min(statementTokens.size, answerTokens.size);
+    if (containment >= 0.85) return true;
+  }
+  return false;
+}
+
+function meaningfulTokens(value: string) {
+  const stop = new Set(["a", "an", "and", "are", "as", "at", "be", "because", "for", "from", "i", "in", "is", "it", "may", "of", "on", "or", "that", "the", "this", "to", "we", "with", "you", "your"]);
+  return new Set(normalizeNarrative(value).split(/[^a-z0-9]+/).filter((token) => token.length > 2 && !stop.has(token)));
 }
 
 function validateParticipantFacingNarrative(

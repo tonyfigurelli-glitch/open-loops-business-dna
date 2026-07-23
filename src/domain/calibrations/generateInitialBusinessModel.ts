@@ -5,6 +5,7 @@ import type {
   CalibrationResponse,
 } from "../models";
 import { smallBusinessOwnerCalibration } from "./smallBusinessOwnerCalibration";
+import { BUSINESS_PRACTICE_LIBRARY_VERSION } from "../businessPracticeLibrary";
 
 export function generateInitialBusinessModel(
   responses: CalibrationResponse[],
@@ -98,6 +99,18 @@ export function generateInitialBusinessModel(
     unknowns,
     importantDirectQuotes,
     proposedExperiment,
+    appliedPractices: [{
+      practiceId: "measurable-priority",
+      evidenceReferences: ["q04", "q08"].filter((questionId) =>
+        evidenceReferences.some((reference) => reference.questionId === questionId)),
+      inferredConnection: "The stated outcome and the current operating pattern may not yet share one observable definition of progress.",
+      businessConsequence: "The business can remain active while learning too little about what actually moves the priority.",
+      fitExplanation: "One small result measure can turn the next action into evidence rather than another general intention.",
+      caution: "The measure must not hide profitability, sustainability, customer impact, or team strain.",
+      whatWouldDisproveIt: "A clear measure already guides weekly choices and the outcome remains blocked for another identifiable reason.",
+      experimentConnection: "The seven-day action records whether one observable step advances the priority and what actually blocks it.",
+    }],
+    managementLibraryVersion: BUSINESS_PRACTICE_LIBRARY_VERSION,
   };
 }
 
